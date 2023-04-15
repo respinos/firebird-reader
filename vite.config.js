@@ -17,21 +17,52 @@ const files = glob.sync(path.resolve(__dirname, 'src') + '/**/*.html').reduce((a
   return acc;
 }, {});
 
+// export default defineConfig({
+//   plugins: [
+//     svelte({
+//       /* plugin options */
+//       preprocess: [scss({})],
+//     }),
+//   ],
+//   root: path.resolve(__dirname, "src"),
+//   build: {
+//     outDir: path.resolve(__dirname, "dist"),
+//     emptyOutDir: true,
+//     rollupOptions: {
+//       input: files
+//     }
+//   },
+//   resolve: {
+//     alias: {
+//       "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),
+//     },
+//     extensions: [".mjs", ".js", ".ts", ".json", ".svelte", ".scss"],
+//   },
+//   server: {
+//     // port: 8080,
+//     hot: true,
+//     proxy: {
+//       '^/cgi/imgsrv/*': {
+//         target: 'https://babel.hathitrust.org',
+//         changeOrigin: true
+//       },
+//     }
+//   },
+//   css: {
+//     preprocessorOptions: {
+//       scss: {
+//         //  additionalData: `@import "@/scss/app.scss";`,
+//         //additionalData: `@import "src/scss/_variables.scss";`,
+//         quietDeps: true,
+//       },
+//     },
+//   },
+// });
+
 export default defineConfig({
-  plugins: [
-    svelte({
-      /* plugin options */
-      preprocess: [scss({})],
-    }),
-  ],
-  root: path.resolve(__dirname, "src"),
-  build: {
-    outDir: path.resolve(__dirname, "dist"),
-    emptyOutDir: true,
-    rollupOptions: {
-      input: files
-    }
-  },
+  plugins: [svelte({
+    preprocess: [scss({})],
+  })],
   resolve: {
     alias: {
       "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),
@@ -39,13 +70,12 @@ export default defineConfig({
     extensions: [".mjs", ".js", ".ts", ".json", ".svelte", ".scss"],
   },
   server: {
-    // port: 8080,
-    hot: true,
     proxy: {
       '^/cgi/imgsrv/*': {
         target: 'https://babel.hathitrust.org',
         changeOrigin: true
       },
+    }
   },
   css: {
     preprocessorOptions: {
@@ -56,4 +86,4 @@ export default defineConfig({
       },
     },
   },
-});
+})

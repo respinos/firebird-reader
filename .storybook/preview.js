@@ -5,7 +5,7 @@ import * as bootstrap from "bootstrap";
 const preview = {
   parameters: {
     backgrounds: {
-      default: "clear",
+      default: "light",
     },
     actions: { argTypesRegex: "^on[A-Z].*" },
     controls: {

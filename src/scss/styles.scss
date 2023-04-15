@@ -1,0 +1,48 @@
+body {
+  display: grid;
+  // overflow: hidden;
+  height: 100vh;
+  width: 100%;
+  grid-template-rows: min-content minmax(0, 1fr);
+}
+
+header {
+  grid-row: 1/2;
+  padding: 1.5rem;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 1.125rem;
+}
+
+#app {
+  grid-row: 2/3;
+}
+
+.splitpanes__pane {
+  // overflow: auto !important;
+  position: relative;
+}
+
+.pane--reader {
+  display: grid;
+  position: relative;
+  grid-template-rows: minmax(0, 1fr);
+}
+
+.virtual-list-wrapper {
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12);
+  background: #fafafa;
+  font-family: -apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+  color: #333;
+  -webkit-font-smoothing: antialiased;
+}
+
+.accordion-body p:last-child {
+  margin-bottom: 0;
+}
+
+button:hover i.border-dark {
+  border-color: #fff !important;
+}

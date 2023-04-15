@@ -1,47 +1,66 @@
 <script>
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import { Pane, Splitpanes } from 'svelte-splitpanes';
+	import View from './components/ScrollView/index.svelte';
+	import ViewToolbar from './components/ViewToolbar';
+	import Panel from './components/Panel';
+	import MetadataPanel from './components/MetadataPanel';
 </script>
 
-<main>
-  <div>
-    <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
-
-  <div class="card">
-    <Counter />
-  </div>
-
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
-</main>
+<Splitpanes vertical style="width: 100%">
+	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5">
+		<div class="accordion" id="controls">
+			<MetadataPanel></MetadataPanel>
+			<Panel parent="#controls">
+				<svelte:fragment slot="title">Download</svelte:fragment>
+				<svelte:fragment slot="body">
+					<p>This is a download form.</p>
+				</svelte:fragment>
+			</Panel>
+			<Panel parent="#controls" expanded={true}>
+				<svelte:fragment slot="title">Search in This Text</svelte:fragment>
+				<svelte:fragment slot="body">
+					<form>
+						<div class="d-flex flex-nowrap  gap-1">
+							<div class="flex-grow-1">
+								<input type="text" class="form-control" placeholder="..." />
+							</div>
+							<div class="d-flex flex-nowrap gap-1">
+								<button class="btn btn-outline-secondary">
+									<i class="fa-solid fa-magnifying-glass"></i>
+								</button>
+								<button class="btn btn-outline-secondary">
+									<i class="fa-regular fa-circle-xmark"></i>
+								</button>
+							</div>
+						</div>
+					</form>
+				</svelte:fragment>
+			</Panel>
+			<Panel parent="#controls">
+				<slot:fragment slot="title">Jump to Section</slot:fragment>
+				<slot:fragment slot="body"></slot:fragment>
+			</Panel>
+			<Panel parent="#controls">
+				<slot:fragment slot="title">Get This Item</slot:fragment>
+				<slot:fragment slot="body"></slot:fragment>
+			</Panel>
+			<Panel parent="#controls">
+				<slot:fragment slot="title">Lists</slot:fragment>
+				<slot:fragment slot="body"></slot:fragment>
+			</Panel>
+			<Panel parent="#controls">
+				<slot:fragment slot="title">Share</slot:fragment>
+				<slot:fragment slot="body">
+					<p><em>Anywhere but Twitter.</em></p>
+				</slot:fragment>
+			</Panel>
+		</div>
+	</Pane>
+	<Pane size={75} class="pane--reader">
+		<ViewToolbar></ViewToolbar>
+		<View></View>
+	</Pane>
+</Splitpanes>
 
 <style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
 </style>
