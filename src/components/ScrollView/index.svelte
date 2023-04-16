@@ -1,13 +1,17 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
 
   import VirtualList from '../VirtualList.svelte';
   import Page from '../Page/index.svelte';
+
+  const emitter = getContext('emitter');
 
   let container;
   let content;
 
   let virtualList;
+  let scrollToIndex = 0;
+  let currentSeq = 1;
 
   let pageMap = {};
 
@@ -43,15 +47,50 @@
         } else {
           console.log("-- app.missing.mount", seq, canvas);
         }
-        // loadImage(canvas, pageMap[i]);
       }
     }
+    // console.log("-- app.updated", tmpSeq);
     for(const item of inView) {
       manifest.items[item].inView = false;
       // pageMap[item].toggle(false);
       console.log("-- app.unmount", manifest.items[item].seq);
     }
     inView = new Set(tmp);
+  }
+
+  const onAfterScroll = function(event) {
+
+    let tmpSeq; let percentage = -1;
+    let stats = event.detail.stats;
+    stats.forEach((stat) => {
+      if ( stat.percentage > percentage ) {
+        percentage = stat.percentage;
+        tmpSeq = manifest.items[stat.index].seq;
+      }
+      console.log("-- update.percentage", stat.index, stat.percentage, percentage, tmpSeq);
+    })
+    updateCurrentSeq(tmpSeq);
+  }
+
+  emitter.on('goto.page', data => {
+    let target;
+    if ( data == 'PREV' && currentSeq > 0 ) {
+      target = scrollToIndex - 1;
+    } else if ( data == 'NEXT' && currentSeq <= manifest.total_items - 1 ) {
+      target = scrollToIndex + 1;
+    } else if ( ! isNaN(data) ) {
+      target = data - 1;
+    }
+    console.log("<< goto.page", data, target);
+    scrollToIndex = target;
+  });
+
+  const updateCurrentSeq = function(seq) {
+    console.log("-- updateCurrentSeq", seq, currentSeq);
+    if ( seq != currentSeq ) {
+      currentSeq = seq;
+      emitter.emit('update.seq', currentSeq);
+    }
   }
 
   onMount(() => {
@@ -63,8 +102,11 @@
   <VirtualList
       bind:this={virtualList}
       on:itemsUpdated={onItemsUpdated}
+      on:afterScroll={onAfterScroll}
       width="100%"
       height="auto"
+      {scrollToIndex}
+      scrollToBehaviour="smooth"
       itemCount={manifest.total_items}
       itemSize={heights}>
     <Page slot="item" let:index seq={index + 1} let:style {style} canvas={manifest.items[index]} bind:this={pageMap[index]}></Page>

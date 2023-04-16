@@ -43,6 +43,13 @@ header {
   margin-bottom: 0;
 }
 
+.accordion-button.fixed {
+  background: transparent;
+  &::after {
+    display: none;
+  }
+}
+
 button:hover i.border-dark {
   border-color: #fff !important;
 }

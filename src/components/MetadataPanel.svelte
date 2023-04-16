@@ -3,11 +3,14 @@
 </script>
 
 <h1 class="p-3" style="font-size: 1.2rem">Ground-water resources of Lowndes County, Alabama; a reconnaissance ...</h1>
-<div class="accordion">
+<!-- <div class="accordion"> -->
   <div class="accordion-item">
     <h2 class="accordion-header">
-      <span class="accordion-button">
-        About this Item
+      <span class="accordion-button fixed">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-circle-info"></i>
+          About this Item
+        </div>
       </span>
     </h2>
     <div>
@@ -24,4 +27,4 @@
       </div>
     </div>
   </div>
-</div>
+<!-- </div> -->

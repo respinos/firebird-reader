@@ -52,7 +52,7 @@
 
 	const dispatchEvent = createEventDispatcher();
 
-	const sizeAndPositionManager = new SizeAndPositionManager({
+	export const sizeAndPositionManager = new SizeAndPositionManager({
 		itemCount,
 		itemSize,
 		estimatedItemSize: getEstimatedItemSize(),
@@ -236,19 +236,64 @@
 			}
 
 			setTimeout(() => {
-			dispatchEvent('itemsUpdated', {
-				start,
-				end: stop,
-			});
+				dispatchEvent('itemsUpdated', {
+					start,
+					end: stop,
+				});
 			}, 0)
 		}
 
 		items = updatedItems;
 	}
 
+	function gatherStats(state) {
+		let offset = state.offset;
+		const { start, stop } = sizeAndPositionManager.getVisibleRange({
+			containerSize: scrollDirection === DIRECTION.VERTICAL ? 
+				wrapperHeight : 
+				( width == 'auto' ? wrapper.clientWidth : width ),
+			offset,
+			overscanCount,
+		});
+
+		let viewport = {
+			top: wrapper.scrollTop,
+			bottom: wrapper.scrollTop + wrapperHeight
+		};
+
+		for (let index = start; index <= stop; index++) {
+			let x = sizeAndPositionManager.getSizeAndPositionForIndex(index);
+			let elementPos = {
+				top: x.offset,
+				bottom: x.offset + x.size
+			};
+			// console.log("-- refresh", elementPos, viewport);
+			let percentage;
+			if ( viewport.top < elementPos.top && viewport.bottom > elementPos.bottom ) {
+				percentage = wrapperHeight;
+			} else if ( elementPos.top < viewport.top && elementPos.bottom > viewport.bottom ) {
+				percentage = wrapperHeight;
+			} else if ( elementPos.top < viewport.top ) {
+				percentage = x.size - ( viewport.top - elementPos.top );
+			} else if ( elementPos.bottom > viewport.bottom ) {
+				percentage = x.size - ( elementPos.bottom - viewport.bottom );
+			} else {
+				percentage = x.size;
+			}
+			percentage = ( percentage / wrapperHeight ) * 100;
+
+			state.stats.push({
+				index: index,
+				offset: x.offset,
+				size: x.size,
+				percentage: percentage
+			});
+		}
+	}
 
 	function scrollTo(value) {
 		if ('scroll' in wrapper) {
+			console.log("-- scrollTo", value);
 			wrapper.scroll({
 				[SCROLL_PROP[scrollDirection]]: value,
 				behavior:                       scrollToBehaviour,
@@ -269,9 +314,15 @@
 			index = 0;
 		}
 
+		let containerSize = scrollDirection === DIRECTION.VERTICAL ? height : width;
+		if ( containerSize == 'auto' ) {
+			containerSize = wrapperHeight;
+		}
+
 		return sizeAndPositionManager.getUpdatedOffsetForIndex({
 			align,
-			containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
+			// containerSize: scrollDirection === DIRECTION.VERTICAL ? height : width,
+			containerSize: containerSize,
 			currentOffset: state.offset || 0,
 			targetIndex:   index,
 		});
@@ -285,10 +336,15 @@
 		state = {
 			offset,
 			scrollChangeReason: SCROLL_CHANGE_REASON.OBSERVED,
+			stats: []
 		};
+
+		gatherStats(state);
+		let stats = state.stats;
 
 		dispatchEvent('afterScroll', {
 			offset,
+			stats,
 			event,
 		});
 	}

@@ -1,5 +1,24 @@
 <script>
+  import { getContext } from 'svelte';
 
+  let inputSeq;
+
+  const emitter = getContext('emitter');
+
+  emitter.on('update.seq', seq => {
+    inputSeq.value = seq;
+  })
+
+  const updateSeq = function() {
+    let seq = parseInt(inputSeq.value, 10);
+    console.log("-- goto.page", seq);
+    emitter.emit('goto.page', seq);
+  }
+
+  const goto = function(target) {
+    console.log("-- goto.page", target);
+    emitter.emit('goto.page', target);
+  }
 </script>
 
 <div class="view--toolbar rounded">
@@ -15,7 +34,7 @@
   <form>
     <div class="d-flex align-items-center gap-1 bg-dark text-light p-1 px-2 rounded">
       <span>#</span>
-      <input type="text" class="form-control text-center" value="1" size="3" />
+      <input bind:this={inputSeq} type="number" class="form-control text-center" value="1" min="1" max="102" on:change={updateSeq} on:blur={updateSeq} />
       <span>/</span>
       <span>102</span>
     </div>
@@ -54,10 +73,10 @@
     <button type="button" class="btn btn-outline-dark">
       <i class="fa-solid fa-chevron-left border-start border-3 border-dark"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark">
+    <button type="button" class="btn btn-outline-dark" on:click={() => goto('PREV')}>
       <i class="fa-solid fa-chevron-left"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark">
+    <button type="button" class="btn btn-outline-dark" on:click={() => goto('NEXT')}>
       <i class="fa-solid fa-chevron-right"></i>
     </button>
     <button type="button" class="btn btn-outline-dark">

@@ -163,7 +163,8 @@
   style:--height={canvas.useHeight}
   style:--width={canvas.useWidth}>
   <div class="page-toolbar">
-    <button type="button" class="btn btn-outline-dark" on:click={rotateScan}><i class="bi bi-arrow-clockwise"></i></button>
+    <button type="button" class="btn btn-light" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+    <button type="button" class="btn btn-light"><i class="fa-regular fa-square"></i></button>
     <span class="badge bg-secondary d-flex align-items-center p-2">#{seq}</span>
   </div>
   <figure class="frame">
@@ -208,16 +209,17 @@
   }
 
   .page-toolbar {
-    background: black;
-    color: white;
+    /* background: black;
+    color: white; */
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+    gap: 0.5rem;
     padding: 0.5rem;
     width: calc(var(--width) * 1px);
-    width: 80%;
-    width: 300px;
+    /* width: 80%;
+    width: 300px; */
     position: sticky;
     top: 0.5rem;
     z-index: 50;
