@@ -22,6 +22,8 @@
   let objectUrl;
   let isLoaded = false;
 
+  let timeout;
+
   // cgi/imgsrv/thumbnail?id={canvas.id}&seq={seq}
   let defaultThumbnailSrc = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=`;
   export let thumbnailSrc = defaultThumbnailSrc;
@@ -29,7 +31,8 @@
   export function toggle(visible) {
     isVisible = visible;
     if (visible) {
-      loadImage();
+      timeout = setTimeout(loadImage, 1000);
+      // loadImage();
     } else {
       unloadImage();
     }
@@ -42,6 +45,7 @@
   }
 
   const loadImage = function() {
+    timeout = null;
     if ( image.src != defaultThumbnailSrc ) { console.log("AHOY DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
     let img_src = `/cgi/imgsrv/image?id=${canvas.id}&seq=${seq}&height=${height}`;
@@ -59,6 +63,7 @@
       .then(blob => {
         objectUrl = URL.createObjectURL(blob);
         if ( image ) {
+          console.log("-- page.mount", seq, canvas);
           image.src = objectUrl;
           isLoaded = true;
           loadPageText();
@@ -70,7 +75,7 @@
 
   const unloadImage = function() {
     URL.revokeObjectURL(objectUrl);
-    console.log("---- unload", seq, image);
+    // console.log("---- unload", seq, image);
   }
 
   const loadPageText = function() {
@@ -149,19 +154,28 @@
   $: rotateX = 0;
   $: orientMargin = 0;
 
+  $: console.log(">> zoom", zoom, scanHeight, scanWidth);
+
   let testWidth, testHeight;
 
   onMount(() => {
     console.log("-- page.mount", seq);
 
-    return () => { console.log("-- page.unmount", seq); unloadImage(); }
+    return () => { 
+      console.log("-- page.unmount", seq);
+      if(timeout) {
+        clearTimeout(timeout);
+        console.log("-- app.unmount", seq);
+      }
+      unloadImage(); 
+    }
   })
 
 </script>
 
 <div class="page" {style} data-seq={seq} 
-  style:--height={canvas.useHeight}
-  style:--width={canvas.useWidth}>
+  style:--height={Math.ceil(canvas.useHeight * zoom)}
+  style:--width={Math.ceil(canvas.useWidth * zoom)}>
   <div class="page-toolbar">
     <button type="button" class="btn btn-light" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
     <button type="button" class="btn btn-light"><i class="fa-regular fa-square"></i></button>
@@ -179,8 +193,8 @@
 <style>
   .page {
     width: 400px;
-    background: #ddd;
-    border-bottom: 4px solid #666;
+    /* background: #ddd;
+    border-bottom: 4px solid #666; */
 
     display: flex;
     flex-direction: column;
@@ -194,11 +208,11 @@
     display: flex;
     align-items: center;
     /* justify-content: center; */
-    border: 1px solid darkorange;
+    /* border: 1px solid darkorange; */
     /* padding: 1rem; */
 
-    height: calc(var(--height) * 1px);
-    width: calc(var(--width) * 1px);
+    height: calc(var(--height) * 0.9 * 1px);
+    width: calc(var(--width) * 0.9 * 1px);
 
     /* max-width: 400px; */
 
@@ -206,6 +220,12 @@
     overflow: auto;
 
     position: relative;
+
+    /* box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12); */
+  }
+
+  .frame:hover {
+    border: 1px solid darkorange;
   }
 
   .page-toolbar {
@@ -230,9 +250,13 @@
   }
 
   figure img {
-    height: 100%;
+    height: 99%;
     display: block;
     margin: 0 auto;
+
+    background: #f9f8f5;
+    box-shadow: 0px 10px 13px -7px #000000, 0px 6px 15px 5px rgba(0, 0, 0, 0);
+    border: 1px solid #ddd;    
   }
 
   figure figcaption {

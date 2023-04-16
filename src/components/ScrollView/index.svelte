@@ -13,11 +13,15 @@
   let scrollToIndex = 0;
   let currentSeq = 1;
 
+  let zoom = 1;
+  let zoomIndex = 0;
+  const zoomScales = [ 1, 1.5, 1.75, 2, 2.5 ];
+
   let pageMap = {};
 
   import manifest from '../../fixtures/manifest3.json';
   let manifestMap = {}; let heights = [];
-  let baseHeight = Math.ceil(window.innerHeight * 0.90);
+  let baseHeight = Math.ceil(window.innerHeight * 0.90) * zoom;
   manifest.items.forEach((item) => {
     item.originalHeight = item.height;
     item.originalWidth = item.width;
@@ -41,7 +45,7 @@
       tmp.push(i);
       if ( ! canvas.inView ) {
         canvas.inView = true;
-        console.log("-- app.mount", seq, canvas);
+        // console.log("-- app.mount", seq, canvas);
         if ( pageMap[i] ){
           pageMap[i].toggle(true)
         } else {
@@ -85,6 +89,28 @@
     scrollToIndex = target;
   });
 
+  emitter.on('update.zoom', delta => {
+    console.log('<< update.zoom', zoomIndex, delta, zoom);
+    zoomIndex += delta;
+    if ( zoomIndex < 0 ) { zoomIndex = 0; }
+    else if ( zoomIndex >= zoomScales.length ) {
+      zoomIndex = zoomScales.length - 1;
+    }
+
+    let newHeights = [];
+    manifest.items.forEach((item) => {
+      newHeights.push(baseHeight * zoomScales[zoomIndex]);
+    })
+    // virtualList.scrollToBehaviour = 'instant';
+    scrollToIndex = currentSeq - 1;
+    heights = newHeights;
+    // setTimeout(() => {
+    //   virtualList.scrollToBehaviour = 'smooth';
+    // })
+
+    zoom = zoomScales[zoomIndex];
+  })
+
   const updateCurrentSeq = function(seq) {
     console.log("-- updateCurrentSeq", seq, currentSeq);
     if ( seq != currentSeq ) {
@@ -107,9 +133,10 @@
       height="auto"
       {scrollToIndex}
       scrollToBehaviour="smooth"
+      scrollToAlignment="start"
       itemCount={manifest.total_items}
       itemSize={heights}>
-    <Page slot="item" let:index seq={index + 1} let:style {style} canvas={manifest.items[index]} bind:this={pageMap[index]}></Page>
+    <Page slot="item" let:index seq={index + 1} let:style {style} canvas={manifest.items[index]} zoom={zoom} bind:this={pageMap[index]}></Page>
   </VirtualList>
 </div>
 

@@ -19,6 +19,10 @@
     console.log("-- goto.page", target);
     emitter.emit('goto.page', target);
   }
+
+  const zoom = function(delta) {
+    emitter.emit('update.zoom', delta);
+  }
 </script>
 
 <div class="view--toolbar rounded">
@@ -61,10 +65,10 @@
   </div>
 
   <div class="btn-group" role="group" aria-label="Zoom">
-    <button type="button" class="btn btn-outline-dark">
+    <button type="button" class="btn btn-outline-dark" on:click={() => zoom(1)}>
       <i class="fa-solid fa-plus"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark">
+    <button type="button" class="btn btn-outline-dark" on:click={() => zoom(-1)}>
       <i class="fa-solid fa-minus"></i>
     </button>
   </div>
