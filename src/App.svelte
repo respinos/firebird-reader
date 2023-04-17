@@ -18,7 +18,7 @@
 </script>
 
 <Splitpanes vertical style="width: 100%">
-	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5 pt-3 bg-white">
+	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5 pt-3 ps-2 pe-3 bg-white">
 		<div class="accordion" id="controls">
 			<MetadataPanel></MetadataPanel>
 			<Panel parent="#controls">

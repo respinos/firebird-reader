@@ -16,22 +16,25 @@
   let zoom = 1;
   let zoomIndex = 0;
   const zoomScales = [ 1, 1.5, 1.75, 2, 2.5 ];
+  let marginBottom = 4 * 16;
 
   let pageMap = {};
 
   import manifest from '../../fixtures/manifest3.json';
   let manifestMap = {}; let heights = [];
   let baseHeight = Math.ceil(window.innerHeight * 0.90) * zoom;
-  manifest.items.forEach((item) => {
+  manifest.items.forEach((item, index) => {
     item.originalHeight = item.height;
     item.originalWidth = item.width;
     item.inView = false;
     item.loaded = false;
     item.page = null;
+    item.index = index;
+    item.zoom = 1;
     manifestMap[item.seq] = item;
     item.useHeight = baseHeight;
     item.useWidth = Math.ceil(baseHeight * ( item.width / item.height ));
-    heights.push(baseHeight);
+    heights.push(baseHeight + marginBottom);
   })
 
   let inView = new Set();
@@ -71,23 +74,39 @@
         percentage = stat.percentage;
         tmpSeq = manifest.items[stat.index].seq;
       }
-      console.log("-- update.percentage", stat.index, stat.percentage, percentage, tmpSeq);
+      // console.log("-- update.percentage", stat.index, stat.percentage, percentage, tmpSeq);
     })
     updateCurrentSeq(tmpSeq);
   }
-
-  emitter.on('goto.page', data => {
-    let target;
-    if ( data == 'PREV' && currentSeq > 0 ) {
-      target = scrollToIndex - 1;
-    } else if ( data == 'NEXT' && currentSeq <= manifest.total_items - 1 ) {
-      target = scrollToIndex + 1;
-    } else if ( ! isNaN(data) ) {
-      target = data - 1;
+  
+  const gotoIndex = function({ delta, seq }) {
+    let target = manifestMap[currentSeq].index;
+    if ( delta ) { target += delta; }
+    else if ( seq && manifestMap[seq]) {
+      target = manifestMap[seq].index 
     }
-    console.log("<< goto.page", data, target);
+    if ( target < 0 ) { target = 0; }
+    else if ( target >= manifest.items.length ) {
+      target = manifest.items.length - 1;
+    }
+    console.log("<< goto.page", delta, "/", seq, "->", target);
     scrollToIndex = target;
-  });
+  }
+
+  emitter.on('goto.page', gotoIndex);
+
+  // emitter.on('goto.page', data => {
+  //   let target;
+  //   if ( data == 'PREV' && currentSeq > 0 ) {
+  //     target = scrollToIndex - 1;
+  //   } else if ( data == 'NEXT' && currentSeq <= manifest.total_items - 1 ) {
+  //     target = scrollToIndex + 1;
+  //   } else if ( ! isNaN(data) ) {
+  //     target = data - 1;
+  //   }
+  //   console.log("<< goto.page", data, target);
+  //   scrollToIndex = target;
+  // });
 
   emitter.on('update.zoom', delta => {
     console.log('<< update.zoom', zoomIndex, delta, zoom);
@@ -99,7 +118,7 @@
 
     let newHeights = [];
     manifest.items.forEach((item) => {
-      newHeights.push(baseHeight * zoomScales[zoomIndex]);
+      newHeights.push(baseHeight * zoomScales[zoomIndex] + marginBottom);
     })
     // virtualList.scrollToBehaviour = 'instant';
     scrollToIndex = currentSeq - 1;
@@ -109,6 +128,15 @@
     // })
 
     zoom = zoomScales[zoomIndex];
+  })
+
+  emitter.on('update.zoom.page', ({ seq, delta }) => {
+    let canvas = manifestMap[seq];
+    canvas.zoom += delta;
+    let newHeights = [...heights];
+    newHeights[canvas.index] = baseHeight * canvas.zoom + marginBottom;
+    console.log("-- update.zoom.page", seq, delta, newHeights[canvas.index]);
+    heights = newHeights;
   })
 
   const updateCurrentSeq = function(seq) {
@@ -121,6 +149,10 @@
 
   onMount(() => {
     console.log("-- itemCount", manifest.total_items);
+
+    return () => {
+      emitter.off('goto.page', gotoIndex);
+    }
   })
 </script>
 
@@ -136,7 +168,7 @@
       scrollToAlignment="start"
       itemCount={manifest.total_items}
       itemSize={heights}>
-    <Page slot="item" let:index seq={index + 1} let:style {style} canvas={manifest.items[index]} zoom={zoom} bind:this={pageMap[index]}></Page>
+    <Page slot="item" let:index seq={index + 1} let:style {style} canvas={manifest.items[index]} zoom={Math.max(manifest.items[index].zoom, zoom)} bind:this={pageMap[index]}></Page>
   </VirtualList>
 </div>
 

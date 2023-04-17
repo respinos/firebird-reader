@@ -1,7 +1,9 @@
 <script>
 
-  import { onMount } from 'svelte';
+  import { onMount, getContext } from 'svelte';
   import { afterUpdate } from 'svelte';
+
+  const emitter = getContext('emitter');
 
   import PageText from '../PageText/index.svelte';
   import SearchHighlights from '../SearchHighlights/index.svelte';
@@ -13,6 +15,7 @@
   export let zoom;
   export let style;
 
+  let pageZoom = 1;
 
   let scan;
   let image;
@@ -41,12 +44,11 @@
   const updateMatches = function(coords, values) {
     matches = [ ...values ];
     page_coords = [ ...coords ];
-    console.log("UPDATE MATCHES", coords, values);
   }
 
-  const loadImage = function() {
+  const loadImage = function(reload=false) {
     timeout = null;
-    if ( image.src != defaultThumbnailSrc ) { console.log("AHOY DUPE", image.src); return ; }
+    if ( image.src != defaultThumbnailSrc || reload ) { console.log("AHOY DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
     let img_src = `/cgi/imgsrv/image?id=${canvas.id}&seq=${seq}&height=${height}`;
     fetch(img_src)
@@ -57,6 +59,7 @@
         let ratio = canvas.height / parseInt(parts[1], 10);
         let width = Math.ceil(parseInt(parts[0], 10) * ratio);
         canvas.width = width;
+        canvas.useWidth = Math.ceil(canvas.useHeight * ( canvas.width / canvas.height ));
         console.log("--", seq, size, `${canvas.width}x${canvas.height}`);
         return response.blob();
       })
@@ -131,6 +134,12 @@
     }
   }
 
+  const updateZoom = function(delta) {
+    // pageZoom += delta;
+    // loadImage(true);
+    emitter.emit('update.zoom.page', { seq, delta });
+  };
+
   function calculateRatio(canvas) {
     if ( canvas.height > canvas.width ) {
       return window.innerHeight / canvas.height;
@@ -145,16 +154,22 @@
     return Math.ceil(value * scanRatio * zoom);
   }
 
+  function calculateZoom(zoom, pageZoom) {
+    if ( pageZoom > 1 ) { return pageZoom; }
+    return zoom;
+  }
+
   $: isVisible = false;
+  $: scanZoom = calculateZoom(zoom, pageZoom);
   $: scanRatio = calculateRatio(canvas);
-  $: scanHeight = calculate(canvas.height, zoom);
-  $: scanWidth = calculate(canvas.width, zoom);
+  $: scanHeight = calculate(canvas.height, scanZoom);
+  $: scanWidth = calculate(canvas.width, scanZoom);
   $: scanAdjusted = false;
   $: orient = 0;
   $: rotateX = 0;
   $: orientMargin = 0;
 
-  $: console.log(">> zoom", zoom, scanHeight, scanWidth);
+  $: console.log(">> zoom", zoom, pageZoom, scanHeight, scanWidth);
 
   let testWidth, testHeight;
 
@@ -174,14 +189,22 @@
 </script>
 
 <div class="page" {style} data-seq={seq} 
-  style:--height={Math.ceil(canvas.useHeight * zoom)}
-  style:--width={Math.ceil(canvas.useWidth * zoom)}>
-  <div class="page-toolbar">
-    <button type="button" class="btn btn-light" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
-    <button type="button" class="btn btn-light"><i class="fa-regular fa-square"></i></button>
+  style:--height={Math.ceil(scanHeight)}
+  style:--width={Math.ceil(scanWidth)}>
+  <div class="page-toolbar bg-white">
+    <div class="btn-group-vertical" role="group" aria-label="Zoom">
+      <button type="button" class="btn btn-outline-dark" on:click={() => updateZoom(0.5)}>
+        <i class="fa-solid fa-plus"></i>
+      </button>
+      <button type="button" class="btn btn-outline-dark" on:click={() => updateZoom(-0.5)}>
+        <i class="fa-solid fa-minus"></i>
+      </button>
+    </div>
+    <button type="button" class="btn btn-outline-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+    <button type="button" class="btn btn-outline-dark"><i class="fa-regular fa-square"></i></button>
     <span class="badge bg-secondary d-flex align-items-center p-2">#{seq}</span>
   </div>
-  <figure class="frame">
+  <figure class="frame" class:adjusted={canvas.width > canvas.height}>
     <img bind:this={image} src={defaultThumbnailSrc} alt="" />
     <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
     <figcaption>
@@ -198,7 +221,9 @@
 
     display: flex;
     flex-direction: column;
-    align-items: center;
+    /* align-items: center; */
+
+    flex-direction: row;
 
     /* overflow: hidden; */
     position: relative;
@@ -213,6 +238,7 @@
 
     height: calc(var(--height) * 0.9 * 1px);
     width: calc(var(--width) * 0.9 * 1px);
+    max-width: 100%;
 
     /* max-width: 400px; */
 
@@ -235,18 +261,23 @@
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
+
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+
     gap: 0.5rem;
     padding: 0.5rem;
     width: calc(var(--width) * 1px);
-    /* width: 80%;
-    width: 300px; */
     position: sticky;
     top: 0.5rem;
     z-index: 50;
-    /* position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%); */
+
+    width: auto;
+    /* align-self: flex-end; */
+    align-self: flex-start;
+    order: 2;
+    margin-right: 1rem;
+    margin-top: 2rem;
   }
 
   figure img {
@@ -257,6 +288,17 @@
     background: #f9f8f5;
     box-shadow: 0px 10px 13px -7px #000000, 0px 6px 15px 5px rgba(0, 0, 0, 0);
     border: 1px solid #ddd;    
+  }
+
+  figure.adjusted {
+    /* max-width: 100%; */
+    margin: auto;
+  }
+
+  figure.adjusted img {
+    height: auto;
+    width: 100%;
+    max-height: 100%;
   }
 
   figure figcaption {

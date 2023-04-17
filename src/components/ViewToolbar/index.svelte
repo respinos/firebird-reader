@@ -1,28 +1,29 @@
 <script>
-  import { getContext } from 'svelte';
-
-  let inputSeq;
-
+  import { onMount, getContext } from 'svelte';
   const emitter = getContext('emitter');
 
-  emitter.on('update.seq', seq => {
-    inputSeq.value = seq;
-  })
+  let seq = 1;
 
-  const updateSeq = function() {
-    let seq = parseInt(inputSeq.value, 10);
-    console.log("-- goto.page", seq);
-    emitter.emit('goto.page', seq);
+  const updateSeq = function(data) {
+    if ( data ) { seq = data; }
   }
 
-  const goto = function(target) {
-    console.log("-- goto.page", target);
-    emitter.emit('goto.page', target);
+  const goto = function(args) {
+    console.log("-- goto.page", args);
+    emitter.emit('goto.page', args);
   }
 
   const zoom = function(delta) {
     emitter.emit('update.zoom', delta);
   }
+
+  emitter.on('update.seq', updateSeq);
+
+  onMount(() => {
+    return () => {
+      emitter.off('update.seq', updateSeq);
+    }
+  })
 </script>
 
 <div class="view--toolbar rounded">
@@ -38,7 +39,7 @@
   <form>
     <div class="d-flex align-items-center gap-1 bg-dark text-light p-1 px-2 rounded">
       <span>#</span>
-      <input bind:this={inputSeq} type="number" class="form-control text-center" value="1" min="1" max="102" on:change={updateSeq} on:blur={updateSeq} />
+      <input bind:value={seq} type="number" class="form-control text-center" min="1" max="102" on:change={() => goto({ seq: seq })} on:blur={() => goto({ seq: seq })} />
       <span>/</span>
       <span>102</span>
     </div>
@@ -77,10 +78,10 @@
     <button type="button" class="btn btn-outline-dark">
       <i class="fa-solid fa-chevron-left border-start border-3 border-dark"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark" on:click={() => goto('PREV')}>
+    <button type="button" class="btn btn-outline-dark" on:click={() => goto(-1)}>
       <i class="fa-solid fa-chevron-left"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark" on:click={() => goto('NEXT')}>
+    <button type="button" class="btn btn-outline-dark" on:click={() => goto(1)}>
       <i class="fa-solid fa-chevron-right"></i>
     </button>
     <button type="button" class="btn btn-outline-dark">
