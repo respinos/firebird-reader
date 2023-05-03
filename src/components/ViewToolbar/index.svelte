@@ -78,10 +78,10 @@
     <button type="button" class="btn btn-outline-dark">
       <i class="fa-solid fa-chevron-left border-start border-3 border-dark"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark" on:click={() => goto(-1)}>
+    <button type="button" class="btn btn-outline-dark" on:click={() => goto({ delta: -1 })}>
       <i class="fa-solid fa-chevron-left"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark" on:click={() => goto(1)}>
+    <button type="button" class="btn btn-outline-dark" on:click={() => goto({ delta: 1 })}>
       <i class="fa-solid fa-chevron-right"></i>
     </button>
     <button type="button" class="btn btn-outline-dark">

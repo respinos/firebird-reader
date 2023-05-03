@@ -10,6 +10,10 @@
 
   import { extractHighlights } from '../../lib/highlights';
 
+  export let observer;
+  export let handleIntersecting;
+  export let handleUnintersecting;
+
   export let seq;
   export let canvas;
   export let zoom;
@@ -46,7 +50,7 @@
     page_coords = [ ...coords ];
   }
 
-  const loadImage = function(reload=false) {
+  export const loadImage = function(reload=false) {
     timeout = null;
     if ( image.src != defaultThumbnailSrc || reload ) { console.log("AHOY DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
@@ -76,12 +80,12 @@
       })    
   }
 
-  const unloadImage = function() {
+  export const unloadImage = function() {
     URL.revokeObjectURL(objectUrl);
     // console.log("---- unload", seq, image);
   }
 
-  const loadPageText = function() {
+  export const loadPageText = function() {
 
     function parseCoords(value) {
       var values = value.split(' ')
@@ -190,7 +194,11 @@
 
 <div class="page" {style} data-seq={seq} 
   style:--height={Math.ceil(scanHeight)}
-  style:--width={Math.ceil(scanWidth)}>
+  style:--width={Math.ceil(scanWidth)}
+  use:observer 
+  id="id{seq}" 
+  on:intersecting={handleIntersecting} 
+  on:unintersecting={handleUnintersecting}>
   <div class="page-toolbar bg-white">
     <div class="btn-group-vertical" role="group" aria-label="Zoom">
       <button type="button" class="btn btn-outline-dark" on:click={() => updateZoom(0.5)}>
@@ -215,7 +223,7 @@
 
 <style>
   .page {
-    width: 400px;
+    width: 100%;
     /* background: #ddd;
     border-bottom: 4px solid #666; */
 
