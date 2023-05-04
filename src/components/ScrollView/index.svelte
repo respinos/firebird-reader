@@ -256,29 +256,16 @@
     else if ( zoomIndex >= zoomScales.length ) {
       zoomIndex = zoomScales.length - 1;
     }
-
-    let newHeights = [];
-    manifest.items.forEach((item) => {
-      newHeights.push(baseHeight * zoomScales[zoomIndex] + marginBottom);
-    })
-    // virtualList.scrollToBehaviour = 'instant';
-    scrollToIndex = currentSeq - 1;
-    heights = newHeights;
-    // setTimeout(() => {
-    //   virtualList.scrollToBehaviour = 'smooth';
-    // })
-
     zoom = zoomScales[zoomIndex];
   })
 
-  emitter.on('update.zoom.page', ({ seq, delta }) => {
-    let canvas = manifestMap[seq];
-    canvas.zoom += delta;
-    let newHeights = [...heights];
-    newHeights[canvas.index] = baseHeight * canvas.zoom + marginBottom;
-    console.log("-- update.zoom.page", seq, delta, newHeights[canvas.index]);
-    heights = newHeights;
-  })
+  // emitter.on('update.zoom.page', ({ seq, delta }) => {
+  //   let canvas = manifestMap[seq];
+  //   canvas.zoom += delta;
+  //   newHeights[canvas.index] = baseHeight * canvas.zoom + marginBottom;
+  //   console.log("-- update.zoom.page", seq, delta, newHeights[canvas.index]);
+  //   heights = newHeights;
+  // })
 
   // const updateCurrentSeq = function(seq) {
   //   console.log("-- updateCurrentSeq", seq, currentSeq);

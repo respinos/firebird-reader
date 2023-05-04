@@ -139,9 +139,9 @@
   }
 
   const updateZoom = function(delta) {
-    // pageZoom += delta;
-    // loadImage(true);
-    emitter.emit('update.zoom.page', { seq, delta });
+    pageZoom += delta;
+    loadImage(true);
+    // emitter.emit('update.zoom.page', { seq, delta });
   };
 
   function calculateRatio(canvas) {
@@ -163,11 +163,18 @@
     return zoom;
   }
 
+  function calculatePage(value, zoom) {
+    if ( zoom == 1 ) { return null; }
+    return `${Math.ceil(value * scanRatio * zoom)}px`;
+  }
+
   $: isVisible = false;
-  $: scanZoom = calculateZoom(zoom, pageZoom);
+  $: scanZoom = calculateZoom(zoom, 1);
   $: scanRatio = calculateRatio(canvas);
-  $: scanHeight = calculate(canvas.height, scanZoom);
-  $: scanWidth = calculate(canvas.width, scanZoom);
+  $: scanHeight = calculate(canvas.height, scanZoom) || '99%';
+  $: scanWidth = calculate(canvas.width, scanZoom) || 'auto';
+  $: imgHeight = calculatePage(canvas.height, pageZoom);
+  $: imgWidth = calculatePage(canvas.width, pageZoom);
   $: scanAdjusted = false;
   $: orient = 0;
   $: rotateX = 0;
@@ -199,7 +206,7 @@
   id="id{seq}" 
   on:intersecting={handleIntersecting} 
   on:unintersecting={handleUnintersecting}>
-  <div class="page-toolbar bg-white">
+  <div class="page-toolbar bg-white shadow-sm rounded">
     <div class="btn-group-vertical" role="group" aria-label="Zoom">
       <button type="button" class="btn btn-outline-dark" on:click={() => updateZoom(0.5)}>
         <i class="fa-solid fa-plus"></i>
@@ -212,12 +219,14 @@
     <button type="button" class="btn btn-outline-dark"><i class="fa-regular fa-square"></i></button>
     <span class="badge bg-secondary d-flex align-items-center p-2">#{seq}</span>
   </div>
-  <figure class="frame" class:adjusted={canvas.width > canvas.height}>
-    <img bind:this={image} src={defaultThumbnailSrc} alt="" />
+  <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
+    {#if true || isVisible}
+    <img bind:this={image} src={defaultThumbnailSrc} alt="" style:height={imgHeight} style:width={imgWidth} />
     <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
-    <figcaption>
+    <figcaption class="visually-hidden">
       <PageText hidden={true} image={image} canvas={canvas} seq={seq}></PageText>
     </figcaption>
+    {/if}
   </figure>
 </div>
 
@@ -278,6 +287,7 @@
     width: calc(var(--width) * 1px);
     position: sticky;
     top: 0.5rem;
+    right: 0.5rem;
     z-index: 50;
 
     width: auto;
@@ -309,8 +319,27 @@
     max-height: 100%;
   }
 
-  figure figcaption {
-    display: none;
+  .frame:is([data-orient="90"]) {
+    /* max-width: 100%;
+    height: auto; */
+    transform: rotate(90deg) scale(0.8) !important;
+    margin-top: calc(var(--orient-margin) * 1px) !important;
+    margin-bottom: calc(var(--orient-margin) * 1px) !important;
   }
 
+  .frame:is([data-orient="180"]) {
+    /* max-width: 100%;
+    max-height: 100%;
+    width: 100%; */
+    transform: rotate(180deg) !important;
+  }
+
+  .frame:is([data-orient="270"]) {
+    /* max-width: 100%;
+    height: auto; */
+
+    transform: rotate(270deg) scale(0.8) !important;
+    margin-top: calc(var(--orient-margin) * 1px) !important;
+    margin-bottom: calc(var(--orient-margin) * 1px) !important;
+  }
 </style>
