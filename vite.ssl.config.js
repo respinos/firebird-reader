@@ -5,6 +5,8 @@ const { scss } = pkg;
 import path from "node:path";
 import glob from 'fast-glob';
 
+import basicSsl from '@vitejs/plugin-basic-ssl';
+
 // Find all HTML files and build an object of names and paths to work from
 const files = glob.sync(path.resolve(__dirname, 'src') + '/**/*.html').reduce((acc, cur) => {
   // we want to keep the path
@@ -21,16 +23,10 @@ export default defineConfig({
   plugins: [
     svelte({
       preprocess: [scss({})],
-    })
+    }),
+    basicSsl(),
   ],
   root: path.resolve(__dirname, "src"),
-  build: {
-    outDir: path.resolve(__dirname, "dist"),
-    emptyOutDir: true,
-    rollupOptions: {
-      input: files
-    }
-  },  
   resolve: {
     alias: {
       "~bootstrap": path.resolve(__dirname, "node_modules/bootstrap"),

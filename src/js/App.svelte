@@ -1,23 +1,40 @@
 <script>
   import { onMount, setContext } from 'svelte';
 
+	import { Manifest } from './lib/manifest';
+
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
 	import View from './components/ScrollView/index.svelte';
 	import ViewToolbar from './components/ViewToolbar';
 	import Panel from './components/Panel';
+	
 	import MetadataPanel from './components/MetadataPanel';
+	import VersionPanel from './components/VersionPanel';
+	import JumpToSectionPanel from './components/JumpToSectionPanel';
+	import GetThisItemPanel from './components/GetThisItemPanel';
+	import SharePanel from './components/SharePanel';
+	import CollectionsPanel from './components/CollectionsPanel';
+
+	import WebsiteHeader from '~firebird-common/src/js/components/Header';
 
 	import Emittery from 'emittery';
 	const emitter = new Emittery();
 	setContext('emitter', emitter);
 
-	// onMount(() => {
-	// 	const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-	// 	const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
-	// })
+	const manifest = new Manifest(HT.params);
+	setContext('manifest', manifest);
+
+	onMount(() => {
+
+		const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+		const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
+	})
 </script>
 
-<Splitpanes vertical style="width: 100%">
+<hathi-website-header>
+	<WebsiteHeader searchState="toggle"></WebsiteHeader>
+</hathi-website-header>
+<Splitpanes class="reader" vertical style="width: 100%">
 	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5 pt-3 ps-2 pe-3 bg-white">
 		<div class="accordion" id="controls">
 			<MetadataPanel></MetadataPanel>
@@ -33,7 +50,7 @@
 				<svelte:fragment slot="title">Search in This Text</svelte:fragment>
 				<svelte:fragment slot="body">
 					<form>
-						<div class="d-flex flex-nowrap  gap-1">
+						<div class="d-flex flex-nowrap gap-1">
 							<div class="flex-grow-1">
 								<input type="text" class="form-control" placeholder="..." />
 							</div>
@@ -49,40 +66,12 @@
 					</form>
 				</svelte:fragment>
 			</Panel>
-			<Panel parent="#controls">
-				<i class="fa-solid fa-bars" slot="icon"></i>
-				<slot:fragment slot="title">Jump to Section</slot:fragment>
-				<slot:fragment slot="body"></slot:fragment>
-			</Panel>
-			<Panel parent="#controls">
-				<i class="fa-solid fa-book" slot="icon"></i>
-				<slot:fragment slot="title">Get This Item</slot:fragment>
-				<slot:fragment slot="body"></slot:fragment>
-			</Panel>
-			<Panel parent="#controls">
-				<i class="fa-solid fa-bookmark" slot="icon"></i>
-				<slot:fragment slot="title">Lists</slot:fragment>
-				<slot:fragment slot="body"></slot:fragment>
-			</Panel>
-			<Panel parent="#controls">
-				<i class="fa-solid fa-share-nodes" slot="icon"></i>
-				<slot:fragment slot="title">Share</slot:fragment>
-				<slot:fragment slot="body">
-					<p><em>Anywhere but Twitter.</em></p>
-				</slot:fragment>
-			</Panel>
+			<JumpToSectionPanel></JumpToSectionPanel>
+			<GetThisItemPanel></GetThisItemPanel>
+			<CollectionsPanel></CollectionsPanel>
+			<SharePanel></SharePanel>
 		</div>
-		<div class="alert alert-light mt-4" role="alert">
-			<h3 class="fs-7">Version</h3>
-			<p class="fs-7">
-				<span>2019-03-27 08:10 UTC</span>
-				<br />
-				<button type="button" class="btn btn-sm btn-outline-dark" data-bs-toggle="popover" data-bs-title="About the version" data-bs-content="#version-information">About the version</button>
-			</p>
-			<div hidden id="version-information">
-				<p>Does this actually work?</p>
-			</div>
-		</div>
+		<VersionPanel></VersionPanel>
 	</Pane>
 	<Pane size={75} class="pane--reader">
 		<ViewToolbar></ViewToolbar>

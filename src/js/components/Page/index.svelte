@@ -206,19 +206,32 @@
   id="id{seq}" 
   on:intersecting={handleIntersecting} 
   on:unintersecting={handleUnintersecting}>
-  <div class="page-toolbar bg-white shadow-sm rounded">
-    <div class="btn-group-vertical" role="group" aria-label="Zoom">
-      <button type="button" class="btn btn-outline-dark" on:click={() => updateZoom(0.5)}>
-        <i class="fa-solid fa-plus"></i>
-      </button>
-      <button type="button" class="btn btn-outline-dark" on:click={() => updateZoom(-0.5)}>
-        <i class="fa-solid fa-minus"></i>
+
+  <details class="page-menu">
+    <summary>
+      <div class="d-flex align-items-center justify-content-between shadow px-3 py-2 gap-2 rounded">
+        <span class="seq">#{seq}</span>
+        <span class="arrow">
+          <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+        </span>
+      </div>
+    </summary>
+    <div class="d-flex flex-column gap-1 align-items-center me-0 width-min-content">
+      <button type="button" class="btn btn-dark"><i class="fa-regular fa-square"></i></button>
+      <button type="button" class="btn btn-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+      <div class="btn-group-vertical" role="group">
+        <button type="button" class="btn btn-dark" on:click={() => updateZoom(0.5)}>
+          <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="btn btn-dark" on:click={() => updateZoom(-0.5)}>
+          <i class="fa-solid fa-minus" aria-hidden="true"></i>
+        </button>
+      </div>
+      <button type="button" class="btn btn-dark" on:click={rotateScan}>
+        <i class="fa-solid fa-download" aria-hidden="true"></i>
       </button>
     </div>
-    <button type="button" class="btn btn-outline-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
-    <button type="button" class="btn btn-outline-dark"><i class="fa-regular fa-square"></i></button>
-    <span class="badge bg-secondary d-flex align-items-center p-2">#{seq}</span>
-  </div>
+  </details>
   <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
     {#if true || isVisible}
     <img bind:this={image} src={defaultThumbnailSrc} alt="" style:height={imgHeight} style:width={imgWidth} />
@@ -230,7 +243,7 @@
   </figure>
 </div>
 
-<style>
+<style lang="scss">
   .page {
     width: 100%;
     /* background: #ddd;
@@ -271,32 +284,30 @@
     border: 1px solid darkorange;
   }
 
-  .page-toolbar {
-    /* background: black;
-    color: white; */
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
+  // .page-toolbar {
+  //   display: flex;
+  //   flex-direction: row;
+  //   align-items: center;
+  //   justify-content: flex-end;
 
-    flex-direction: column-reverse;
-    justify-content: flex-start;
+  //   flex-direction: column-reverse;
+  //   justify-content: flex-start;
 
-    gap: 0.5rem;
-    padding: 0.5rem;
-    width: calc(var(--width) * 1px);
-    position: sticky;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 50;
+  //   gap: 0.5rem;
+  //   padding: 0.5rem;
+  //   width: calc(var(--width) * 1px);
+  //   position: sticky;
+  //   top: 0.5rem;
+  //   right: 0.5rem;
+  //   z-index: 50;
 
-    width: auto;
-    /* align-self: flex-end; */
-    align-self: flex-start;
-    order: 2;
-    margin-right: 1rem;
-    margin-top: 2rem;
-  }
+  //   width: auto;
+  //   /* align-self: flex-end; */
+  //   align-self: flex-start;
+  //   order: 2;
+  //   margin-right: 1rem;
+  //   margin-top: 2rem;
+  // }
 
   figure img {
     height: 99%;
@@ -341,5 +352,55 @@
     transform: rotate(270deg) scale(0.8) !important;
     margin-top: calc(var(--orient-margin) * 1px) !important;
     margin-bottom: calc(var(--orient-margin) * 1px) !important;
+  }
+
+  .page-menu {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    text-align: right;
+    // width: 11ch;
+    padding: 0;
+    margin: 0;
+  }  
+
+  .page-menu[open] .arrow i::before {
+    content: "\F077";
+  }
+
+
+  .page-menu summary {
+    list-style: none;
+    /*   padding: 0.5rem 0.75rem; */
+    background: #333;
+    color: #eee;
+
+    border: 2px solid #333;
+    background: #fff;
+    color: #333;
+
+    border-radius: 4px;
+
+    font-family: "Roboto Mono", monospace;
+  }
+
+  .page-menu > div {
+    margin-top: 0.5rem;
+    margin: 0.5rem auto;
+    font-size: 1.5rem;
+    --bs-btn-font-size: 1.5rem !important;
+  }
+
+  .page-menu .btn {
+    --bs-btn-font-size: 1.5rem;
+  }
+
+  .page-menu.deux {
+    width: auto;
+    text-align: center;
+  }
+
+  .width-min-content {
+    width: min-content;
   }
 </style>

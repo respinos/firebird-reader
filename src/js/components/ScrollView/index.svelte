@@ -6,6 +6,8 @@
   import Page from '../Page/index.svelte';
 
   const emitter = getContext('emitter');
+  const manifest = getContext('manifest');
+
   const queue = new PQueue({
     concurrency: 5,
     interval: 1000,
@@ -28,7 +30,7 @@
 
   const unloadPage = async function(pageDatum) {
     console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
-    manifestMap[pageDatum.seq].page.toggle(false);
+    itemMap[pageDatum.seq].page.toggle(false);
     pageDatum.loaded = false;
   }
 
@@ -51,27 +53,24 @@
   }
 
   const loadPages = function(currentSeq) {
-    if (manifestMap[currentSeq].timeout) {
-      clearTimeout(manifestMap[currentSeq].timeout);
-      manifestMap[currentSeq].timeout = null;
+    if (itemMap[currentSeq].timeout) {
+      clearTimeout(itemMap[currentSeq].timeout);
+      itemMap[currentSeq].timeout = null;
     }
     let previouslyInView = [];
-    manifest.items.forEach((item) => {
+    itemData.forEach((item) => {
       if ( item.inView ) {
         previouslyInView.push(item.seq);
       }
     })
     let newInView = [ currentSeq ];
-    // queue.add(() => { return queuePage(manifestMap[currentSeq]) }, Infinity);
     for (let seq = currentSeq - 1; seq >= currentSeq - 5; seq--) {
       if (seq > 0) {
-        // queue.add(() => { return queuePage(manifestMap[seq]) });
         newInView.push(seq);
       }
     }
     for (let seq = currentSeq + 1; seq <= currentSeq + 5; seq++) {
-      if (seq < manifest.total_items) {
-        // queue.add(() => { return queuePage(manifestMap[seq]) });
+      if (seq < manifest.totalSeq) {
         newInView.push(seq);
       }
     }
@@ -82,17 +81,17 @@
     console.log("$$$ DIFF", currentSeq, currentDiff, newDiff);
 
     currentDiff.forEach((seq) => {
-      manifestMap[seq].inView = false;
+      itemMap[seq].inView = false;
       // and push unto the unload stack
       unloadQueue.add(() => {
-        return unloadPage(manifestMap[seq])
+        return unloadPage(itemMap[seq])
       });
     })
 
     newDiff.forEach((seq) => {
-      manifestMap[seq].inView = true;
+      itemMap[seq].inView = true;
       queue.add(() => {
-        return queuePage(manifestMap[seq])
+        return queuePage(itemMap[seq])
       }, 
       { 
         priority: seq == currentSeq ? Infinity : 0 
@@ -105,7 +104,7 @@
 
   const handleIntersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
-    let pageDatum = manifestMap[seq];
+    let pageDatum = itemMap[seq];
     if ( detail.isIntersecting ) {
       pageDatum.intersectionRatio = detail.intersectionRatio;
       if ( pageDatum.loaded ) {
@@ -136,10 +135,10 @@
   const handleUnintersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
     console.log("- intersecting", seq);
-    manifestMap[seq].intersectionRatio = undefined;
-    if (manifestMap[seq].timeout) {
-      clearTimeout(manifestMap[seq].timeout);
-      manifestMap[seq].timeout = null;
+    itemMap[seq].intersectionRatio = undefined;
+    if (itemMap[seq].timeout) {
+      clearTimeout(itemMap[seq].timeout);
+      itemMap[seq].timeout = null;
     }
   })
 
@@ -156,11 +155,11 @@
       return;
     }
     for(let seq = start; seq <= end; seq += 1) {
-      if ( manifestMap[seq] && manifestMap[seq].inView == false ) {
-        manifestMap[seq].inView = true;
+      if ( itemMap[seq] && itemMap[seq].inView == false ) {
+        itemMap[seq].inView = true;
         console.log("$$ currentSeq PEEK", check, "<-", seq);
         queue.add(() => {
-          return queuePage(manifestMap[seq])
+          return queuePage(itemMap[seq])
         }, 
         { 
           priority: 0
@@ -173,11 +172,11 @@
     if ( currentInView.length == 0 ) { return; }
     let tmp = {intersectionRatio: 0, seq: 0};
     currentInView.forEach((seq) => {
-      let pageDatum = manifestMap[seq];
+      let pageDatum = itemMap[seq];
       if ( pageDatum.intersectionRatio === undefined ) { return ; }
       // console.log("/// ---", manifestMap[seq].intersectionRatio, manifestMap[seq].inView);
-      if ( manifestMap[seq].intersectionRatio > tmp.intersectionRatio ) {
-        tmp.intersectionRatio = manifestMap[seq].intersectionRatio;
+      if ( itemMap[seq].intersectionRatio > tmp.intersectionRatio ) {
+        tmp.intersectionRatio = itemMap[seq].intersectionRatio;
         tmp.seq = seq;
       }
     })
@@ -206,24 +205,31 @@
 
   let pageMap = {};
 
-  import manifest from '../../fixtures/manifest3.json';
-  const manifestMap = {};
+  
+  const itemData = [];
+  const itemMap = {};
   const currentInView = [];
 
   let baseHeight = Math.ceil(window.innerHeight * 0.90) * zoom;
-  manifest.items.forEach((item, index) => {
-    item.originalHeight = item.height;
-    item.originalWidth = item.width;
+  for(let seq = 1; seq <= manifest.totalSeq; seq++) {
+    let item = {};
+    item.id = manifest.id;
+    item.seq = seq;
+    item.originalHeight = item.height = manifest.meta(seq).height;
+    item.originalWidth = item.width = manifest.meta(seq).width;
+
+    item.useHeight = baseHeight;
+    item.useWidth = Math.ceil(baseHeight * ( item.width / item.height ));
+
     item.inView = false;
     item.loaded = false;
     item.page = null;
-    item.index = index;
-    item.zoom = 1;
-    manifestMap[item.seq] = item;
-    item.useHeight = baseHeight;
-    item.useWidth = Math.ceil(baseHeight * ( item.width / item.height ));
-  })
+    item.index = seq - 1;
 
+
+    itemData.push(item);
+    itemMap[item.seq] = item;
+  }
 
   const gotoPage = function(options) {
     let target;
@@ -237,8 +243,8 @@
     }
     if ( target == currentSeq ) { return ; }
     if ( target < 1 ) { target = 1 ; }
-    else if ( target > manifest.total_items ) {
-      target = manifest.total_items;
+    else if ( target > manifest.totalSeq ) {
+      target = manifest.totalSeq;
     }
 
     console.log("<< goto.page", options, target, currentSeq);
@@ -276,7 +282,7 @@
   // }
 
   onMount(() => {
-    console.log("-- itemCount", manifest.total_items);
+    console.log("-- itemCount", manifest.totalSeq);
 
     return () => {
       emitter.off('goto.page', gotoPage);
@@ -290,7 +296,7 @@
 
 <div class="view--container" bind:this={container}>
   <div class="inner">
-  {#each manifest.items as canvas}
+  {#each itemData as canvas}
   <Page 
     bind:this={canvas.page}
     {observer} 
@@ -325,6 +331,7 @@
     flex-direction: column;
     gap: 1rem;
     scroll-behavior: auto;
+    width: 100%;
   }
 
   /* .view--content {

@@ -1,6 +1,8 @@
 <script>
   import { onMount, getContext } from 'svelte';
+
   const emitter = getContext('emitter');
+  const manifest = getContext('manifest');
 
   let seq = 1;
 
@@ -39,9 +41,9 @@
   <form>
     <div class="d-flex align-items-center gap-1 bg-dark text-light p-1 px-2 rounded">
       <span>#</span>
-      <input bind:value={seq} type="number" class="form-control text-center" min="1" max="102" on:change={() => goto({ seq: seq })} on:blur={() => goto({ seq: seq })} />
+      <input bind:value={seq} type="number" class="form-control text-center" min="1" max={manifest.totalSeq} on:change={() => goto({ seq: seq })} on:blur={() => goto({ seq: seq })} />
       <span>/</span>
-      <span>102</span>
+      <span>{manifest.totalSeq}</span>
     </div>
   </form>
 
@@ -99,7 +101,8 @@
   .view--toolbar {
     position: absolute;
     bottom: 1rem;
-    right: 1rem;
+    /* left: 0.5rem; */
+    right: 0.5rem;
     display: flex;
     align-items: center;
     padding: 0.25rem;
@@ -107,6 +110,7 @@
     justify-content: flex-end;
     z-index: 100;
     gap: 0.5rem;
+    box-shadow: var(--shadow-elevation-medium);
   }
 
 </style>
