@@ -16,7 +16,7 @@
     <ul class="list-unstyled">
       {#each externalLinks.filter(link => link.type == 'oclc') as link}
         <li>
-          <a href="https://www.worldcat.org/oclc/{link.value}">Find in a library</a>
+          <a href="{link.href}">Find in a library</a>
         </li>
       {/each}
       {#each externalLinks.filter(link => link.type == 'pod') as link}
