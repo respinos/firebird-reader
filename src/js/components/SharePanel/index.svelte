@@ -11,7 +11,9 @@
   let btnShareHandle;
   let shareHandleLink;
   let btnShareHandleLink;
+  let btnCodeBlock;
   let modal;
+  let modalBody;
 
   // initial seq
   let seq = manifest.currentSeq;
@@ -31,13 +33,29 @@
     return this.getAttribute('aria-label');
   }
 
+  function copySelection(trigger, el) {
+    el.select();
+    document.execCommand('copy');
+    console.log("copySelection", trigger.bs, trigger.bs.setContent);
+    // let tooltip = bootstrap.Tooltip.getInstance(trigger);
+    trigger.bs.setContent({ '.tooltip-inner': 'Copied' });
+  }
+
   onMount(() => {
     btnShareHandle.bs = new bootstrap.Tooltip(btnShareHandle, { title: getLabel });
     btnShareHandleLink.bs = new bootstrap.Tooltip(btnShareHandleLink, { title: getLabel });
+    btnCodeBlock.bs = new bootstrap.Tooltip(btnCodeBlock, { title: getLabel, container: modalBody });
+
+    [ btnShareHandle, btnShareHandleLink, btnCodeBlock ].forEach((el) => {
+      el.addEventListener('hidden.bs.tooltip', () => {
+        el.bs.setContent({ '.tooltip-inner': el.getAttribute('aria-label') });
+      })
+    })
 
     return () => {
       btnShareHandle.bs.dispose();
       btnShareHandleLink.bs.dispose();
+      btnCodeBlock.bs.dispose();
       emitter.off('update.seq', updateSeq);
     }
   })
@@ -62,7 +80,9 @@
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy permanent link"
-          bind:this={btnShareHandle}>
+          data-bs-placement="right"
+          bind:this={btnShareHandle}
+          on:click={() => copySelection(btnShareHandle, shareHandle)}>
           <i class="fa-solid fa-copy" aria-hidden="true"></i>
         </button>
       </div>
@@ -81,7 +101,9 @@
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy link to this page scan"
-          bind:this={btnShareHandleLink}>
+          data-bs-placement="right"
+          bind:this={btnShareHandleLink}
+          on:click={() => copySelection(btnShareHandleLink, shareHandleLink)}>
           <i class="fa-solid fa-copy" aria-hidden="true"></i>
         </button>
       </div>
@@ -94,19 +116,28 @@
 <Modal bind:this={modal}>
   <svelte:fragment slot="modal-title">Embed this item</svelte:fragment>
   <svelte:fragment slot="modal-body">
-    <div class="mb-3">
+    <div class="mb-3" bind:this={modalBody}>
       <p id="embed-help-info">
         Copy the code below and paste it into the HTML of any website or blog.
       </p>
       <label for="embed-codeblock" class="visually-hidden">Code Block</label>
-      <textarea 
-        class="form-control" 
-        id="embed-codeblock" 
-        aria-describedby="embed-help-info" 
-        rows="3"
-        bind:this={codeBlock}
-        bind:value={codeBlockText[view]}
-        on:click={() => codeBlock.select()}></textarea>
+      <div class="d-flex align-items-start gap-2">
+        <textarea 
+          class="form-control" 
+          id="embed-codeblock" 
+          aria-describedby="embed-help-info" 
+          rows="3"
+          bind:this={codeBlock}
+          bind:value={codeBlockText[view]}
+          on:click={() => codeBlock.select()}></textarea>
+        <button 
+          class="btn btn-outline-dark" 
+          aria-label="Copy iframe code"
+          bind:this={btnCodeBlock}
+          on:click={() => copySelection(codeBlock)}>
+          <i class="fa-solid fa-copy" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
     <div class="mb-3">
       <div class="form-check form-check-inline">
