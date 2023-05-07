@@ -36,8 +36,6 @@
   function copySelection(trigger, el) {
     el.select();
     document.execCommand('copy');
-    console.log("copySelection", trigger.bs, trigger.bs.setContent);
-    // let tooltip = bootstrap.Tooltip.getInstance(trigger);
     trigger.bs.setContent({ '.tooltip-inner': 'Copied' });
   }
 
