@@ -18,6 +18,7 @@
 	import SharePanel from './components/SharePanel';
 	import CollectionsPanel from './components/CollectionsPanel';
 	import SearchInItemPanel from './components/SearchInItemPanel';
+	import DownloadPanel from './components/DownloadPanel';
 
 	import WebsiteHeader from '~firebird-common/src/js/components/Header';
 
@@ -29,8 +30,6 @@
 	setContext('manifest', manifest);
 
 	export let view = 'reader';
-
-	console.log("AHOY", view, location);
 
 	onMount(() => {
 
@@ -46,13 +45,7 @@
 	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5 pt-3 ps-2 pe-3 bg-white">
 		<div class="accordion" id="controls">
 			<MetadataPanel></MetadataPanel>
-			<Panel parent="#controls">
-				<i class="fa-solid fa-download" slot="icon"></i>
-				<svelte:fragment slot="title">Download</svelte:fragment>
-				<svelte:fragment slot="body">
-					<p>This is a download form.</p>
-				</svelte:fragment>
-			</Panel>
+			<DownloadPanel></DownloadPanel>
 			{#if view == 'reader'}
 			<SearchInItemPanel></SearchInItemPanel>
 			<JumpToSectionPanel></JumpToSectionPanel>
