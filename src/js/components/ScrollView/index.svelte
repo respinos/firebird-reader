@@ -134,7 +134,7 @@
 
   const handleUnintersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
-    console.log("- intersecting", seq);
+    // console.log("- intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
     if (itemMap[seq].timeout) {
       clearTimeout(itemMap[seq].timeout);

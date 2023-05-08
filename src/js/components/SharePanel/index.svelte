@@ -36,24 +36,26 @@
   function copySelection(trigger, el) {
     el.select();
     document.execCommand('copy');
-    trigger.bs.setContent({ '.tooltip-inner': 'Copied' });
+    let tooltip = bootstrap.Tooltip.getInstance(trigger);
+    tooltip.setContent({ '.tooltip-inner': 'Copied' });
   }
 
   onMount(() => {
-    btnShareHandle.bs = new bootstrap.Tooltip(btnShareHandle, { title: getLabel });
-    btnShareHandleLink.bs = new bootstrap.Tooltip(btnShareHandleLink, { title: getLabel });
-    btnCodeBlock.bs = new bootstrap.Tooltip(btnCodeBlock, { title: getLabel, container: modalBody });
+    // btnShareHandle.bs = new bootstrap.Tooltip(btnShareHandle, { title: getLabel });
+    // btnShareHandleLink.bs = new bootstrap.Tooltip(btnShareHandleLink, { title: getLabel });
+    // btnCodeBlock.bs = new bootstrap.Tooltip(btnCodeBlock, { title: getLabel, container: modalBody });
 
     [ btnShareHandle, btnShareHandleLink, btnCodeBlock ].forEach((el) => {
       el.addEventListener('hidden.bs.tooltip', () => {
-        el.bs.setContent({ '.tooltip-inner': el.getAttribute('aria-label') });
+        let tooltip = bootstrap.Tooltip.getInstance(el);
+        tooltip.setContent({ '.tooltip-inner': el.getAttribute('aria-label') });
       })
     })
 
     return () => {
-      btnShareHandle.bs.dispose();
-      btnShareHandleLink.bs.dispose();
-      btnCodeBlock.bs.dispose();
+      // btnShareHandle.bs.dispose();
+      // btnShareHandleLink.bs.dispose();
+      // btnCodeBlock.bs.dispose();
       emitter.off('update.seq', updateSeq);
     }
   })
@@ -79,6 +81,7 @@
           class="btn btn-outline-dark" 
           aria-label="Copy permanent link"
           data-bs-placement="right"
+          data-bs-toggle="tooltip"
           bind:this={btnShareHandle}
           on:click={() => copySelection(btnShareHandle, shareHandle)}>
           <i class="fa-solid fa-copy" aria-hidden="true"></i>
@@ -100,6 +103,7 @@
           class="btn btn-outline-dark" 
           aria-label="Copy link to this page scan"
           data-bs-placement="right"
+          data-bs-toggle="tooltip"
           bind:this={btnShareHandleLink}
           on:click={() => copySelection(btnShareHandleLink, shareHandleLink)}>
           <i class="fa-solid fa-copy" aria-hidden="true"></i>
@@ -131,6 +135,7 @@
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy iframe code"
+          data-bs-toggle="tooltip"
           bind:this={btnCodeBlock}
           on:click={() => copySelection(codeBlock)}>
           <i class="fa-solid fa-copy" aria-hidden="true"></i>

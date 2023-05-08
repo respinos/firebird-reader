@@ -30,6 +30,12 @@ hathi-website-header  {
   grid-template-rows: minmax(0, 1fr);
 }
 
+.pane--search {
+  display: grid;
+  grid-template-rows: 1fr;
+  background: white !important;
+}
+
 .accordion-body p:last-child {
   margin-bottom: 0;
 }

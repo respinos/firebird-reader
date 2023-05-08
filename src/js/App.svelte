@@ -4,8 +4,11 @@
 	import { Manifest } from './lib/manifest';
 
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
+	
 	import View from './components/ScrollView/index.svelte';
 	import ViewToolbar from './components/ViewToolbar';
+	import SearchView from './components/SearchView';
+
 	import Panel from './components/Panel';
 	
 	import MetadataPanel from './components/MetadataPanel';
@@ -14,6 +17,7 @@
 	import GetThisItemPanel from './components/GetThisItemPanel';
 	import SharePanel from './components/SharePanel';
 	import CollectionsPanel from './components/CollectionsPanel';
+	import SearchInItemPanel from './components/SearchInItemPanel';
 
 	import WebsiteHeader from '~firebird-common/src/js/components/Header';
 
@@ -23,6 +27,10 @@
 
 	const manifest = new Manifest(HT.params);
 	setContext('manifest', manifest);
+
+	export let view = 'reader';
+
+	console.log("AHOY", view, location);
 
 	onMount(() => {
 
@@ -45,37 +53,23 @@
 					<p>This is a download form.</p>
 				</svelte:fragment>
 			</Panel>
-			<Panel parent="#controls" expanded={true}>
-				<i class="fa-solid fa-magnifying-glass" slot="icon"></i>
-				<svelte:fragment slot="title">Search in This Text</svelte:fragment>
-				<svelte:fragment slot="body">
-					<form>
-						<div class="d-flex flex-nowrap gap-1">
-							<div class="flex-grow-1">
-								<input type="text" class="form-control" placeholder="..." />
-							</div>
-							<div class="d-flex flex-nowrap gap-1">
-								<button class="btn btn-outline-secondary">
-									<i class="fa-solid fa-magnifying-glass"></i>
-								</button>
-								<button class="btn btn-outline-secondary">
-									<i class="fa-regular fa-circle-xmark"></i>
-								</button>
-							</div>
-						</div>
-					</form>
-				</svelte:fragment>
-			</Panel>
+			{#if view == 'reader'}
+			<SearchInItemPanel></SearchInItemPanel>
 			<JumpToSectionPanel></JumpToSectionPanel>
+			{/if}
 			<GetThisItemPanel></GetThisItemPanel>
 			<CollectionsPanel></CollectionsPanel>
 			<SharePanel></SharePanel>
 		</div>
 		<VersionPanel></VersionPanel>
 	</Pane>
-	<Pane size={75} class="pane--reader">
+	<Pane size={75} class="pane--{view}">
+		{#if view == 'search'}
+		<SearchView></SearchView>
+		{:else}
 		<ViewToolbar></ViewToolbar>
 		<View></View>
+		{/if}
 	</Pane>
 </Splitpanes>
 

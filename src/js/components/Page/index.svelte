@@ -362,6 +362,7 @@
     // width: 11ch;
     padding: 0;
     margin: 0;
+    z-index: 50;
   }  
 
   .page-menu[open] .arrow i::before {
