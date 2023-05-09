@@ -10,7 +10,7 @@
 
   const queue = new PQueue({
     concurrency: 5,
-    interval: 1000,
+    interval: 500,
   });
 
   const unloadQueue = new PQueue({
@@ -31,12 +31,17 @@
   const unloadPage = async function(pageDatum) {
     console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
     itemMap[pageDatum.seq].page.toggle(false);
-    pageDatum.loaded = false;
+    currentInView.delete(pageDatum.seq);
+    pageDatum.loaded = pageDatum.inView = false;
+    itemMap[pageDatum.seq].timeout = null;
   }
 
   const loadPage = async function(pageDatum, delta) {
     if (! pageDatum.loaded) {
       console.log(":: loading", pageDatum.seq, queue.size, "->", pageDatum);
+      // if ( ! pageDatum.peeked ) {
+      //   pageDatum.loaded = true;
+      // }
       pageDatum.loaded = true;
       pageDatum.page.toggle(true);
     } else {
@@ -57,6 +62,7 @@
       clearTimeout(itemMap[currentSeq].timeout);
       itemMap[currentSeq].timeout = null;
     }
+    // if (itemMap[currentSeq].peeked) { itemMap[currentSeq].peeked = false;}
     let previouslyInView = [];
     itemData.forEach((item) => {
       if ( item.inView ) {
@@ -78,15 +84,15 @@
     let currentDiff = previouslyInView.filter(x => !newInView.includes(x));
     let newDiff = newInView.filter(x => !previouslyInView.includes(x));
 
-    console.log("$$$ DIFF", currentSeq, currentDiff, newDiff);
+    // console.log("$$$ DIFF", currentSeq, currentDiff, newDiff);
 
-    currentDiff.forEach((seq) => {
-      itemMap[seq].inView = false;
-      // and push unto the unload stack
-      unloadQueue.add(() => {
-        return unloadPage(itemMap[seq])
-      });
-    })
+    // currentDiff.forEach((seq) => {
+    //   itemMap[seq].inView = false;
+    //   // and push unto the unload stack
+    //   unloadQueue.add(() => {
+    //     return unloadPage(itemMap[seq])
+    //   });
+    // })
 
     newDiff.forEach((seq) => {
       itemMap[seq].inView = true;
@@ -98,12 +104,13 @@
       })
     });
 
-    currentInView.length = 0;
-    currentInView.push(...newInView);
+    // currentInView.length = 0;
+    // currentInView.push(...newInView);
   }
 
   const handleIntersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
+    // console.log("$$ looking for currentSeq", seq);
     let pageDatum = itemMap[seq];
     if ( detail.isIntersecting ) {
       pageDatum.intersectionRatio = detail.intersectionRatio;
@@ -126,37 +133,52 @@
         }, 1000);
         // loadPages(seq);
       }
+      // currentInView.push(seq);
+      currentInView.add(seq);
     } else {
-      console.log("# intersecting", seq, detail.isIntersecting, detail.intersectionRatio, pageDatum.isVisible);
+      console.log("? intersecting", seq, detail.isIntersecting, detail.intersectionRatio, pageDatum.isVisible);
     }
+    console.log("!! currentInView", Array.from(currentInView));
     setCurrentSeq();
   })
 
   const handleUnintersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
-    // console.log("- intersecting", seq);
+    console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
     if (itemMap[seq].timeout) {
       clearTimeout(itemMap[seq].timeout);
       itemMap[seq].timeout = null;
     }
+
+    unloadQueue.add(() => {
+      return unloadPage(itemMap[seq])
+    });
+
+    // itemMap[seq].timeout = setTimeout(() => {
+    //   unloadPage(itemMap[seq]);
+    // })
   })
 
   const peekPages = function(curentSeq, check) {
     let start, end, delta;
-    if ( check > 0.7 ) {
-      start = currentSeq + 1;
-      end = currentSeq + 5;
-    } else if ( check < 0.25 ) {
-      start = currentSeq - 5;
-      end = currentSeq - 1;
-    } else {
-      // no reason to peek
-      return;
-    }
+    // if ( check > 0.7 ) {
+    //   start = currentSeq + 1;
+    //   end = currentSeq + 5;
+    // } else if ( check < 0.25 ) {
+    //   start = currentSeq - 5;
+    //   end = currentSeq - 1;
+    // } else {
+    //   // no reason to peek
+    //   return;
+    // }
+    start = currentSeq - 2; end = currentSeq + 2;
+    // if ( itemMap[start] && itemMap[start].loaded ) { return ; }
+    // if ( ! itemMap[start] ) { return; }
+    console.log("$$ currentSeq PEEK", currentSeq, start, end);
     for(let seq = start; seq <= end; seq += 1) {
       if ( itemMap[seq] && itemMap[seq].inView == false ) {
-        itemMap[seq].inView = true;
+        itemMap[seq].peeked = true;
         console.log("$$ currentSeq PEEK", check, "<-", seq);
         queue.add(() => {
           return queuePage(itemMap[seq])
@@ -171,7 +193,8 @@
   const setCurrentSeq = function() {
     if ( currentInView.length == 0 ) { return; }
     let tmp = {intersectionRatio: 0, seq: 0};
-    currentInView.forEach((seq) => {
+    let possibles = Array.from(currentInView).sort((a,b) => a-b);
+    possibles.forEach((seq) => {
       let pageDatum = itemMap[seq];
       if ( pageDatum.intersectionRatio === undefined ) { return ; }
       // console.log("/// ---", manifestMap[seq].intersectionRatio, manifestMap[seq].inView);
@@ -180,10 +203,10 @@
         tmp.seq = seq;
       }
     })
-    if ( currentSeq != tmp.seq ) {
+    if ( currentSeq != tmp.seq && tmp.seq > 0 ) {
       currentSeq = tmp.seq;
-      let check = currentInView.indexOf(currentSeq) / currentInView.length;
-      console.log("$$ currentSeq =", currentSeq, check);
+      let check = possibles.indexOf(currentSeq) / possibles.length;
+      console.log("$$ currentSeq =", currentSeq, check, possibles);
       peekPages(currentSeq, check);
       emitter.emit('update.seq', currentSeq);
     }
@@ -208,7 +231,7 @@
   
   const itemData = [];
   const itemMap = {};
-  const currentInView = [];
+  const currentInView = new Set;
 
   let baseHeight = Math.ceil(window.innerHeight * 0.90) * zoom;
   for(let seq = 1; seq <= manifest.totalSeq; seq++) {

@@ -1,13 +1,16 @@
 <script>
   import { onMount, setContext } from 'svelte';
+	import { writable } from 'svelte/store';
 
 	import { Manifest } from './lib/manifest';
 
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
 	
-	import View from './components/ScrollView/index.svelte';
 	import ViewToolbar from './components/ViewToolbar';
 	import SearchView from './components/SearchView';
+	import ScrollView from './components/ScrollView/index.svelte';
+	import FlipView from './components/FlipView';
+	import GridView from './components/GridView';
 
 	import Panel from './components/Panel';
 	
@@ -29,10 +32,18 @@
 	const manifest = new Manifest(HT.params);
 	setContext('manifest', manifest);
 
-	export let view = 'reader';
+	const views = {};
+	views['1up'] = ScrollView;
+	views['2up'] = FlipView;
+	views['thumb'] = GridView;
+
+	export let view = '1up';
+
+	const currentView = writable(view);
+
+	$: viewClass = ( view == 'search' ) ? 'search' : 'reader';
 
 	onMount(() => {
-
 		const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
 		const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
 	})
@@ -56,12 +67,12 @@
 		</div>
 		<VersionPanel></VersionPanel>
 	</Pane>
-	<Pane size={75} class="pane--{view}">
+	<Pane size={75} class="pane--{viewClass}">
 		{#if view == 'search'}
 		<SearchView></SearchView>
 		{:else}
 		<ViewToolbar></ViewToolbar>
-		<View></View>
+		<svelte:component this={views[view]}></svelte:component>
 		{/if}
 	</Pane>
 </Splitpanes>

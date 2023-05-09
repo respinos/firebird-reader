@@ -38,7 +38,7 @@
   export function toggle(visible) {
     isVisible = visible;
     if (visible) {
-      timeout = setTimeout(loadImage, 1000);
+      timeout = setTimeout(loadImage, 500);
       // loadImage();
     } else {
       unloadImage();
@@ -52,7 +52,7 @@
 
   export const loadImage = function(reload=false) {
     timeout = null;
-    if ( image.src != defaultThumbnailSrc || reload ) { console.log("AHOY DUPE", image.src); return ; }
+    if ( image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
     let img_src = `/cgi/imgsrv/image?id=${canvas.id}&seq=${seq}&height=${height}`;
     fetch(img_src)
@@ -82,6 +82,9 @@
 
   export const unloadImage = function() {
     URL.revokeObjectURL(objectUrl);
+    if ( image ) {
+      image.src = defaultThumbnailSrc;
+    }
     // console.log("---- unload", seq, image);
   }
 
@@ -233,13 +236,13 @@
     </div>
   </details>
   <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
-    {#if true || isVisible}
+    {#if isVisible}
     <img bind:this={image} src={defaultThumbnailSrc} alt="" style:height={imgHeight} style:width={imgWidth} />
+    {/if}
     <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
     <figcaption class="visually-hidden">
       <PageText hidden={true} image={image} canvas={canvas} seq={seq}></PageText>
     </figcaption>
-    {/if}
   </figure>
 </div>
 
