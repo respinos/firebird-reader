@@ -8,6 +8,7 @@
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
+  export let container;
 
   const queue = new PQueue({
     concurrency: 5,
@@ -26,7 +27,7 @@
   })
 
   const { observer, io } = createObserver({
-    root: null,
+    root: container,
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
     rootMargin: `200% 0% 200% 0%`
   });
@@ -220,7 +221,6 @@
     return currentSeq;
   }
 
-  let container;
   let content;
 
   let currentSeq = 1;
@@ -316,12 +316,13 @@
   })
 
   onDestroy(() => {
-    io.disconnect();
+    if ( io ) {
+      io.disconnect();
+    }
   })
 </script>
 
-<div class="view--container" bind:this={container}>
-  <div class="inner">
+<div class="inner">
   {#each itemData as canvas}
   <Page 
     bind:this={canvas.page}
@@ -333,24 +334,9 @@
     bind:zoom={zoom}
     {thumbnailer}></Page>
   {/each}
-  </div>
 </div>
 
 <style>
-
-  .view--container {
-    grid-row: 1/2;
-    min-height: 0;
-    overflow: auto;
-
-    /* display: grid;
-    grid-template-rows: minmax(0, 1fr); */
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
 
   .inner {
     display: flex;
@@ -359,9 +345,4 @@
     scroll-behavior: auto;
     width: 100%;
   }
-
-  /* .view--content {
-    grid-area: 1/2;
-    min-height: 0;
-  } */
 </style>

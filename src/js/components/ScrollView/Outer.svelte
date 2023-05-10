@@ -3,33 +3,33 @@
 	import { createObserver } from 'svelte-use-io';
   import PQueue from "p-queue";
 
-  // import Inner from './Inner.svelte';
-  import Page from '../Page/index.svelte';
+  import Inner from './Inner.svelte';
+  // import Page from '../Page/index.svelte';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
 
-  const queue = new PQueue({
-    concurrency: 5,
-    interval: 500,
-  });
+  // const queue = new PQueue({
+  //   concurrency: 5,
+  //   interval: 500,
+  // });
 
-  const unloadQueue = new PQueue({
-    concurrency: 1,
-    interval: 5000,
-  })
+  // const unloadQueue = new PQueue({
+  //   concurrency: 1,
+  //   interval: 5000,
+  // })
 
-  const thumbnailer = new PQueue({
-    concurrency: 1,
-    intervalCap: 1,
-    interval: 1500,
-  })
+  // const thumbnailer = new PQueue({
+  //   concurrency: 1,
+  //   intervalCap: 1,
+  //   interval: 1500,
+  // })
 
-  const { observer, io } = createObserver({
-    root: null,
-    threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
-    rootMargin: `200% 0% 200% 0%`
-  });
+  // const { observer, io } = createObserver({
+  //   root: null,
+  //   threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
+  //   rootMargin: `200% 0% 200% 0%`
+  // });
 
   const unloadPage = async function(pageDatum) {
     console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
@@ -314,26 +314,10 @@
       emitter.off('goto.page', gotoPage);
     }
   })
-
-  onDestroy(() => {
-    io.disconnect();
-  })
 </script>
 
 <div class="view--container" bind:this={container}>
-  <div class="inner">
-  {#each itemData as canvas}
-  <Page 
-    bind:this={canvas.page}
-    {observer} 
-    {canvas} 
-    {handleIntersecting}
-    {handleUnintersecting}
-    seq={canvas.seq} 
-    bind:zoom={zoom}
-    {thumbnailer}></Page>
-  {/each}
-  </div>
+  <Inner {container}></Inner>
 </div>
 
 <style>
@@ -351,17 +335,4 @@
     align-items: center;
     gap: 1rem;
   }
-
-  .inner {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    scroll-behavior: auto;
-    width: 100%;
-  }
-
-  /* .view--content {
-    grid-area: 1/2;
-    min-height: 0;
-  } */
 </style>

@@ -211,7 +211,7 @@
   on:unintersecting={handleUnintersecting}>
 
   <details class="page-menu">
-    <summary>
+    <summary class="bg-dark text-white">
       <div class="d-flex align-items-center justify-content-between shadow px-3 py-2 gap-2 rounded">
         <span class="seq">#{seq}</span>
         <span class="arrow">
@@ -219,18 +219,18 @@
         </span>
       </div>
     </summary>
-    <div class="d-flex flex-column gap-1 align-items-center me-0 width-min-content">
-      <button type="button" class="btn btn-dark"><i class="fa-regular fa-square"></i></button>
-      <button type="button" class="btn btn-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+    <div class="d-flex flex-column gap-1 align-items-center xxme-0 width-min-content xxbg-vaguely-white">
+      <button type="button" class="btn btn-light border border-dark"><i class="fa-regular fa-square"></i></button>
+      <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
       <div class="btn-group-vertical" role="group">
-        <button type="button" class="btn btn-dark" on:click={() => updateZoom(0.5)}>
+        <button type="button" class="btn btn-light border border-dark" on:click={() => updateZoom(0.5)}>
           <i class="fa-solid fa-plus" aria-hidden="true"></i>
         </button>
-        <button type="button" class="btn btn-dark" on:click={() => updateZoom(-0.5)}>
+        <button type="button" class="btn btn-light border border-dark" on:click={() => updateZoom(-0.5)}>
           <i class="fa-solid fa-minus" aria-hidden="true"></i>
         </button>
       </div>
-      <button type="button" class="btn btn-dark" on:click={rotateScan}>
+      <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}>
         <i class="fa-solid fa-download" aria-hidden="true"></i>
       </button>
     </div>
@@ -358,7 +358,8 @@
   }
 
   .page-menu {
-    position: absolute;
+    position: sticky;
+    order: 2;
     top: 0.5rem;
     right: 0.5rem;
     text-align: right;
@@ -366,6 +367,8 @@
     padding: 0;
     margin: 0;
     z-index: 50;
+    align-self: flex-start;
+    margin-left: -5rem;
   }  
 
   .page-menu[open] .arrow i::before {
@@ -406,5 +409,9 @@
 
   .width-min-content {
     width: min-content;
+  }
+
+  .bg-vaguely-white {
+    background-color: rgba(255,255,255,0.5) !important;
   }
 </style>

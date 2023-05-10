@@ -1,5 +1,6 @@
 <script>
   import { onMount, getContext } from 'svelte';
+	import { writable } from 'svelte/store';
 
   import Panel from '../Panel';
   import Modal from '~firebird-common/src/js/components/Modal';
@@ -13,6 +14,7 @@
 
   emitter.on('update.seq', updateSeq);
 
+  let currentView = manifest.currentView;
   let currentSeq = manifest.currentSeq;
   let format = 'pdf';
   let range = manifest.allowFullDownload ? 'volume' : 'current-page';
@@ -255,7 +257,7 @@
 
 </script>
 
-<Panel parent="#controls" expanded={true}>
+<Panel parent="#controls">
   <i class="fa-solid fa-download" slot="icon"></i>
   <svelte:fragment slot="title">Download</svelte:fragment>
   <svelte:fragment slot="body">
@@ -325,6 +327,7 @@
 
       <fieldset class="mb-3">
         <legend class="fs-5">Range</legend>
+        {#if $currentView == '1up'}
         <div class="form-check">
           <input name="range" 
             class="form-check-input" 
@@ -337,6 +340,32 @@
             Current page scan (#{currentSeq})
           </label>
         </div>
+        {:else if $currentView == '2up'}
+        <div class="form-check">
+          <input name="range" 
+            class="form-check-input" 
+            type="radio" 
+            value="current-page" 
+            id="range-current-verso-page" 
+            disabled={format == 'epub' || format == 'plaintext-zip'}
+            bind:group={range}>
+          <label class="form-check-label" for="range-current-verso-page">
+            Current verso page scan (#{currentSeq})
+          </label>
+        </div>
+        <div class="form-check">
+          <input name="range" 
+            class="form-check-input" 
+            type="radio" 
+            value="current-page" 
+            id="range-current-recto-page" 
+            disabled={format == 'epub' || format == 'plaintext-zip'}
+            bind:group={range}>
+          <label class="form-check-label" for="range-current-recto-page">
+            Current recto page scan (#{currentSeq+1})
+          </label>
+        </div>
+        {/if}
         {#if manifest.allowFullDownload}
         <div class="form-check">
           <input name="range"  class="form-check-input" type="radio" value="volume" id="range-download-volume" bind:group={range}>

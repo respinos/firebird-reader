@@ -8,7 +8,7 @@
 	
 	import ViewToolbar from './components/ViewToolbar';
 	import SearchView from './components/SearchView';
-	import ScrollView from './components/ScrollView/index.svelte';
+	import ScrollView from './components/ScrollView/Outer.svelte';
 	import FlipView from './components/FlipView';
 	import GridView from './components/GridView';
 
@@ -40,8 +40,14 @@
 	export let view = '1up';
 
 	const currentView = writable(view);
+	manifest.currentView = currentView;
 
 	$: viewClass = ( view == 'search' ) ? 'search' : 'reader';
+
+	window.switchView = function(v) {
+		view = v;
+		$currentView = view;
+	}
 
 	onMount(() => {
 		const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
@@ -57,7 +63,7 @@
 		<div class="accordion" id="controls">
 			<MetadataPanel></MetadataPanel>
 			<DownloadPanel></DownloadPanel>
-			{#if view == 'reader'}
+			{#if view != 'search'}
 			<SearchInItemPanel></SearchInItemPanel>
 			<JumpToSectionPanel></JumpToSectionPanel>
 			{/if}
