@@ -1,6 +1,8 @@
 <script>
   import { onMount, getContext } from 'svelte';
 
+  import ViewMenu from './ViewMenu.svelte';
+
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
 
@@ -47,25 +49,7 @@
     </div>
   </form>
 
-  <div class="btn-group dropup">
-    <button type="button" class="btn btn-outline-dark dropdown-toggle text-uppercase" data-bs-toggle="dropdown" aria-expanded="false">
-      <i class="fa-solid fa-up-down"></i>
-      View
-    </button>
-    <ul class="dropdown-menu">
-      <li>
-        <span class="dropdown-header">
-          <span>Page Format</span>
-        </span>
-      </li>
-      <li>
-        <button type="button" class="dropdown-item" href="#plaintext">
-          <i class="fa-regular fa-file-lines"></i>
-          <span>Plain Text</span>
-        </button>
-      </li>
-    </ul>
-  </div>
+  <ViewMenu></ViewMenu>
 
   <div class="btn-group" role="group" aria-label="Zoom">
     <button type="button" class="btn btn-outline-dark" on:click={() => zoom(1)}>
@@ -97,7 +81,7 @@
 
 </div>
 
-<style>
+<style lang="scss">
   .view--toolbar {
     position: absolute;
     bottom: 1rem;

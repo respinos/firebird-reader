@@ -6,7 +6,7 @@
 
 	import { Pane, Splitpanes } from 'svelte-splitpanes';
 	
-	import ViewToolbar from './components/ViewToolbar';
+	import ViewerToolbar from './components/ViewerToolbar';
 	import SearchView from './components/SearchView';
 	import ScrollView from './components/ScrollView/Outer.svelte';
 	import FlipView from './components/FlipView';
@@ -37,10 +37,13 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '1up';
+	export let view = '2up';
+	export let format = 'image';
 
 	const currentView = writable(view);
+	const currentFormat = writable(format);
 	manifest.currentView = currentView;
+	manifest.currentFormat = currentFormat;
 
 	$: viewClass = ( view == 'search' ) ? 'search' : 'reader';
 
@@ -77,8 +80,8 @@
 		{#if view == 'search'}
 		<SearchView></SearchView>
 		{:else}
-		<ViewToolbar></ViewToolbar>
-		<svelte:component this={views[view]}></svelte:component>
+		<ViewerToolbar></ViewerToolbar>
+		<svelte:component this={views[$currentView]}></svelte:component>
 		{/if}
 	</Pane>
 </Splitpanes>

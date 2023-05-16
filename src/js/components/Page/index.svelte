@@ -2,8 +2,10 @@
 
   import { onMount, getContext } from 'svelte';
   import { afterUpdate } from 'svelte';
+  import { get } from 'svelte/store';
 
   const emitter = getContext('emitter');
+  const manifest = getContext('manifest');
 
   import PageText from '../PageText/index.svelte';
   import SearchHighlights from '../SearchHighlights/index.svelte';
@@ -14,10 +16,16 @@
   export let handleIntersecting;
   export let handleUnintersecting;
 
+  const view = manifest.currentView;
+
   export let seq;
   export let canvas;
   export let zoom;
-  export let style;
+  export let style = null;
+  export let area = null;
+
+  export let innerHeight = window.innerHeight;
+  export let innerWidth = window.innerWidth;
 
   let pageZoom = 1;
 
@@ -149,7 +157,7 @@
 
   function calculateRatio(canvas) {
     if ( canvas.height > canvas.width ) {
-      return window.innerHeight / canvas.height;
+      return innerHeight / canvas.height;
     }
     let width = window.innerWidth * 0.6;
     let ratio = width / canvas.width;
@@ -188,7 +196,7 @@
   let testWidth, testHeight;
 
   onMount(() => {
-    console.log("-- page.mount", seq);
+    console.log("-- page.mount", seq, style);
 
     return () => { 
       console.log("-- page.unmount", seq);
@@ -202,15 +210,19 @@
 
 </script>
 
-<div class="page" {style} data-seq={seq} 
+<div class="page" {style} data-seq={seq}
   style:--height={Math.ceil(scanHeight)}
   style:--width={Math.ceil(scanWidth)}
+  class:view-2up={$view == '2up'}
+  class:view-1up={$view == '1up'}
+  class:verso={area == 'verso'}
+  class:recto={area == 'recto'}
   use:observer 
   id="id{seq}" 
   on:intersecting={handleIntersecting} 
   on:unintersecting={handleUnintersecting}>
 
-  <details class="page-menu">
+  <details class="page-menu" class:sticky={get(manifest.currentView) == '1up'}>
     <summary class="bg-dark text-white">
       <div class="d-flex align-items-center justify-content-between shadow px-3 py-2 gap-2 rounded">
         <span class="seq">#{seq}</span>
@@ -241,7 +253,7 @@
     {/if}
     <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
     <figcaption class="visually-hidden">
-      <PageText hidden={true} image={image} canvas={canvas} seq={seq}></PageText>
+      <PageText hidden={true} canvas={canvas} seq={seq}></PageText>
     </figcaption>
   </figure>
 </div>
@@ -260,6 +272,14 @@
 
     /* overflow: hidden; */
     position: relative;
+
+    &.verso {
+      grid-area: verso;
+    }
+
+    &.recto {
+      grid-area: recto;
+    }
   }
 
   .frame {
@@ -272,6 +292,7 @@
     height: calc(var(--height) * 0.9 * 1px);
     width: calc(var(--width) * 0.9 * 1px);
     max-width: 100%;
+    max-height: 100%; // maybe?
 
     /* max-width: 400px; */
 
@@ -358,18 +379,57 @@
   }
 
   .page-menu {
-    position: sticky;
     order: 2;
-    top: 0.5rem;
-    right: 0.5rem;
     text-align: right;
     // width: 11ch;
     padding: 0;
     margin: 0;
     z-index: 50;
     align-self: flex-start;
-    margin-left: -5rem;
-  }  
+    // margin-left: -5rem;
+  }
+
+  .page.view-1up {
+    .page-menu {
+      position: sticky;
+      top: 0.5rem;
+      right: 0.5rem;
+      margin-left: -5rem;
+    }
+  }
+
+  .page.view-2up {
+    .page-menu {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+    }
+
+    &.verso {
+      .page-menu {
+        left: 0.5rem;
+        right: auto;
+      }
+
+      figure {
+        margin-right: 0;
+      }
+    }
+
+    &.recto {
+      figure {
+        margin-left: 0;
+      }
+    }
+
+    figure {
+      margin-top: 1rem;
+    }
+  }
+
+
+  
+  .page-menu
 
   .page-menu[open] .arrow i::before {
     content: "\F077";
