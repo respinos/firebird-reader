@@ -242,9 +242,9 @@
           <i class="fa-solid fa-minus" aria-hidden="true"></i>
         </button>
       </div>
-      <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}>
+      <!-- <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}>
         <i class="fa-solid fa-download" aria-hidden="true"></i>
-      </button>
+      </button> -->
     </div>
   </details>
   <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
@@ -307,31 +307,6 @@
   .frame:hover {
     border: 1px solid darkorange;
   }
-
-  // .page-toolbar {
-  //   display: flex;
-  //   flex-direction: row;
-  //   align-items: center;
-  //   justify-content: flex-end;
-
-  //   flex-direction: column-reverse;
-  //   justify-content: flex-start;
-
-  //   gap: 0.5rem;
-  //   padding: 0.5rem;
-  //   width: calc(var(--width) * 1px);
-  //   position: sticky;
-  //   top: 0.5rem;
-  //   right: 0.5rem;
-  //   z-index: 50;
-
-  //   width: auto;
-  //   /* align-self: flex-end; */
-  //   align-self: flex-start;
-  //   order: 2;
-  //   margin-right: 1rem;
-  //   margin-top: 2rem;
-  // }
 
   figure img {
     height: 99%;
@@ -413,12 +388,20 @@
 
       figure {
         margin-right: 0;
+
+        img {
+          margin-right: 0;
+        }
       }
     }
 
     &.recto {
       figure {
         margin-left: 0;
+
+        img {
+          margin-left: 0;
+        }
       }
     }
 

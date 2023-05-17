@@ -3,7 +3,6 @@
 	import { createObserver } from 'svelte-use-io';
   import PQueue from "p-queue";
 
-  // import Inner from './Inner.svelte';
   import Page from '../Page/index.svelte';
 
   const emitter = getContext('emitter');
@@ -26,8 +25,11 @@
     interval: 1500,
   })
 
-  let observer, io;
-  let wtf = 0;
+  const { observer, io }= createObserver({
+    root: container,
+    threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
+    rootMargin: `0% 200% 0% 200%`
+  })
 
   console.log("AHOY AHOY createObserver", container);
 
@@ -65,7 +67,6 @@
       clearTimeout(itemMap[currentSeq].timeout);
       itemMap[currentSeq].timeout = null;
     }
-    // if (itemMap[currentSeq].peeked) { itemMap[currentSeq].peeked = false;}
     let previouslyInView = [];
     itemData.forEach((item) => {
       if ( item.inView ) {
@@ -112,7 +113,6 @@
   }
 
   const handleIntersecting = (({detail}) => {
-    // return;
     let seq = parseInt(detail.target.dataset.seq);
     // console.log("$$ looking for currentSeq", seq);
     let pageDatum = itemMap[seq];
@@ -120,24 +120,14 @@
       pageDatum.intersectionRatio = detail.intersectionRatio;
       if ( pageDatum.loaded ) {
         console.log("# intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
-        // but maybe we have pages that haven't been loaded!
-        // if ( pageDatum.timeout ) { clearTimeout(pageDatum.timeout); }
-        // pageDatum.timeout = setTimeout(() => {
-        //   console.log("# intersecting", seq);
-        //   loadPages(seq);
-        // }, 1000);
       } else {
         console.log("+ intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
-        // pageDatum.page.toggle(true);
-        // pageDatum.inView = true;
         if ( pageDatum.timeout ) { clearTimeout(pageDatum.timeout); }
         pageDatum.timeout = setTimeout(() => {
           console.log("$ intersecting", seq);
           loadPages(seq);
         }, 1000);
-        // loadPages(seq);
       }
-      // currentInView.push(seq);
       currentInView.add(seq);
     } else {
       console.log("? intersecting", seq, detail.isIntersecting, detail.intersectionRatio, pageDatum.isVisible);
@@ -159,27 +149,11 @@
     unloadQueue.add(() => {
       return unloadPage(itemMap[seq])
     });
-
-    // itemMap[seq].timeout = setTimeout(() => {
-    //   unloadPage(itemMap[seq]);
-    // })
   })
 
   const peekPages = function(curentSeq, check) {
     let start, end, delta;
-    // if ( check > 0.7 ) {
-    //   start = currentSeq + 1;
-    //   end = currentSeq + 5;
-    // } else if ( check < 0.25 ) {
-    //   start = currentSeq - 5;
-    //   end = currentSeq - 1;
-    // } else {
-    //   // no reason to peek
-    //   return;
-    // }
     start = currentSeq - 2; end = currentSeq + 2;
-    // if ( itemMap[start] && itemMap[start].loaded ) { return ; }
-    // if ( ! itemMap[start] ) { return; }
     console.log("$$ currentSeq PEEK", currentSeq, start, end);
     for(let seq = start; seq <= end; seq += 1) {
       if ( itemMap[seq] && itemMap[seq].inView == false ) {
@@ -231,94 +205,70 @@
 
   
   const itemData = [];
-  const frameData = [];
+  const spreadData = [];
   const itemMap = {};
   const currentInView = new Set;
 
   let left = 0;
 
-  let innerHeight = -1; let innerWidth = -1;
+  let innerHeight = container.clientHeight;
+  let innerWidth = container.clientWidth;
   let baseHeight;
-  innerHeight = container && innerHeight < 0 ? container.clientHeight : -1;
-  innerWidth = container && innerWidth < 0 ? container.clientWidth : -1;
 
-  if ( container ) {
-    wtf += 1;
-    if ( wtf > 25 ) { alert("WHY"); }
+  baseHeight = Math.ceil(innerHeight * 0.9) * zoom;
+  for(let seq = 1; seq <= manifest.totalSeq; seq++) {
+    let item = {};
+    item.id = manifest.id;
+    item.seq = seq;
+    item.originalHeight = item.height = manifest.meta(seq).height;
+    item.originalWidth = item.width = manifest.meta(seq).width;
 
-    let tmp = createObserver({
-      root: container,
-      threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
-      rootMargin: `0% 200% 0% 200%`
-    })
+    item.useHeight = baseHeight;
+    item.useWidth = Math.ceil(baseHeight * ( item.width / item.height ));
 
-    observer = tmp.observer;
-    io = tmp.io;
+    item.inView = false;
+    item.loaded = false;
+    item.page = null;
+    item.index = seq - 1;
 
-    window.xyzobserver = observer;
+    item.area = ( seq % 2 == 0 ) ? 'recto' : 'verso';
+    console.log("AHOY AREA", seq, item.area);
 
-    console.log("-- Inner: innerHeight", innerHeight);
-    baseHeight = Math.ceil(innerHeight * 0.9) * zoom;
-    for(let seq = 1; seq <= manifest.totalSeq; seq++) {
-      let item = {};
-      item.id = manifest.id;
-      item.seq = seq;
-      item.originalHeight = item.height = manifest.meta(seq).height;
-      item.originalWidth = item.width = manifest.meta(seq).width;
-
-      item.useHeight = baseHeight;
-      item.useWidth = Math.ceil(baseHeight * ( item.width / item.height ));
-
-      item.inView = false;
-      item.loaded = false;
-      item.page = null;
-      item.index = seq - 1;
-
-      item.area = ( seq % 2 == 0 ) ? 'recto' : 'verso';
-      console.log("AHOY AREA", seq, item.area);
-
-      itemData.push(item);
-      itemMap[item.seq] = item;
-    }
-
-    for(let seq = 1; seq <= manifest.totalSeq; seq+=2) {
-      let frame = [];
-      frame.push(itemMap[seq]);
-      frame.push(itemMap[seq + 1]);
-      frameData.push(frame);
-    }
-
-    console.log("-- frame", frameData);
-
+    itemData.push(item);
+    itemMap[item.seq] = item;
   }
 
-  // $: if ( innerHeight > -1 && itemData.length == 0 ) {
+  for(let seq = 1; seq <= manifest.totalSeq; seq+=2) {
+    let spread = [];
+    spread.push(itemMap[seq]);
+    spread.push(itemMap[seq + 1]);
+    spreadData.push(spread);
+  }
 
-  // }
+  console.log("-- spread", spreadData);
 
   const gotoPage = function(options) {
     let target;
-    let currentFrame = Math.floor(currentSeq / 2);
+    let currentSpread = Math.floor(currentSeq / 2);
     if ( options.delta ) {
-      target = currentFrame + options.delta;
+      target = currentSpread + options.delta;
     } else if ( options.seq && ! isNaN(options.seq) ) {
       target = Math.floor(options.seq / 2);
     } else {
       // invalid option;
       return;
     }
-    if ( target == currentFrame ) { return ; }
+    if ( target == currentSpread ) { return ; }
     if ( target < 0 ) { target = 0 ; }
     else if ( target > manifest.totalSeq ) {
       target = manifest.totalSeq;
     }
 
-    let direction = -1; // ( target > currentFrame ) ? -1 : 1;
+    let direction = -1;
 
-    console.log("<< goto.page", options, ( ( innerWidth * target ) ) * ( direction ), target, currentFrame, direction, ":", currentSeq);
-    currentSeq = frameData[target][0].seq;
+    console.log("<< goto.page", options, ( ( innerWidth * target ) ) * ( direction ), target, currentSpread, direction, ":", currentSeq);
+    currentSeq = spreadData[target][0].seq;
     setTimeout(() => {
-      // container.querySelector(`#frame${target}`).scrollIntoView({ behavior: 'smooth'});
       left = ( ( innerWidth * target ) ) * ( direction );
     })
   }
@@ -338,7 +288,17 @@
   onMount(() => {
     console.log("-- itemCount", manifest.totalSeq, container);
 
+    const resizeObserver = new ResizeObserver(entries => {
+      const entry = entries.at(0);
+      innerWidth = entry.contentRect.width;
+      innerHeight = entry.contentRect.height;
+      console.log("-- resizeObserver", innerWidth, innerHeight);
+    })
+
+    resizeObserver.observe(container);
+
     return () => {
+      resizeObserver.unobserve(container);
       emitter.off('goto.page', gotoPage);
     }
   })
@@ -358,48 +318,35 @@
   >
   {#if container == null}
     <pre>LOADING : {innerHeight}</pre>
-  {:else if true}
-  {#each frameData as frame, frameIdx}
-    <div class="frame" 
-      class:zoomed={zoom > 1} 
-      id="frame{frameIdx}">
-      <span class="frame-idx">{frameIdx + 1}</span>
-      {#each frame as canvas, canvasIdx}
-        {#if true && canvas}
-        <Page 
-          bind:this={canvas.page}
-          style="max-height: {innerHeight * 0.9 * zoom}px"
-          area={canvasIdx == 0 ? 'verso' : 'recto'}
-          {observer} 
-          {canvas} 
-          {handleIntersecting}
-          {handleUnintersecting}
-          {innerHeight}
-          {innerWidth}
-          seq={canvas.seq} 
-          bind:zoom={zoom}
-          ></Page>
-        {:else}
-        <pre>{canvas.seq}</pre>
-        {/if}
-      {/each}
-    </div>    
-  {/each}
   {:else}
-    {#each itemData as canvas}
-      <Page 
-        style="grid-area: {canvas.area}"
-        bind:this={canvas.page}
-        {observer} 
-        {canvas} 
-        {handleIntersecting}
-        {handleUnintersecting}
-        seq={canvas.seq} 
-        bind:zoom={zoom}
-        ></Page>      
-    {/each}}
+    {#each spreadData as spread, spreadIdx}
+      <div class="spread" 
+        class:zoomed={zoom > 1} 
+        id="spread{spreadIdx}">
+        <span class="spread-idx">{spreadIdx + 1}</span>
+        {#each spread as canvas, canvasIdx}
+          {#if true && canvas}
+          <Page 
+            bind:this={canvas.page}
+            style="max-height: {innerHeight * 0.9 * zoom}px"
+            area={canvasIdx == 0 ? 'verso' : 'recto'}
+            {observer} 
+            {canvas} 
+            {handleIntersecting}
+            {handleUnintersecting}
+            {innerHeight}
+            {innerWidth}
+            seq={canvas.seq} 
+            bind:zoom={zoom}
+            ></Page>
+          {:else}
+          <pre>{canvas.seq}</pre>
+          {/if}
+        {/each}
+      </div>    
+    {/each}
   {/if}
-  </div>
+</div>
 
 <style>
 
@@ -417,7 +364,7 @@
     transition: left 0.4s;
   }
 
-  .frame {
+  .spread {
     height: 100%;
     min-width: calc(var(--width) * 1px);
     width: calc(var(--width) * 1px);
@@ -432,7 +379,7 @@
     }
   }
 
-  .frame-idx {
+  .spread-idx {
     position: absolute;
     top: 50%;
     left: 1rem;
