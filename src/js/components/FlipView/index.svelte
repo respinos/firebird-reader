@@ -24,7 +24,9 @@
 </script>
 
 <div class="view--container" bind:this={container}>
+  {#if container}
   <Inner {container}></Inner>
+  {/if}
 </div>
 
 <style>

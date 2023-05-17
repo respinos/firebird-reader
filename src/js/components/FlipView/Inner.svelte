@@ -26,13 +26,9 @@
     interval: 1500,
   })
 
-  const { observer, io } = createObserver({
-    root: container,
-    threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
-    rootMargin: `0% 200% 0% 200%`
-  });
+  let observer, io;
+  let wtf = 0;
 
-  window.xyzobserver = observer;
   console.log("AHOY AHOY createObserver", container);
 
   const unloadPage = async function(pageDatum) {
@@ -243,9 +239,24 @@
 
   let innerHeight = -1; let innerWidth = -1;
   let baseHeight;
-  $: innerHeight = container && innerHeight < 0 ? container.clientHeight : -1;
-  $: innerWidth = container && innerWidth < 0 ? container.clientWidth : -1;
-  $: if ( innerHeight > -1 && itemData.length == 0 ) {
+  innerHeight = container && innerHeight < 0 ? container.clientHeight : -1;
+  innerWidth = container && innerWidth < 0 ? container.clientWidth : -1;
+
+  if ( container ) {
+    wtf += 1;
+    if ( wtf > 25 ) { alert("WHY"); }
+
+    let tmp = createObserver({
+      root: container,
+      threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
+      rootMargin: `0% 200% 0% 200%`
+    })
+
+    observer = tmp.observer;
+    io = tmp.io;
+
+    window.xyzobserver = observer;
+
     console.log("-- Inner: innerHeight", innerHeight);
     baseHeight = Math.ceil(innerHeight * 0.9) * zoom;
     for(let seq = 1; seq <= manifest.totalSeq; seq++) {
@@ -280,6 +291,10 @@
     console.log("-- frame", frameData);
 
   }
+
+  // $: if ( innerHeight > -1 && itemData.length == 0 ) {
+
+  // }
 
   const gotoPage = function(options) {
     let target;
@@ -335,12 +350,19 @@
   })
 </script>
 
-<div class="inner" style:--width={innerWidth} style:--left={left}>
-  {#if innerHeight < 0}
+<div 
+  class="inner" 
+  style:--width={innerWidth} 
+  style:--left={left}
+  style:--columnWidth={zoom > 1 ? ( `${( innerWidth / 2 ) * zoom}px` ) : null}
+  >
+  {#if container == null}
     <pre>LOADING : {innerHeight}</pre>
   {:else if true}
   {#each frameData as frame, frameIdx}
-    <div class="frame" class:zoomed={zoom > 1} id="frame{frameIdx}">
+    <div class="frame" 
+      class:zoomed={zoom > 1} 
+      id="frame{frameIdx}">
       <span class="frame-idx">{frameIdx + 1}</span>
       {#each frame as canvas, canvasIdx}
         {#if true && canvas}
@@ -401,7 +423,7 @@
     width: calc(var(--width) * 1px);
     display: grid;
     grid-template-areas: "verso recto";
-    grid-template-columns: 50% 50%;
+    grid-template-columns: var(--columnWidth, 50%) var(--columnWidth, 50%);
     grid-template-rows: 1fr;
     position: relative;
 
