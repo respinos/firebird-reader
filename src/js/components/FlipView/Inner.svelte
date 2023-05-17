@@ -247,6 +247,18 @@
 
   console.log("-- spread", spreadData);
 
+  const handlePageClick = function(event) {
+    if ( event.target.closest('details') ) { return ; }
+    if ( event.target.closest('button') ) { return ; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    let options = { delta: 1 };
+    if ( pageDiv.classList.contains('verso') ) {
+      options.delta = -1;
+    }
+    gotoPage(options);
+  }
+
   const gotoPage = function(options) {
     let target;
     let currentSpread = Math.floor(currentSeq / 2);
@@ -315,6 +327,7 @@
   style:--width={innerWidth} 
   style:--left={left}
   style:--columnWidth={zoom > 1 ? ( `${( innerWidth / 2 ) * zoom}px` ) : null}
+  on:click={handlePageClick}
   >
   {#if container == null}
     <pre>LOADING : {innerHeight}</pre>

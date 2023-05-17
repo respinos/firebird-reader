@@ -249,7 +249,14 @@
   </details>
   <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
     {#if isVisible}
-    <img bind:this={image} src={defaultThumbnailSrc} alt="" style:height={imgHeight} style:width={imgWidth} />
+    <img 
+      bind:this={image} 
+      src={defaultThumbnailSrc} 
+      alt="" 
+      style:height={imgHeight} 
+      style:width={imgWidth} 
+      class:zoomed={pageZoom > 1}
+      />
     {/if}
     <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
     <figcaption class="visually-hidden">
@@ -456,5 +463,9 @@
 
   .bg-vaguely-white {
     background-color: rgba(255,255,255,0.5) !important;
+  }
+
+  img.zoomed {
+    align-self: flex-start;
   }
 </style>
