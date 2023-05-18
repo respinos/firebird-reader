@@ -17,7 +17,7 @@
   export let handleIntersecting;
   export let handleUnintersecting;
 
-  export let pageDiv;
+  let pageDiv;
 
   const view = manifest.currentView;
 
@@ -32,6 +32,10 @@
 
   export let innerHeight = window.innerHeight;
   export let innerWidth = window.innerWidth;
+
+  export const scrollIntoView = function() {
+    pageDiv.scrollIntoView({ behavior: 'instant'});
+  }
 
   export const visible = function(viewport) {
     let top = pageDiv.offsetTop;
@@ -102,7 +106,8 @@
     timeout = null;
     if ( image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
-    let img_src = `/cgi/imgsrv/image?id=${canvas.id}&seq=${seq}&height=${height}`;
+    let action = ( $view == 'thumb' ) ? 'thumbnail' : 'image';
+    let img_src = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
     fetch(img_src)
       .then((response) => {
         let size = response.headers.get('x-image-size');
@@ -112,13 +117,13 @@
         let width = Math.ceil(parseInt(parts[0], 10) * ratio);
         canvas.width = width;
         canvas.useWidth = Math.ceil(canvas.useHeight * ( canvas.width / canvas.height ));
-        console.log("--", seq, size, `${canvas.width}x${canvas.height}`);
+        // console.log("--", seq, size, `${canvas.width}x${canvas.height}`);
         return response.blob();
       })
       .then(blob => {
         objectUrl = URL.createObjectURL(blob);
         if ( image ) {
-          console.log("-- page.mount", seq, canvas);
+          // console.log("-- page.mount", seq, canvas);
           image.src = objectUrl;
           isLoaded = true;
           loadPageText();
@@ -174,7 +179,7 @@
 
   const imageOnLoad = function(event) {
     if ( rotateX != 0 ) { return ; }
-    console.log("!", seq, rotateX, event.target.naturalWidth, event.target.naturalHeight);
+    // console.log("!", seq, rotateX, event.target.naturalWidth, event.target.naturalHeight);
     // if ( event.target.naturalHeight != scanHeight ) {
     //   scanHeight = event.target.naturalHeight;
     //   scanAdjusted = true;
@@ -233,18 +238,18 @@
   $: rotateX = 0;
   $: orientMargin = 0;
 
-  $: console.log(">> zoom", zoom, pageZoom, scanHeight, scanWidth);
+  // $: console.log(">> zoom", zoom, pageZoom, scanHeight, scanWidth);
 
   let testWidth, testHeight;
 
   onMount(() => {
-    console.log("-- page.mount", seq, style);
+    // console.log("-- page.mount", seq, style);
 
     return () => { 
-      console.log("-- page.unmount", seq);
+      // console.log("-- page.unmount", seq);
       if(timeout) {
         clearTimeout(timeout);
-        console.log("-- app.unmount", seq);
+        // console.log("-- app.unmount", seq);
       }
       unloadImage(); 
     }
@@ -283,8 +288,10 @@
     </summary>
     <div class="d-flex flex-column gap-1 align-items-center width-min-content menu-items">
       <button type="button" class="btn btn-light border border-dark"><i class="fa-regular fa-square"></i></button>
-      {#if area != 'thumb'}
+      {#if $view == '1up'}
       <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+      {/if}
+      {#if $view == '1up' || $view == '2up'}
       <div class="btn-group-vertical" role="group">
         <button type="button" class="btn btn-light border border-dark" on:click={() => updateZoom(0.5)}>
           <i class="fa-solid fa-plus" aria-hidden="true"></i>
@@ -378,9 +385,14 @@
   }
 
   figure img {
-    height: 99%;
+    // height: 99%;
     display: block;
     margin: 0 auto;
+
+    max-height: 99%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
 
     background: #f9f8f5;
     box-shadow: 0px 10px 13px -7px #000000, 0px 6px 15px 5px rgba(0, 0, 0, 0);

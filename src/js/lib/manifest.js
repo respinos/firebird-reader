@@ -124,5 +124,25 @@ export class Manifest {
 
   seq(pageNum) {
     return this._num2seq[pageNum] || pageNum;
-  }  
+  }
+
+  hasFrontCover() {
+    return (
+      this.checkFeatures(1, "FRONT_COVER") || 
+      (
+        this.checkFeatures(1, "COVER") && this.checkFeatures(1, "RIGHT")
+      ) || 
+      this.checkFeatures(1, "COVER") || 
+      ! this.checkFeatures(1)
+    );
+  }
+
+  hasBackCover() {
+    return ( 
+      this.checkFeatures(this.totalSeq, "BACK_COVER") || 
+      (
+        this.checkFeatures(this.totalSeq, "COVER") && this.checkFeatures(this.totalSeq, "LEFT") 
+      ) 
+    );
+  }
 }

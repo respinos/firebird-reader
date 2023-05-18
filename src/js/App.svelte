@@ -37,7 +37,7 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = 'thumb';
+	export let view = '2up';
 	export let format = 'image';
 
 	let lastView = '1up';
@@ -51,11 +51,6 @@
 	window.manifest = manifest;
 
 	$: viewClass = ( view == 'search' ) ? 'search' : 'reader';
-
-	// window.switchView = function(v) {
-	// 	view = v;
-	// 	$currentView = view;
-	// }
 
 	function switchView(options) {
 		console.log("-- switchView", options);
@@ -82,7 +77,7 @@
 </script>
 
 <hathi-website-header>
-	<WebsiteHeader searchState="toggle"></WebsiteHeader>
+	<WebsiteHeader searchState="toggle" compact={true}></WebsiteHeader>
 </hathi-website-header>
 <Splitpanes class="reader" vertical style="width: 100%">
 	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5 pt-3 ps-2 pe-3 bg-white">
@@ -104,7 +99,10 @@
 		<SearchView></SearchView>
 		{:else}
 		<ViewerToolbar></ViewerToolbar>
-		<svelte:component this={views[$currentView]}></svelte:component>
+		<svelte:component 
+			this={views[$currentView]}
+			startSeq={$currentSeq}
+			></svelte:component>
 		{/if}
 	</Pane>
 </Splitpanes>

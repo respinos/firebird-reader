@@ -1,13 +1,15 @@
 <script>
-  import { onMount, onDestroy, getContext } from 'svelte';
+  import { onMount, afterUpdate, onDestroy, getContext } from 'svelte';
 	import { createObserver } from 'svelte-use-io';
   import PQueue from "p-queue";
+  import { debounce } from '../../lib/debounce';
 
   import Page from '../Page/index.svelte';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
   export let container;
+  export let startSeq = 1;
 
   const queue = new PQueue({
     concurrency: 5,
@@ -30,26 +32,6 @@
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
     rootMargin: `200% 0% 200% 0%`
   });
-
-  const isInViewport = function(element) {
-    const rect = element.getBoundingClientRect();
-    return (
-        rect.top >= 0 &&
-        rect.left >= 0 &&
-        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
-        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
-    );
-  }
-
-  const debounce = (callback, wait) => {
-    let timeoutId = null;
-    return (...args) => {
-      window.clearTimeout(timeoutId);
-      timeoutId = window.setTimeout(() => {
-        callback.apply(null, args);
-      }, wait);
-    };
-  }
 
   const unloadPage = async function(pageDatum) {
     console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
@@ -80,10 +62,10 @@
     return loadPage(pageDatum, delta);
   }
 
-  const loadPages = function(currentSeq) {
-    if (itemMap[currentSeq].timeout) {
-      clearTimeout(itemMap[currentSeq].timeout);
-      itemMap[currentSeq].timeout = null;
+  const loadPages = function(targetSeq) {
+    if (itemMap[targetSeq].timeout) {
+      clearTimeout(itemMap[targetSeq].timeout);
+      itemMap[targetSeq].timeout = null;
     }
     // if (itemMap[currentSeq].peeked) { itemMap[currentSeq].peeked = false;}
     let previouslyInView = [];
@@ -92,13 +74,13 @@
         previouslyInView.push(item.seq);
       }
     })
-    let newInView = [ currentSeq ];
-    for (let seq = currentSeq - 1; seq >= currentSeq - 5; seq--) {
+    let newInView = [ targetSeq ];
+    for (let seq = targetSeq - 1; seq >= targetSeq - 5; seq--) {
       if (seq > 0) {
         newInView.push(seq);
       }
     }
-    for (let seq = currentSeq + 1; seq <= currentSeq + 5; seq++) {
+    for (let seq = targetSeq + 1; seq <= targetSeq + 5; seq++) {
       if (seq < manifest.totalSeq) {
         newInView.push(seq);
       }
@@ -113,7 +95,7 @@
         return queuePage(itemMap[seq])
       }, 
       { 
-        priority: seq == currentSeq ? Infinity : 0 
+        priority: seq == targetSeq ? Infinity : 0 
       })
     });
   }
@@ -201,13 +183,9 @@
     }
   }
 
-  window.currentSeq = function() {
-    return currentSeq;
-  }
-
   let content;
 
-  let currentSeq = 1;
+  const currentSeq = manifest.currentSeq;
 
   let zoom = 1;
   let zoomIndex = 0;
@@ -261,7 +239,7 @@
 
     console.log("<< goto.page", options, target, currentSeq);
     setTimeout(() => {
-      container.querySelector(`#id${target}`).scrollIntoView({ behavior: 'instant'});
+      itemMap[target].page.scrollIntoView();
     })
   }
 
@@ -273,14 +251,18 @@
     emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
   }
 
-  const setCurrentSeq = function() {
-
-    let viewport = {};
+  let viewport = {};
+  const updateViewport = function() {
     viewport.height = container.offsetHeight;
     viewport.top = container.scrollTop;
     viewport.bottom = viewport.top + viewport.height;
+  }
+  updateViewport();
 
-    // isInViewport(el)
+  const setCurrentSeq = function() {
+    if ( ! isInitialized ) { return ; }
+
+    console.log("-- setCurrentSeq", viewport);
     let max = { seq: -1, percentage: 0 };
     let possibles = Array.from(currentInView).sort((a,b) => a-b);
     possibles.forEach((seq) => {
@@ -290,7 +272,7 @@
         max.percentage = percentage;
       }
     })
-    currentSeq = max.seq;
+    $currentSeq = max.seq;
     emitter.emit('update.seq', currentSeq);
   }
 
@@ -306,10 +288,28 @@
     zoom = zoomScales[zoomIndex];
   })
 
+  let isInitialized = false;
+  afterUpdate(() => {
+    if ( itemMap[manifest.totalSeq].page ) {
+      if ( ! isInitialized ) {
+        if ( startSeq > 1 ) {
+          setTimeout(() => {
+            console.log("-- initialize", startSeq);
+            itemMap[startSeq].page.scrollIntoView({ behavior: 'instant'});
+            isInitialized = true;
+          })
+        } else {
+          isInitialized = true;
+        }
+      }
+    }
+  })
+
   onMount(() => {
     console.log("-- itemCount", manifest.totalSeq);
 
     const handleScroll = debounce((ev) => {
+      updateViewport();
       setCurrentSeq();
     }, 100);
 

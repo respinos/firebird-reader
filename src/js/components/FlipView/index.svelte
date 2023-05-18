@@ -10,7 +10,7 @@
   let container;
   let content;
 
-  let currentSeq = 1;
+  export let startSeq = 1;
 
   let zoom = 1;
   let zoomIndex = 0;
@@ -25,7 +25,7 @@
 
 <div class="view--container" bind:this={container}>
   {#if container}
-  <Inner {container}></Inner>
+  <Inner {container} {startSeq}></Inner>
   {/if}
 </div>
 

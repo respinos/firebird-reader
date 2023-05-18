@@ -12,16 +12,16 @@
 
   let currentSeq = 1;
 
+  export let startSeq = 1;
 
   onMount(() => {
-    console.log("-- itemCount", manifest.totalSeq);
-
+    console.log("-- itemCount", manifest.totalSeq, startSeq);
   })
 </script>
 
 <div class="view--container" bind:this={container}>
   {#if container}
-  <Inner {container}></Inner>    
+  <Inner {container} {startSeq}></Inner>
   {/if}
 </div>
 
