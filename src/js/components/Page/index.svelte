@@ -1,3 +1,4 @@
+<svelte:options accessors={true} />
 <script>
 
   import { onMount, getContext } from 'svelte';
@@ -16,6 +17,8 @@
   export let handleIntersecting;
   export let handleUnintersecting;
 
+  export let pageDiv;
+
   const view = manifest.currentView;
 
   export let seq;
@@ -23,9 +26,46 @@
   export let zoom;
   export let style = null;
   export let area = null;
+  export let mode = 'page';
+
+  let pageNum = manifest.pageNum(seq);
 
   export let innerHeight = window.innerHeight;
   export let innerWidth = window.innerWidth;
+
+  export const visible = function(viewport) {
+    let top = pageDiv.offsetTop;
+    let height = parseInt(pageDiv.dataset.height, 10);
+    let bottom = top + height;
+
+    let rootMargin = 0;
+
+    let pageIsVisible = ( top >= ( viewport.top - rootMargin ) && bottom <= ( viewport.bottom + rootMargin ));
+    let bottomIsVisible = ( top < ( viewport.top - rootMargin ) && viewport.top < ( bottom + rootMargin ) )
+    let topIsVisible = ( top < ( viewport.bottom + rootMargin ) && viewport.bottom < ( bottom + rootMargin ));
+
+    let percentage = 0; let test;
+    if ( topIsVisible || bottomIsVisible || pageIsVisible ) {
+      // now we're visible
+      if ( pageIsVisible ) {
+        percentage = 1.0;
+        test = 'topIsVisible && bottomIsVisible';
+      } else if ( topIsVisible ) {
+        // only the top is visible
+        let heightVisible = viewport.bottom - top;
+        percentage = heightVisible / height;
+        test = 'topIsVisible';
+      } else if ( bottomIsVisible ) {
+        let heightVisible = bottom - viewport.top;
+        percentage = heightVisible / height;
+        test = 'bottomIsVisible';
+      }
+    }
+
+    // console.log("-- visible", seq, percentage, { top, bottom }, viewport );
+
+    return percentage;
+  }
 
   let pageZoom = 1;
 
@@ -97,6 +137,8 @@
   }
 
   export const loadPageText = function() {
+
+    if ( mode != 'page' ) { return ; }
 
     function parseCoords(value) {
       var values = value.split(' ')
@@ -210,29 +252,38 @@
 
 </script>
 
-<div class="page" {style} data-seq={seq}
+<div class="page" {style} data-seq={seq} data-height={Math.ceil(scanHeight)}
   style:--height={Math.ceil(scanHeight)}
   style:--width={Math.ceil(scanWidth)}
   class:view-2up={$view == '2up'}
   class:view-1up={$view == '1up'}
   class:verso={area == 'verso'}
   class:recto={area == 'recto'}
+  class:view-thumb={area == 'thumb'}
   use:observer 
   id="id{seq}" 
   on:intersecting={handleIntersecting} 
-  on:unintersecting={handleUnintersecting}>
+  on:unintersecting={handleUnintersecting}
+  bind:this={pageDiv}>
 
+  {#if area != 'xxthumb'}
   <details class="page-menu" class:sticky={get(manifest.currentView) == '1up'}>
     <summary class="bg-dark text-white">
       <div class="d-flex align-items-center justify-content-between shadow px-3 py-2 gap-2 rounded">
-        <span class="seq">#{seq}</span>
+        <span class="seq">
+          #{seq}
+          {#if pageNum}
+            ({pageNum})
+          {/if}
+        </span>
         <span class="arrow">
           <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
         </span>
       </div>
     </summary>
-    <div class="d-flex flex-column gap-1 align-items-center xxme-0 width-min-content xxbg-vaguely-white">
+    <div class="d-flex flex-column gap-1 align-items-center width-min-content menu-items">
       <button type="button" class="btn btn-light border border-dark"><i class="fa-regular fa-square"></i></button>
+      {#if area != 'thumb'}
       <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
       <div class="btn-group-vertical" role="group">
         <button type="button" class="btn btn-light border border-dark" on:click={() => updateZoom(0.5)}>
@@ -242,11 +293,13 @@
           <i class="fa-solid fa-minus" aria-hidden="true"></i>
         </button>
       </div>
+      {/if}
       <!-- <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}>
         <i class="fa-solid fa-download" aria-hidden="true"></i>
       </button> -->
     </div>
   </details>
+  {/if}
   <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
     {#if isVisible}
     <img 
@@ -258,10 +311,12 @@
       class:zoomed={pageZoom > 1}
       />
     {/if}
+    {#if area != 'thumb'}
     <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
     <figcaption class="visually-hidden">
       <PageText hidden={true} canvas={canvas} seq={seq}></PageText>
     </figcaption>
+    {/if}
   </figure>
 </div>
 
@@ -286,6 +341,13 @@
 
     &.recto {
       grid-area: recto;
+    }
+
+    &.view-thumb {
+      width: auto;
+      flex-direction: column;
+      gap: 0.5rem;
+      // margin-bottom: 3rem;
     }
   }
 
@@ -380,6 +442,21 @@
     }
   }
 
+  .page.view-thumb {
+    .page-menu {
+      // position: absolute;
+      // top: -3rem;
+      // right: 0.5rem;
+      align-self: flex-end;
+      order: 0;
+
+      .menu-items {
+        position: absolute;
+        right: 0;
+      }
+    }
+  }
+
   .page.view-2up {
     .page-menu {
       position: absolute;
@@ -417,9 +494,6 @@
     }
   }
 
-
-  
-  .page-menu
 
   .page-menu[open] .arrow i::before {
     content: "\F077";

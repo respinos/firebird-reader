@@ -8,11 +8,11 @@
   const manifest = getContext('manifest');
   const emitter = getContext('emitter');
 
-  const updateSeq = function(data) {
-    if ( data ) { currentSeq = data; }
-  }
+  // const updateSeq = function(data) {
+  //   if ( data ) { currentSeq = data; }
+  // }
 
-  emitter.on('update.seq', updateSeq);
+  // emitter.on('update.seq', updateSeq);
 
   let currentView = manifest.currentView;
   let currentSeq = manifest.currentSeq;
@@ -149,13 +149,13 @@
       let page;
       switch(range) {
         case 'current-page':
-          page = currentSeq;
+          page = $currentSeq;
           break;
         case 'current-page-verso':
-          page = currentSeq;
+          page = $currentSeq;
           break;
         case 'current-page-recto':
-          page = currentSeq;
+          page = $currentSeq;
           break;
       }
       if ( ! page ) {
@@ -250,9 +250,9 @@
       callback(arguments);
     };
 
-    return () => {
-      emitter.off('update.seq', updateSeq);
-    }
+    // return () => {
+    //   emitter.off('update.seq', updateSeq);
+    // }
   })
 
 </script>
@@ -337,7 +337,7 @@
             disabled={format == 'epub' || format == 'plaintext-zip'}
             bind:group={range}>
           <label class="form-check-label" for="range-current-page">
-            Current page scan (#{currentSeq})
+            Current page scan (#{$currentSeq})
           </label>
         </div>
         {:else if $currentView == '2up'}
@@ -350,7 +350,7 @@
             disabled={format == 'epub' || format == 'plaintext-zip'}
             bind:group={range}>
           <label class="form-check-label" for="range-current-verso-page">
-            Current verso page scan (#{currentSeq})
+            Current verso page scan (#{$currentSeq})
           </label>
         </div>
         <div class="form-check">
@@ -362,7 +362,7 @@
             disabled={format == 'epub' || format == 'plaintext-zip'}
             bind:group={range}>
           <label class="form-check-label" for="range-current-recto-page">
-            Current recto page scan (#{currentSeq+1})
+            Current recto page scan (#{$currentSeq+1})
           </label>
         </div>
         {/if}
@@ -425,7 +425,7 @@
       <input type="hidden" name="id" value={manifest.id} />
       <input type="hidden" name="attachment" value="1" />
       <input type="hidden" name="tracker" value="D{tunnelFormAttempt}" />
-      <input type="hidden" name="seq" value={currentSeq} />
+      <input type="hidden" name="seq" value={$currentSeq} />
       {#if format == 'image-tiff' || format == 'image-jpeg'}
         <input type="hidden" name="format" value="image/{(format.split('-'))[1]}" />
         <input 

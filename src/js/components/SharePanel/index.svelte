@@ -16,12 +16,12 @@
   let modalBody;
 
   // initial seq
-  let seq = manifest.currentSeq;
+  let currentSeq = manifest.currentSeq;
   
-  function updateSeq(data) {
-    if ( data ) { seq = data; }
-  }
-  emitter.on('update.seq', updateSeq);
+  // function updateSeq(data) {
+  //   if ( data ) { seq = data; }
+  // }
+  // emitter.on('update.seq', updateSeq);
 
   let codeBlock;
   let view = '1up';
@@ -53,10 +53,7 @@
     })
 
     return () => {
-      // btnShareHandle.bs.dispose();
-      // btnShareHandleLink.bs.dispose();
-      // btnCodeBlock.bs.dispose();
-      emitter.off('update.seq', updateSeq);
+      // emitter.off('update.seq', updateSeq);
     }
   })
 
@@ -96,7 +93,7 @@
           type="text" 
           class="form-control" 
           readonly 
-          value="https://hdl.handle.net/2027/{manifest.id}?urlappend=%3Bseq={seq}"
+          value="https://hdl.handle.net/2027/{manifest.id}?urlappend=%3Bseq={$currentSeq}"
           bind:this={shareHandleLink}
           on:click={() => shareHandleLink.select()} />
         <button 

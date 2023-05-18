@@ -10,7 +10,8 @@
     let target = this;
     let value = target.dataset.value;
     if ( value != $view ) {
-      $view = value;
+      emitter.emit('switch.view', { view: value });
+      // $view = value;
     }
   }
 

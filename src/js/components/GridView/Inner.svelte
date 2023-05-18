@@ -1,16 +1,12 @@
 <script>
-  import { onMount, afterUpdate, onDestroy, getContext } from 'svelte';
-  import { get } from 'svelte/store';
+  import { onMount, onDestroy, getContext } from 'svelte';
 	import { createObserver } from 'svelte-use-io';
   import PQueue from "p-queue";
 
-  // import Inner from './Inner.svelte';
   import Page from '../Page/index.svelte';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
-  let currentSeq = manifest.currentSeq;
-
   export let container;
 
   const queue = new PQueue({
@@ -34,6 +30,26 @@
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
     rootMargin: `200% 0% 200% 0%`
   });
+
+  const isInViewport = function(element) {
+    const rect = element.getBoundingClientRect();
+    return (
+        rect.top >= 0 &&
+        rect.left >= 0 &&
+        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
+
+  const debounce = (callback, wait) => {
+    let timeoutId = null;
+    return (...args) => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(() => {
+        callback.apply(null, args);
+      }, wait);
+    };
+  }
 
   const unloadPage = async function(pageDatum) {
     console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
@@ -64,10 +80,10 @@
     return loadPage(pageDatum, delta);
   }
 
-  const loadPages = function(targetSeq) {
-    if (itemMap[targetSeq].timeout) {
-      clearTimeout(itemMap[targetSeq].timeout);
-      itemMap[targetSeq].timeout = null;
+  const loadPages = function(currentSeq) {
+    if (itemMap[currentSeq].timeout) {
+      clearTimeout(itemMap[currentSeq].timeout);
+      itemMap[currentSeq].timeout = null;
     }
     // if (itemMap[currentSeq].peeked) { itemMap[currentSeq].peeked = false;}
     let previouslyInView = [];
@@ -76,13 +92,13 @@
         previouslyInView.push(item.seq);
       }
     })
-    let newInView = [ targetSeq ];
-    for (let seq = targetSeq - 1; seq >= targetSeq - 5; seq--) {
+    let newInView = [ currentSeq ];
+    for (let seq = currentSeq - 1; seq >= currentSeq - 5; seq--) {
       if (seq > 0) {
         newInView.push(seq);
       }
     }
-    for (let seq = targetSeq + 1; seq <= targetSeq + 5; seq++) {
+    for (let seq = currentSeq + 1; seq <= currentSeq + 5; seq++) {
       if (seq < manifest.totalSeq) {
         newInView.push(seq);
       }
@@ -91,33 +107,21 @@
     let currentDiff = previouslyInView.filter(x => !newInView.includes(x));
     let newDiff = newInView.filter(x => !previouslyInView.includes(x));
 
-    // console.log("$$$ DIFF", currentSeq, currentDiff, newDiff);
-
-    // currentDiff.forEach((seq) => {
-    //   itemMap[seq].inView = false;
-    //   // and push unto the unload stack
-    //   unloadQueue.add(() => {
-    //     return unloadPage(itemMap[seq])
-    //   });
-    // })
-
     newDiff.forEach((seq) => {
       itemMap[seq].inView = true;
       queue.add(() => {
         return queuePage(itemMap[seq])
       }, 
       { 
-        priority: seq == $currentSeq ? Infinity : 0 
+        priority: seq == currentSeq ? Infinity : 0 
       })
     });
-
-    // currentInView.length = 0;
-    // currentInView.push(...newInView);
   }
 
   const handleIntersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
-    // console.log("$$ looking for currentSeq", seq);
+    console.log("$$ looking for currentSeq", seq);
+    if ( ! window.xyzRect ) { window.xyzRect = detail.boundingClientRect; }
     let pageDatum = itemMap[seq];
     if ( detail.isIntersecting ) {
       pageDatum.intersectionRatio = detail.intersectionRatio;
@@ -167,58 +171,43 @@
     // })
   })
 
-  // const peekPages = function(curentSeq, check) {
-  //   let start, end, delta;
-  //   // if ( check > 0.7 ) {
-  //   //   start = currentSeq + 1;
-  //   //   end = currentSeq + 5;
-  //   // } else if ( check < 0.25 ) {
-  //   //   start = currentSeq - 5;
-  //   //   end = currentSeq - 1;
-  //   // } else {
-  //   //   // no reason to peek
-  //   //   return;
-  //   // }
-  //   start = currentSeq - 2; end = currentSeq + 2;
-  //   // if ( itemMap[start] && itemMap[start].loaded ) { return ; }
-  //   // if ( ! itemMap[start] ) { return; }
-  //   console.log("$$ currentSeq PEEK", currentSeq, start, end);
-  //   for(let seq = start; seq <= end; seq += 1) {
-  //     if ( itemMap[seq] && itemMap[seq].inView == false ) {
-  //       itemMap[seq].peeked = true;
-  //       console.log("$$ currentSeq PEEK", check, "<-", seq);
-  //       queue.add(() => {
-  //         return queuePage(itemMap[seq])
-  //       }, 
-  //       { 
-  //         priority: 0
-  //       })    
-  //     }
-  //   }
-  // }
-
-  const setCurrentSeq = function() {
-    if ( currentInView.length == 0 ) { return; }
-    let tmp = {intersectionRatio: 0, seq: 0};
-    let possibles = Array.from(currentInView).sort((a,b) => a-b);
-    possibles.forEach((seq) => {
-      let pageDatum = itemMap[seq];
-      if ( pageDatum.intersectionRatio === undefined ) { return ; }
-      // console.log("/// ---", manifestMap[seq].intersectionRatio, manifestMap[seq].inView);
-      if ( itemMap[seq].intersectionRatio > tmp.intersectionRatio ) {
-        tmp.intersectionRatio = itemMap[seq].intersectionRatio;
-        tmp.seq = seq;
+  const peekPages = function(curentSeq, check) {
+    let start, end, delta;
+    // if ( check > 0.7 ) {
+    //   start = currentSeq + 1;
+    //   end = currentSeq + 5;
+    // } else if ( check < 0.25 ) {
+    //   start = currentSeq - 5;
+    //   end = currentSeq - 1;
+    // } else {
+    //   // no reason to peek
+    //   return;
+    // }
+    start = currentSeq - 2; end = currentSeq + 2;
+    // if ( itemMap[start] && itemMap[start].loaded ) { return ; }
+    // if ( ! itemMap[start] ) { return; }
+    console.log("$$ currentSeq PEEK", currentSeq, start, end);
+    for(let seq = start; seq <= end; seq += 1) {
+      if ( itemMap[seq] && itemMap[seq].inView == false ) {
+        itemMap[seq].peeked = true;
+        console.log("$$ currentSeq PEEK", check, "<-", seq);
+        queue.add(() => {
+          return queuePage(itemMap[seq])
+        }, 
+        { 
+          priority: 0
+        })    
       }
-    })
-    if ( $currentSeq != tmp.seq && tmp.seq > 0 ) {
-      $currentSeq = tmp.seq;
-      console.log("$$ currentSeq =", $currentSeq, possibles);
-      emitter.emit('update.seq', $currentSeq);
     }
-    return tmp;
+  }
+
+  window.currentSeq = function() {
+    return currentSeq;
   }
 
   let content;
+
+  let currentSeq = 1;
 
   let zoom = 1;
   let zoomIndex = 0;
@@ -226,11 +215,14 @@
 
   let pageMap = {};
 
+  
   const itemData = [];
   const itemMap = {};
   const currentInView = new Set;
 
-  let baseHeight = Math.ceil(window.innerHeight * 0.90) * zoom;
+  let innerHeight = 250;
+
+  let baseHeight = Math.ceil(innerHeight * 0.90) * zoom;
   for(let seq = 1; seq <= manifest.totalSeq; seq++) {
     let item = {};
     item.id = manifest.id;
@@ -254,23 +246,52 @@
   const gotoPage = function(options) {
     let target;
     if ( options.delta ) {
-      target = $currentSeq + options.delta;
+      target = currentSeq + options.delta;
     } else if ( options.seq && ! isNaN(options.seq) ) {
       target = options.seq;
     } else {
       // invalid option;
       return;
     }
-    if ( target == $currentSeq ) { return ; }
+    if ( target == currentSeq ) { return ; }
     if ( target < 1 ) { target = 1 ; }
     else if ( target > manifest.totalSeq ) {
       target = manifest.totalSeq;
     }
 
-    console.log("<< goto.page", options, target, $currentSeq);
+    console.log("<< goto.page", options, target, currentSeq);
     setTimeout(() => {
-      itemMap[target].page.pageDiv.scrollIntoView({ behavior: 'instant'});
+      container.querySelector(`#id${target}`).scrollIntoView({ behavior: 'instant'});
     })
+  }
+
+  const handlePageClick = function(event) {
+    if ( event.target.closest('details') ) { return ; }
+    if ( event.target.closest('button') ) { return ; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
+  }
+
+  const setCurrentSeq = function() {
+
+    let viewport = {};
+    viewport.height = container.offsetHeight;
+    viewport.top = container.scrollTop;
+    viewport.bottom = viewport.top + viewport.height;
+
+    // isInViewport(el)
+    let max = { seq: -1, percentage: 0 };
+    let possibles = Array.from(currentInView).sort((a,b) => a-b);
+    possibles.forEach((seq) => {
+      let percentage = itemMap[seq].page.visible(viewport);
+      if ( percentage > max.percentage ) {
+        max.seq = seq;
+        max.percentage = percentage;
+      }
+    })
+    currentSeq = max.seq;
+    emitter.emit('update.seq', currentSeq);
   }
 
   emitter.on('goto.page', gotoPage);
@@ -285,29 +306,18 @@
     zoom = zoomScales[zoomIndex];
   })
 
-  let initialSeq = -1;
-  afterUpdate(() => {
-    if ( initialSeq > 0 ) {
-      // did we finish drawing the pages?
-      if ( itemMap[manifest.totalSeq].page ) {
-        setTimeout(() => {
-          console.log("JUMPING TO", initialSeq);
-          itemMap[initialSeq].page.pageDiv.scrollIntoView({ behavior: 'instant'});
-          initialSeq = -1;
-        })
-      }
-    }
-  })
-
   onMount(() => {
-    console.log("-- scrollView itemCount", manifest.totalSeq, $currentSeq);
+    console.log("-- itemCount", manifest.totalSeq);
 
-    if ( $currentSeq > 1 ) {
-      initialSeq = $currentSeq;
-    }
+    const handleScroll = debounce((ev) => {
+      setCurrentSeq();
+    }, 100);
+
+    container.addEventListener('scroll', handleScroll);
 
     return () => {
       emitter.off('goto.page', gotoPage);
+      container.removeEventListener('scroll', handleScroll);
     }
   })
 
@@ -318,7 +328,7 @@
   })
 </script>
 
-<div class="inner">
+<div class="inner" on:click={handlePageClick} on:keydown={handlePageClick}>
   {#each itemData as canvas}
   <Page 
     bind:this={canvas.page}
@@ -326,6 +336,8 @@
     {canvas} 
     {handleIntersecting}
     {handleUnintersecting}
+    {innerHeight}
+    area="thumb"
     seq={canvas.seq} 
     bind:zoom={zoom}
     {thumbnailer}></Page>
@@ -336,9 +348,14 @@
 
   .inner {
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1.5rem;
+
     scroll-behavior: auto;
+    padding: 1rem;
+    padding-top: 4rem;
     width: 100%;
   }
 </style>
