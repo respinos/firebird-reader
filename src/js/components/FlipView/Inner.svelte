@@ -151,6 +151,7 @@
   const currentInView = new Set;
 
   let left = 0;
+  let inner;
 
   let innerHeight = container.clientHeight;
   let innerWidth = container.clientWidth;
@@ -240,14 +241,20 @@
     console.log("<< goto.page", options, ( ( innerWidth * target ) ) * ( direction ), target, currentSpread, spreadData[target], ":", $currentSeq);
     $currentSeq = spreadData[target].find(item => item).seq;
 
-    left = ( ( innerWidth * target ) ) * ( direction );
+    inner.scrollLeft = ( ( innerWidth * target ) );
+    // left = ( ( innerWidth * target ) ) * ( direction );
+    // container.querySelector(`#spread${target}`).scrollIntoView({ behavior: 'instant' });
+    
   }
 
   emitter.on('goto.page', gotoPage);
 
   const resetSpread = function() {
+    if ( ! isInitialized ) { return ; }
     let currentSpread = itemMap[$currentSeq].spreadIndex;
-    left = ( ( innerWidth * currentSpread ) ) * ( -1 );
+    // container.querySelector(`#spread${target}`).scrollIntoView({ behavior: 'instant' });
+    inner.scrollLeft = ( ( innerWidth * currentSpread ) );
+    // left = ( ( innerWidth * currentSpread ) ) * ( -1 );
   }
 
   // const handleAnimationEnd = function(event) {
@@ -304,7 +311,7 @@
     resizeObserver.observe(container);
 
     return () => {
-      resizeObserver.unobserve(container);
+      // resizeObserver.unobserve(container);
       emitter.off('goto.page', gotoPage);
     }
   })
@@ -313,6 +320,8 @@
     if ( io ) {
       io.disconnect();
     }
+    inner.innerHTML = '';
+    resizeObserver.disconnect();
   })
 </script>
 
@@ -323,6 +332,7 @@
   style:--columnWidth={zoom > 1 ? ( `${( innerWidth / 2 ) * zoom}px` ) : null}
   on:click={handlePageClick}
   on:keydown={handlePageClick}
+  bind:this={inner}
   >
   {#if container == null}
     <pre>LOADING : {innerHeight}</pre>
@@ -370,10 +380,10 @@
     flex-wrap: nowrap;
     /* gap: 1rem; */
 
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: calc(var(--left) * 1px);
+    // position: absolute;
+    // top: 0;
+    // bottom: 0;
+    // left: calc(var(--left) * 1px);
   }
 
   .spread {

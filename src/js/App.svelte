@@ -8,6 +8,7 @@
 	
 	import ViewerToolbar from './components/ViewerToolbar';
 	import SearchView from './components/SearchView';
+	import RestrictedView from './components/RestrictedView';
 	import ScrollView from './components/ScrollView/Outer.svelte';
 	import FlipView from './components/FlipView';
 	import GridView from './components/GridView';
@@ -37,7 +38,7 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '2up';
+	export let view = '1up';
 	export let format = 'image';
 
 	let lastView = '1up';
@@ -50,7 +51,8 @@
 
 	window.manifest = manifest;
 
-	$: viewClass = ( view == 'search' ) ? 'search' : 'reader';
+	// $: viewClass = ( view == 'search' ) ? 'search' : 'reader';
+	$: viewClass = ( views[view] ) ? 'reader' : view;
 
 	function switchView(options) {
 		console.log("-- switchView", options);
@@ -84,7 +86,7 @@
 		<div class="accordion" id="controls">
 			<MetadataPanel></MetadataPanel>
 			<DownloadPanel></DownloadPanel>
-			{#if view != 'search'}
+			{#if view != 'search' && view != 'restricted' }
 			<SearchInItemPanel></SearchInItemPanel>
 			<JumpToSectionPanel></JumpToSectionPanel>
 			{/if}
@@ -97,6 +99,8 @@
 	<Pane size={75} class="pane--{viewClass}">
 		{#if view == 'search'}
 		<SearchView></SearchView>
+		{:else if view == 'restricted'}
+		<RestrictedView></RestrictedView>
 		{:else}
 		<ViewerToolbar></ViewerToolbar>
 		<svelte:component 

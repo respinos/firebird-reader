@@ -321,14 +321,16 @@
     }
   })
 
+  let inner;
   onDestroy(() => {
     if ( io ) {
       io.disconnect();
     }
+    inner.innerHTML = '';
   })
 </script>
 
-<div class="inner" on:click={handlePageClick} on:keydown={handlePageClick}>
+<div class="inner" on:click={handlePageClick} on:keydown={handlePageClick} bind:this={inner}>
   {#each itemData as canvas}
   <Page 
     bind:this={canvas.page}

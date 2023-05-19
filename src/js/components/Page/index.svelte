@@ -1,7 +1,7 @@
 <svelte:options accessors={true} />
 <script>
 
-  import { onMount, getContext } from 'svelte';
+  import { onMount, getContext, onDestroy } from 'svelte';
   import { afterUpdate } from 'svelte';
   import { get } from 'svelte/store';
 
@@ -244,6 +244,7 @@
 
   onMount(() => {
     // console.log("-- page.mount", seq, style);
+    console.log("-- page.mount", seq, isVisible);
 
     return () => { 
       // console.log("-- page.unmount", seq);
@@ -253,6 +254,10 @@
       }
       unloadImage(); 
     }
+  })
+
+  onDestroy(() => {
+    console.log("-- Page DESTROY", seq);
   })
 
 </script>
@@ -271,7 +276,6 @@
   on:unintersecting={handleUnintersecting}
   bind:this={pageDiv}>
 
-  {#if area != 'xxthumb'}
   <details class="page-menu" class:sticky={get(manifest.currentView) == '1up'}>
     <summary class="bg-dark text-white">
       <div class="d-flex align-items-center justify-content-between shadow px-3 py-2 gap-2 rounded">
@@ -306,7 +310,7 @@
       </button> -->
     </div>
   </details>
-  {/if}
+
   <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
     {#if isVisible}
     <img 
@@ -317,12 +321,12 @@
       style:width={imgWidth} 
       class:zoomed={pageZoom > 1}
       />
-    {/if}
-    {#if area != 'thumb'}
-    <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
-    <figcaption class="visually-hidden">
-      <PageText hidden={true} canvas={canvas} seq={seq}></PageText>
-    </figcaption>
+      {#if area != 'thumb'}
+      <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
+      <figcaption class="visually-hidden">
+        <PageText hidden={true} canvas={canvas} seq={seq}></PageText>
+      </figcaption>
+      {/if}
     {/if}
   </figure>
 </div>

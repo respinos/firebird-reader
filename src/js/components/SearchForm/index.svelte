@@ -183,14 +183,17 @@
         <i class="fa-solid fa-arrow-up-1-9" aria-hidden="true"></i>
       </button>
     </div>
+    {#if payload.finalAccessStatus == 'allow'}
     <button type="button" class="btn btn-outline-secondary" class:active={showHightlights} data-bs-toggle="tooltip" aria-label="Toggle highlights">
       <i class="fa-solid fa-sun" aria-hidden="true"></i>
     </button>
+    {/if}
   </div>
-  <div>
+  <div class="mb-3">
     {#each payload.results as item}
       <article class="mb-3">
         <svelte:element this={hTag} class="d-flex align-items-center gap-1">
+          {#if payload.finalAccessStatus == 'allow'}
           <a 
             href="/cgi/pt?id={manifest.id}&seq={item.seq}&q1={q1}&start={payload.range.value}" 
             class="btn btn-link fw-bold p-0" 
@@ -201,6 +204,14 @@
               (p. #{item.pageNum})
             {/if}
           </a>
+          {:else}
+          <span>
+          #{item.seq}
+          {#if item.pageNum}
+            (p. #{item.pageNum})
+          {/if}
+          </span>
+          {/if}
           <span>
               - {item.termHitCount} matching 
             {#if item.termHitCount = 1}term{:else}terms{/if}

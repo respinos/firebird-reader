@@ -242,6 +242,10 @@
   $: if ( ( format == 'plaintext-zip' || format == 'epub' ) && range != 'volume' ) { range = 'volume'; }
 
   onMount(() => {
+    if ( ! allowDownload ) {
+      return;
+    }
+    
     // this will be the log tracking
     tunnelWindow = tunnelFrame.contentWindow;
 
@@ -420,7 +424,6 @@
       </p>
       {/if}
     </form>
-    {/if}
     <form class="d-none" bind:this={tunnelForm} method="GET" action="{action}" target="download-module-{tunnelFormAttempt}">
       <input type="hidden" name="id" value={manifest.id} />
       <input type="hidden" name="attachment" value="1" />
@@ -443,6 +446,9 @@
       aria-hidden="true" 
       title="Tunnel Download Tracker" 
       name="download-module-{tunnelFormAttempt}"></iframe>
+    {:else}
+    <p>This item cannot be downloaded.</p>
+    {/if}
   </svelte:fragment>
 </Panel>
 <Modal bind:this={modal}>

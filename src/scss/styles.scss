@@ -30,7 +30,7 @@ hathi-website-header  {
   grid-template-rows: minmax(0, 1fr);
 }
 
-.pane--search {
+.pane--search, .pane--restricted {
   display: grid;
   grid-template-rows: 1fr;
   background: white !important;

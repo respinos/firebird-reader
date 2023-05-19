@@ -287,15 +287,19 @@
     }
   })
 
+  let inner;
   onDestroy(() => {
+    console.log("-- ScrollView DESTROY");
+
     isInitialized = false;
     if ( io ) {
       io.disconnect();
     }
+    inner.innerHTML = '';
   })
 </script>
 
-<div class="inner">
+<div class="inner" bind:this={inner}>
   {#each itemData as canvas}
   <Page 
     bind:this={canvas.page}
@@ -305,7 +309,7 @@
     {handleUnintersecting}
     seq={canvas.seq} 
     bind:zoom={zoom}
-    {thumbnailer}></Page>
+    ></Page>
   {/each}
 </div>
 
