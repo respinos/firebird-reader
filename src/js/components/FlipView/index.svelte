@@ -1,6 +1,6 @@
 <script>
   import { onMount, onDestroy, getContext } from 'svelte';
-	import { createObserver } from 'svelte-use-io';
+	// import { createObserver } from '../../lib/observer';
 
   import Inner from './Inner.svelte';
 

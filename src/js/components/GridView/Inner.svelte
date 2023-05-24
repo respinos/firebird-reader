@@ -1,6 +1,6 @@
 <script>
   import { onMount, afterUpdate, onDestroy, getContext } from 'svelte';
-	import { createObserver } from 'svelte-use-io';
+	import { createObserver } from '../../lib/observer';
   import PQueue from "p-queue";
   import { debounce } from '../../lib/debounce';
 

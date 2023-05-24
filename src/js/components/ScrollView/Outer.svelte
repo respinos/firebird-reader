@@ -1,6 +1,5 @@
 <script>
   import { onMount, onDestroy, getContext } from 'svelte';
-	import { createObserver } from 'svelte-use-io';
   import PQueue from "p-queue";
 
   import Inner from './Inner.svelte';
