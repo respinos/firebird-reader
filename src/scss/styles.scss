@@ -16,12 +16,21 @@ hathi-website-header  {
 }
 
 .reader {
-  grid-area: main;
+  grid-area: reader;
 }
 
-.splitpanes__pane {
+.splitpanes__pane, .pane {
   // overflow: auto !important;
   position: relative;
+}
+
+aside {
+  // padding-left: 0.5rem;
+  // padding-right: 2.5rem;
+  // margin: 0.25rem 0.5rem;
+  padding: 0.25rem 0.5rem;
+  padding-right: 1rem;
+  min-width: 20rem;
 }
 
 .pane--reader {

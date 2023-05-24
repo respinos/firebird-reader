@@ -4,7 +4,8 @@
 
 	import { Manifest } from './lib/manifest';
 
-	import { Pane, Splitpanes } from 'svelte-splitpanes';
+	// import { Pane, Splitpanes } from 'svelte-splitpanes';
+	import SplitPane from './components/SplitPane';
 	
 	import ViewerToolbar from './components/ViewerToolbar';
 	import SearchView from './components/SearchView';
@@ -51,6 +52,15 @@
 
 	window.manifest = manifest;
 
+	let stage;
+	let maxStageWidth = 700;
+	let expanded = false;
+	let maximized = false;
+
+	function toggleOptions() {
+		expanded = ! expanded;
+	}
+
 	// $: viewClass = ( view == 'search' ) ? 'search' : 'reader';
 	$: viewClass = ( views[view] ) ? 'reader' : view;
 
@@ -72,8 +82,22 @@
 		const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
 		const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl));
 
+		const resizeObserver = new ResizeObserver((entries) => {
+			const entry = entries[0];
+			const contentBoxSize = entry.contentBoxSize[0];
+			console.log(contentBoxSize.inlineSize, maxStageWidth);
+			if ( contentBoxSize.inlineSize <= maxStageWidth ) {
+				maximized = true;
+			} else {
+				maximized = false;
+			}
+		})
+
+		resizeObserver.observe(stage);
+
 		return () => {
 			emitter.off('switch.view', switchView);
+			resizeObserver.disconnect();
 		}
 	})
 </script>
@@ -81,8 +105,18 @@
 <hathi-website-header>
 	<WebsiteHeader searchState="toggle" compact={true}></WebsiteHeader>
 </hathi-website-header>
-<Splitpanes class="reader" vertical style="width: 100%">
-	<Pane snapSize={14} maxSize={30} size={30} class="overflow-auto pb-5 pt-3 ps-2 pe-3 bg-white">
+<div class="stage" class:maximized={maximized} bind:this={stage}>
+	{#if maximized}
+	<button style="grid-area: options" class="btn btn-dark shadow rounded-0 w-100 d-flex justify-content-between align-items-center" on:click={toggleOptions}>
+		<span>Options</span>
+		<i class="fa-solid fa-angle-down" class:fa-rotate-180={expanded} aria-hidden="true"></i>
+	</button>
+	{/if}
+	{#if ! maximized || ( maximized && ! expanded )}
+	<ViewerToolbar></ViewerToolbar>
+	{/if}
+	<SplitPane class="reader" type="horizontal" min="0%" max="50%" pos="30%" snap="10%" expanded={expanded} maximized={maximized} --color="#fff" --thickness="64px">
+	<aside slot="a" style="overflow: auto">
 		<div class="accordion" id="controls">
 			<MetadataPanel></MetadataPanel>
 			<DownloadPanel></DownloadPanel>
@@ -95,21 +129,36 @@
 			<SharePanel></SharePanel>
 		</div>
 		<VersionPanel></VersionPanel>
-	</Pane>
-	<Pane size={75} class="pane--{viewClass}">
+	</aside>
+	<section class="pane--{viewClass}" slot="b">
 		{#if view == 'search'}
 		<SearchView></SearchView>
 		{:else if view == 'restricted'}
 		<RestrictedView></RestrictedView>
 		{:else}
-		<ViewerToolbar></ViewerToolbar>
+		<!-- <ViewerToolbar></ViewerToolbar> -->
 		<svelte:component 
 			this={views[$currentView]}
 			startSeq={$currentSeq}
 			></svelte:component>
 		{/if}
-	</Pane>
-</Splitpanes>
+	</section>
+</SplitPane>
+</div>
 
-<style>
+<style lang="scss">
+	.stage {
+		grid-area: main;
+		display: grid;
+
+		position: relative;
+
+		grid-template-rows: minmax(0, 1fr);
+		grid-template-areas: "reader";
+
+		&.maximized {
+			grid-template-rows: min-content minmax(0, 1fr);
+			grid-template-areas: "options" "reader";
+		}
+	}
 </style>
