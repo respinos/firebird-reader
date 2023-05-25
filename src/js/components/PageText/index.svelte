@@ -6,7 +6,7 @@
   export let hidden = false;
   export let seq;
   export let canvas;
-  export let div;
+  // export let div;
 
   let matches = [];
   let page_coords;

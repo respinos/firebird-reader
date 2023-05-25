@@ -4,6 +4,8 @@
   import Panel from '../Panel';
   import SearchForm from '../SearchForm';
 
+  const emitter = getContext('emitter');
+
   let start = 1;
   let sort = 'seq';
   let showHightlights = true;
@@ -11,7 +13,7 @@
   function onClick(event) {
     let seq = event.target.dataset.seq;
     console.log("onClick", event, event.target);
-    alert(`DISPLAY ${seq}`);
+    emitter.emit('goto.page', { seq : seq });
   }
 
 </script>

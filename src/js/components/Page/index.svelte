@@ -7,6 +7,7 @@
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
+  const q1 = manifest.q1;
 
   import PageText from '../PageText/index.svelte';
   import SearchHighlights from '../SearchHighlights/index.svelte';
@@ -28,6 +29,8 @@
   export let area = null;
   export let mode = 'page';
 
+  let focused = false;
+
   let pageNum = manifest.pageNum(seq);
 
   export let innerHeight = window.innerHeight;
@@ -35,6 +38,20 @@
 
   export const scrollIntoView = function() {
     pageDiv.scrollIntoView({ behavior: 'instant'});
+  }
+
+  export const focus = function(invoke=false) {
+    focused = true;
+    if ( invoke === true ) {
+      setTimeout(() => {
+        pageDiv.focus();
+      }, 0);
+    }
+  }
+
+  export const unfocus = function() {
+    focused = false;
+    if ( pageDiv == document.activeElement ) { pageDiv.blur(); }
   }
 
   export const visible = function(viewport) {
@@ -78,6 +95,9 @@
   let text;
   let matches;
   let page_coords;
+  let pageText;
+  let figCaption;
+  let pageTextIsLoaded = false;
   let objectUrl;
   let isLoaded = false;
 
@@ -94,6 +114,7 @@
       // loadImage();
     } else {
       unloadImage();
+      unloadPageText();
     }
   }
 
@@ -127,6 +148,7 @@
           image.src = objectUrl;
           isLoaded = true;
           loadPageText();
+          emitter.on('update.highlights', loadPageText);
         } else {
           URL.revokeObjectURL(objectUrl);
         }
@@ -141,9 +163,18 @@
     // console.log("---- unload", seq, image);
   }
 
+  const unloadPageText = function() {
+    if ( figCaption ) { figCaption.innerHTML = ''; }
+    emitter.off('update.highlights', loadPageText);
+  }
+
   export const loadPageText = function() {
 
+    if ( ! figCaption ) { return ; }
+
     if ( mode != 'page' ) { return ; }
+
+    console.log("-- loadPageText", mode, $q1);
 
     function parseCoords(value) {
       var values = value.split(' ')
@@ -152,26 +183,39 @@
 
     // if ( pageText && pageText.querySelector('.ocr_page') ) { return ; }
     let text_src = `/cgi/imgsrv/html?id=${canvas.id}&seq=${seq}`;
+    if ( $q1 ) { text_src += `&q1=${$q1}`; }
     // need to deal with q1
     fetch(text_src)
       .then((response) => {
         return response.text();
       })
       .then(text => {
+
+        if ( ! figCaption ) { return ; }
+
         // if ( ! pageText ) { return ; }
         // pageText = text.replace('<div class="ocr_page"', '<div class="ocr_page" data-words="[&quot;lowndes&quot;]"');
         const parser = new DOMParser();
         const ocr_div = parser.parseFromString(text, 'text/html').body.childNodes[0];
 
         page_coords = parseCoords(ocr_div.dataset.coords);
-        ocr_div.dataset.words = `["lowndes"]`;
+        // ocr_div.dataset.words = `["lowndes"]`;
         ocr_div.classList.add('visually-hidden');
         // pageText.append(ocr_div);
+        console.log("loadPageText", seq, page_coords, ocr_div.dataset.words);
 
+        // we have text so watch for updates
+        figCaption.innerHTML = '';
+        figCaption.dataset.loaded = true;
+        figCaption.append(ocr_div);
+
+        // if we have no page coordinates, there's no highlighting
+        if ( ! ocr_div.dataset.coords ) { return; }
+
+        // if no words match, there's no highlighting
         let words = JSON.parse(ocr_div.dataset.words || '[]');
         if ( ! words || ! words.length ) { return ; }
 
-        if ( ! ocr_div.dataset.coords ) { return; }
 
         matches = extractHighlights(words, ocr_div);
       })
@@ -253,6 +297,7 @@
         // console.log("-- app.unmount", seq);
       }
       unloadImage(); 
+      emitter.off('update.highights', loadPageText);
     }
   })
 
@@ -262,6 +307,8 @@
 
 </script>
 
+<!--   inert={!focused ? true : null} ??? -->
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div class="page" {style} data-seq={seq} data-height={Math.ceil(scanHeight)}
   style:--height={Math.ceil(scanHeight)}
   style:--width={Math.ceil(scanWidth)}
@@ -270,8 +317,12 @@
   class:verso={area == 'verso'}
   class:recto={area == 'recto'}
   class:view-thumb={area == 'thumb'}
+  id="p{seq}" 
+  aria-hidden={!focused}
+  aria-label="Page scan {seq}"
+  role="group"
+  tabindex={focused ? 0 : -1}
   use:observer 
-  id="id{seq}" 
   on:intersecting={handleIntersecting} 
   on:unintersecting={handleUnintersecting}
   bind:this={pageDiv}>
@@ -323,8 +374,7 @@
       />
       {#if area != 'thumb'}
       <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
-      <figcaption class="visually-hidden">
-        <PageText hidden={true} canvas={canvas} seq={seq}></PageText>
+      <figcaption class="visually-hidden" bind:this={figCaption}>
       </figcaption>
       {/if}
     {/if}

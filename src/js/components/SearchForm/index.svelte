@@ -1,8 +1,10 @@
 <script>
   import { onMount, beforeUpdate, tick, getContext } from 'svelte';
+  import { tooltip } from '../../lib/tooltip';
 
   const manifest = getContext('manifest');
-
+  const emitter = getContext('emitter');
+  
   export let inPanel = true;
   let hTag = inPanel ? 'h4' : 'h3';
   export let onClick = function(seq) { alert(seq); }
@@ -10,7 +12,8 @@
   let start = 1;
   let sz = 25;
   let sort = 'seq';
-  let showHightlights = true;
+  let showHighlights = true;
+  document.documentElement.dataset.showHighlights = showHighlights;
 
   let searchUrl = new URL(location.href);
   let searchParams = searchUrl.searchParams;
@@ -31,6 +34,11 @@
     q1 = manifest.payload.q1;
     configureNavigationLinks();
     summarizePayload();
+  }
+
+  function toggleHighlights() {
+    showHighlights = ! showHighlights;
+    document.documentElement.dataset.showHighlights = showHighlights;
   }
 
   function configureNavigationLinks() {
@@ -73,7 +81,7 @@
       searchParams.set('sz', 25);
       searchParams.set('q1', q1);
       searchParams.set('sort', sort);
-      if ( ! showHightlights ) {
+      if ( ! showHighlights ) {
         searchParams.set('hl', 'false');
       }
 
@@ -101,6 +109,8 @@
 
           configureNavigationLinks();
           summarizePayload();
+          manifest.q1.set(q1);
+          emitter.emit('update.highlights', q1);
         })
     }
 
@@ -148,9 +158,9 @@
       <button class="btn btn-outline-secondary" 
         type="button"
         aria-label="Clear search" 
-        data-bs-toggle="tooltip"
         data-bs-placement="right"
         disabled={payload == null}
+        use:tooltip
         on:click={clearSearchForm}>
         <i class="fa-regular fa-circle-xmark"></i>
       </button>
@@ -176,15 +186,21 @@
 {#if payload}
   <div class="d-flex align-items-center justify-content-between border rounded p-1 mb-3">
     <div class="btn-group" role="group" aria-label="Sort Results">
-      <button type="button" class="btn btn-outline-secondary" class:active={sort == 'score'} data-bs-toggle="tooltip" aria-label="Sort by relevance">
+      <button type="button" class="btn btn-outline-secondary" class:active={sort == 'score'} use:tooltip aria-label="Sort by relevance">
         <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
       </button>
-      <button type="button" class="btn btn-outline-secondary" class:active={sort == 'seq'} data-bs-toggle="tooltip" aria-label="Sort by page scan">
+      <button type="button" class="btn btn-outline-secondary" class:active={sort == 'seq'} use:tooltip aria-label="Sort by page scan">
         <i class="fa-solid fa-arrow-up-1-9" aria-hidden="true"></i>
       </button>
     </div>
     {#if payload.finalAccessStatus == 'allow'}
-    <button type="button" class="btn btn-outline-secondary" class:active={showHightlights} data-bs-toggle="tooltip" aria-label="Toggle highlights">
+    <button 
+      type="button" 
+      class="btn btn-outline-secondary" 
+      class:active={showHighlights}
+      on:click={toggleHighlights}
+      use:tooltip
+      aria-label={showHighlights ? 'Hide Highlights' : 'Show Highlights'}>
       <i class="fa-solid fa-sun" aria-hidden="true"></i>
     </button>
     {/if}
@@ -277,7 +293,7 @@
   <input type="hidden" name="sz" value={sz} />
   <input type="hidden" name="start" value={start} />
   <input type="hidden" name="sort" value={sort} />
-  <input type="hidden" name="hl" value={showHightlights} />
+  <input type="hidden" name="hl" value={showHighlights} />
 </form>
 {/if}
 

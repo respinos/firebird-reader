@@ -15,6 +15,7 @@
       return values.map((v) => parseInt(v, 10));
     }
 
+    highlights.length = 0;
     var timestamp = (new Date).getTime();
 
     var scaling = {};
@@ -105,7 +106,7 @@
     highlights = highlights
   }
 
-  $: if (matches && matches.length) { console.log("AHOY building matches"); buildHighlights() }
+  $: if (image && matches && matches.length) { console.log("AHOY building matches", matches); buildHighlights() }
 
 </script>
 
@@ -113,8 +114,12 @@
 
   :global(mark.highlight) {
     position: absolute;
-    background: greenyellow;
+    background: #ffff00;
     opacity: 0.2;
+  }
+
+  :global(html[data-show-highlights="false"] mark.highlight) {
+    display: none !important;
   }
 
 </style>

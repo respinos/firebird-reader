@@ -7,10 +7,12 @@ import { setupHTEnv } from '~firebird-common/src/js/lib/utils';
 import * as bootstrap from 'bootstrap';
 window.bootstrap = bootstrap;
 
-new bootstrap.Tooltip('body', { 
-  selector: '[data-bs-toggle="tooltip"]',
-  title: function() { return this.getAttribute('aria-label'); }
-});
+// -- favor lib/tooltip.js action because the native bootstrap 
+// tooltip remains on when buttons are clicked and stay in focus
+// new bootstrap.Tooltip('body', { 
+//   selector: '[data-bs-toggle="tooltip"]',
+//   title: function() { return this.getAttribute('aria-label'); }
+// });
 
 import App from './App.svelte'
 

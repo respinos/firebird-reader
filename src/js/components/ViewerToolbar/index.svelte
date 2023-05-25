@@ -8,6 +8,7 @@
 
   const currentSeq = manifest.currentSeq;
   $: seq = $currentSeq;
+  $: console.log("ViewerToolbar", seq);
 
   // const updateSeq = function(data) {
   //   if ( data ) { seq = data; }

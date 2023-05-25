@@ -49,6 +49,9 @@
 	manifest.currentView = currentView;
 	manifest.currentFormat = currentFormat;
 	manifest.currentSeq = currentSeq;
+	manifest.q1 = writable('');
+
+	console.log("App", $currentSeq);
 
 	window.manifest = manifest;
 

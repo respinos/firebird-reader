@@ -1,6 +1,7 @@
 <script>
 	import { createEventDispatcher } from 'svelte';
 	import { constrain } from './utils.js';
+	import { tooltip } from '../../lib/tooltip';
 
 	/** @type {ReturnType<typeof createEventDispatcher<{ change: undefined }>>} */
 	const dispatch = createEventDispatcher();
@@ -155,8 +156,12 @@
 
 	{#if pos !== '0%' && pos !== '100%'}
 		<div class="{type} divider" class:disabled class:collapsed={position == '0%'} use:drag={(e) => update(e.clientX, e.clientY, e)}>
-			<button type="button" class="btn btn-lg btn-outline-dark shadow rounded-circle" on:click={togglePane} aria-label="Toggle pane">
-				<!-- <i class="fa-solid fa-angles-up fa-rotate-270" aria-hidden="true"></i> -->
+			<button 
+				type="button" 
+				class="btn btn-lg btn-outline-dark shadow rounded-circle" 
+				on:click={togglePane} 
+				use:tooltip
+				aria-label={position == '0%' ? 'Open sidebar' : 'Close sidebar'}>
 				<i 
 					class="fa-solid fa-arrow-right-from-bracket"  
 					class:fa-flip-horizontal={position != '0%'}

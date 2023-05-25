@@ -52,6 +52,6 @@ export const extractHighlights = function (words, ocr_div) {
     matches.push(span);
   })
 
-  // console.log("AHOY MATCHES", matches);
+  console.log("AHOY MATCHES", matches);
   return matches;
 }

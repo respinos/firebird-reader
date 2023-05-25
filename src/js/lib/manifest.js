@@ -1,6 +1,7 @@
 export class Manifest {
   constructor(options={}) {
-    this.currentSeq = options.seq;
+    this.currentSeq = options.seq || options.defaultSeq;
+    this.initialSeq = options.seq;
     delete options.seq;
 
     Object.assign(this, options);

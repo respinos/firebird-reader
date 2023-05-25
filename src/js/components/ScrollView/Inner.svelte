@@ -183,8 +183,20 @@
         max.percentage = percentage;
       }
     })
-    $currentSeq = max.seq;
+    if ( max.seq > 0 ) {
+      $currentSeq = max.seq;
+    }
+    focus($currentSeq);
     // emitter.emit('update.seq', currentSeq);
+  }
+
+  let focusSeq;
+  const focus = function(seq) {
+    if ( focusSeq ) {
+      itemMap[focusSeq].page.unfocus();
+    }
+    itemMap[seq].page.focus();
+    focusSeq = seq;
   }
 
   let content;
