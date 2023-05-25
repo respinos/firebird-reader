@@ -1,6 +1,7 @@
 <script>
   import { onMount, getContext } from 'svelte';
 	import { writable } from 'svelte/store';
+  import { tooltip } from '../../lib/tooltip';
 
   import Panel from '../Panel';
   import Modal from '~firebird-common/src/js/components/Modal';
@@ -17,6 +18,7 @@
   let currentView = manifest.currentView;
   let currentSeq = manifest.currentSeq;
   let currentLocation = manifest.currentLocation;
+  let selected = manifest.selected;
   let format = 'pdf';
   let range = manifest.allowFullDownload ? 'volume' : 'current-page';
   
@@ -237,11 +239,45 @@
     return ( range == 'selected-pages' || range == 'current-page' );
   }
 
+  function flattenSelection(selected) {
+    const list = [];
+    Array.from(selected).sort(function(a, b) { return a - b; }).forEach(function(val) {
+      if ( list.length == 0 ) {
+        list.push([val, -1]);
+      } else {
+        const last = list[list.length - 1];
+        if ( last[1] < 0 && val - last[0] == 1 ) {
+            last[1] = val;
+        } else if ( val - last[1] == 1 ) {
+            last[1] = val;
+        } else {
+            list.push([val, -1]);
+        }
+      }
+    })
+
+    for(var i = 0; i < list.length; i++) {
+      const tmp = list[i];
+      if ( tmp[1] < 0 ) {
+        list[i] = tmp[0];
+      } else {
+        list[i] = tmp[0] + "-" + tmp[1];
+      }
+    }
+    return list;
+  }
+
+  function gotoSelection(sel) {
+    let tmp = new String(sel).split('-');
+    emitter.emit('goto.page', { seq: tmp[0] });
+  }
 
   $: action = buildAction(format);
   $: iframeName = `download-module-${tunnelFormAttempt}`;
   $: if ( ( format == 'plaintext-zip' || format == 'epub' ) && range != 'volume' ) { range = 'volume'; }
-  $: console.log($currentLocation);
+  $: flattenedSelection = flattenSelection($selected);
+  $: console.log("-- download flatten", flattenedSelection);
+  $: if ( flattenedSelection.length ) { range = 'selected-pages'; }
 
   onMount(() => {
     if ( ! allowDownload ) {
@@ -395,6 +431,27 @@
           <label class="form-check-label" for="range-selected-pages">
             Selected page scans
           </label>
+        </div>
+        <div class="d-flex justify-content-between" class:d-none={flattenedSelection.length == 0}>
+          <ul class="list-unstyled mx-4 mb-1">
+            {#each flattenedSelection as sel}
+              <li>
+                <button 
+                  type="button"
+                  class="btn btn-link py-0"
+                  on:click={() => gotoSelection(sel)}
+                  >{sel}</button>
+              </li>
+            {/each}
+          </ul>
+          <button 
+            class="btn btn-outline-dark align-self-start" 
+            type="button"
+            aria-label="Clear selection"
+            use:tooltip
+            on:click={() => manifest.clearSelection()}>
+            <i class="fa-regular fa-circle-xmark" aria-hidden="true"></i>
+          </button>
         </div>
         {/if}
       </fieldset>

@@ -10,6 +10,7 @@ export class Manifest {
     
     this.xget = get;
 
+    this.selectedKey = `selection-${this.id}`;
     this.items = this.featureList;
     this.totalSeq = this.featureList.length;
     this.defaultSeq = parseInt(this.defaultSeq, 10);
@@ -149,5 +150,40 @@ export class Manifest {
         this.checkFeatures(this.totalSeq, "COVER") && this.checkFeatures(this.totalSeq, "LEFT") 
       ) 
     );
+  }
+
+  select(seq, event) {
+    const selected = get(this.selected);
+    const lastSeq = ( event.shiftKey && this._lastSelectedSeq ) ? this._lastSelectedSeq : seq;
+    const startSeq = seq > lastSeq ? lastSeq : seq;
+    const endSeq = seq > lastSeq ? seq : lastSeq;
+
+    if ( selected.size == 0 && event.shiftKey ) {
+      alert(`Shift-click selects the pages between this page and an earlier selection, and we didn't find an earlier selected page.`);
+      return;
+    }
+
+    const isAdding = ! selected.has(seq);
+
+    console.log("-- select", startSeq, endSeq);
+
+    for(let seq_ = startSeq; seq_ <= endSeq; seq_ += 1) {
+      if ( isAdding ) {
+        selected.add(seq_);
+      } else {
+        selected.delete(seq_);
+      }
+    }
+
+    this.selected.set(selected);
+    this._lastSelectedSeq = seq;
+
+    sessionStorage.setItem(this.selectedKey, JSON.stringify(Array.from(selected)));
+  }
+
+  clearSelection() {
+    this.selected.set(new Set());
+    sessionStorage.setItem(this.selectedKey, JSON.stringify(Array.from(get(this.selected))));
+    this._lastSelectedSeq = null;
   }
 }

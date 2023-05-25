@@ -5,9 +5,12 @@
   import { afterUpdate } from 'svelte';
   import { get } from 'svelte/store';
 
+  import { tooltip } from '../../lib/tooltip';
+
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
   const q1 = manifest.q1;
+  const selected = manifest.selected;
 
   import PageText from '../PageText/index.svelte';
   import SearchHighlights from '../SearchHighlights/index.svelte';
@@ -331,7 +334,11 @@
   on:unintersecting={handleUnintersecting}
   bind:this={pageDiv}>
 
-  <details class="page-menu" class:sticky={get(manifest.currentView) == '1up'}>
+  <details 
+    class="page-menu" 
+    class:sticky={get(manifest.currentView) == '1up'}
+    open={$selected.has(seq) ? true : null}
+    >
     <summary 
       class="btn-dark"
       aria-hidden={!focused}
@@ -350,7 +357,20 @@
       </div>
     </summary>
     <div class="d-flex flex-column gap-1 align-items-center width-min-content menu-items">
-      <button type="button" class="btn btn-light border border-dark"><i class="fa-regular fa-square"></i></button>
+      {#if manifest.allowFullDownload}
+      <button 
+        type="button" 
+        class="btn btn-light border border-dark"
+        use:tooltip
+        on:click={(event) => manifest.select(seq, event)}
+        aria-label={$selected.has(seq) ? `Page scan #${seq} is selected` : `Select page scan #${seq}`}
+        aria-pressed={$selected.has(seq)}
+        ><i 
+          class="fa-regular"
+          class:fa-square={!$selected.has(seq)}
+          class:fa-square-check={$selected.has(seq)}></i>
+      </button>
+      {/if}
       {#if $view == '1up'}
       <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
       {/if}

@@ -150,7 +150,7 @@
 		<slot name="a" />
 	</div>
 
-	<div class="pane">
+	<div class="pane b" class:maximized={position == '0%'}>
 		<slot name="b" />
 	</div>
 
@@ -158,7 +158,7 @@
 		<div class="{type} divider" class:disabled class:collapsed={position == '0%'} use:drag={(e) => update(e.clientX, e.clientY, e)}>
 			<button 
 				type="button" 
-				class="btn btn-lg btn-outline-dark shadow rounded-circle" 
+				class="btn x-btn-lg btn-outline-dark shadow rounded-circle" 
 				on:click={togglePane} 
 				use:tooltip
 				aria-label={position == '0%' ? 'Open sidebar' : 'Close sidebar'}>
@@ -299,6 +299,14 @@
 
 	.panes.horizontal.expanded .pane.a {
 		/* padding: 0.25rem 0.5rem; */
+	}
+
+	.pane.b {
+		padding-left: 1rem;
+	}
+
+	.pane.b.maximized {
+		padding-left: 4rem;
 	}
 
 	.panes.horizontal.maximized > .divider {

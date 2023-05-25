@@ -46,7 +46,7 @@
 	const currentView = writable(view);
 	const currentFormat = writable(format);
 	const currentSeq = writable(manifest.currentSeq);
-
+	
 	let instance;
 	manifest.instance = instance;
 
@@ -55,6 +55,9 @@
 	manifest.currentSeq = currentSeq;
 	manifest.q1 = writable('');
 	manifest.currentLocation = writable({});
+
+	const storedSelected = JSON.parse(sessionStorage.getItem(manifest.selectedKey) || '[]');
+	manifest.selected = writable(new Set(storedSelected));
 
 	window.manifest = manifest;
 
