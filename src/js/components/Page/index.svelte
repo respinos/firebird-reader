@@ -30,6 +30,7 @@
   export let mode = 'page';
 
   let focused = false;
+  let invoked = false;
 
   let pageNum = manifest.pageNum(seq);
 
@@ -42,11 +43,12 @@
 
   export const focus = function(invoke=false) {
     focused = true;
-    if ( invoke === true ) {
-      setTimeout(() => {
-        pageDiv.focus();
-      }, 0);
-    }
+    invoked = invoke;
+    // if ( invoke === true ) {
+    //   setTimeout(() => {
+    //     pageDiv.focus();
+    //   }, 0);
+    // }
   }
 
   export const unfocus = function() {
@@ -174,7 +176,7 @@
 
     if ( mode != 'page' ) { return ; }
 
-    console.log("-- loadPageText", mode, $q1);
+    // console.log("-- loadPageText", mode, $q1);
 
     function parseCoords(value) {
       var values = value.split(' ')
@@ -202,7 +204,7 @@
         // ocr_div.dataset.words = `["lowndes"]`;
         ocr_div.classList.add('visually-hidden');
         // pageText.append(ocr_div);
-        console.log("loadPageText", seq, page_coords, ocr_div.dataset.words);
+        // console.log("loadPageText", seq, page_coords, ocr_div.dataset.words);
 
         // we have text so watch for updates
         figCaption.innerHTML = '';
@@ -282,6 +284,8 @@
   $: rotateX = 0;
   $: orientMargin = 0;
 
+  $: if ( invoked && pageDiv ) { pageDiv.focus(); }
+
   // $: console.log(">> zoom", zoom, pageZoom, scanHeight, scanWidth);
 
   let testWidth, testHeight;
@@ -328,8 +332,12 @@
   bind:this={pageDiv}>
 
   <details class="page-menu" class:sticky={get(manifest.currentView) == '1up'}>
-    <summary class="bg-dark text-white">
-      <div class="d-flex align-items-center justify-content-between shadow px-3 py-2 gap-2 rounded">
+    <summary 
+      class="btn-dark"
+      aria-hidden={!focused}
+      tabindex={focused ? 0 : -1}
+      >
+      <div class="d-flex align-items-center justify-content-between shadow px-2 py-1 gap-2 rounded">
         <span class="seq">
           #{seq}
           {#if pageNum}
@@ -409,6 +417,18 @@
       flex-direction: column;
       gap: 0.5rem;
       // margin-bottom: 3rem;
+    }
+
+    &:focus-visible {
+      outline: 0;
+
+      .frame img {
+        // outline: 4px solid darkorange;
+        --bs-btn-focus-shadow-rgb: 66,70,73;
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
+      }
+      
     }
   }
 
@@ -537,20 +557,20 @@
       }
 
       figure {
-        margin-right: 0;
+        margin-right: 0px;
 
         img {
-          margin-right: 0;
+          margin-right: 0px;
         }
       }
     }
 
     &.recto {
       figure {
-        margin-left: 0;
+        margin-left: 0px;
 
         img {
-          margin-left: 0;
+          margin-left: 0px;
         }
       }
     }
@@ -567,18 +587,34 @@
 
 
   .page-menu summary {
+    --bs-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
     list-style: none;
-    /*   padding: 0.5rem 0.75rem; */
-    background: #333;
-    color: #eee;
 
-    border: 2px solid #333;
-    background: #fff;
-    color: #333;
+    font-size: 0.875rem;
+
+    color: var(--bs-btn-color);
+    background-color: var(--bs-btn-bg);
+    margin: 0.25rem;
+
+    border: 2px solid var(--bs-btn-border-color);
 
     border-radius: 4px;
 
     font-family: "Roboto Mono", monospace;
+
+    &:hover {
+      background-color: var(--bs-btn-hover-bg);
+      border-color: var(--bs-btn-hover-border-color);
+      color: var(--bs-btn-hover-color);
+    }
+
+    &:focus-visible {
+      color: var(--bs-btn-hover-color);
+      background-color: var(--bs-btn-hover-bg);
+      border-color: var(--bs-btn-hover-border-color);
+      outline: 0;
+      box-shadow: var(--bs-btn-focus-box-shadow);
+    }
   }
 
   .page-menu > div {

@@ -32,6 +32,21 @@
     rootMargin: `0% 200% 0% 200%`
   })
 
+  export const currentLocation = function() {
+    let location = {};
+    if ( itemMap[$currentSeq] ) {
+      let item = itemMap[$currentSeq];
+      location[item.side] = item;
+    }
+    if ( itemMap[$currentSeq].side == 'verso' ) {
+      let item = itemMap[$currentSeq + 1];
+      if ( item ) {
+        location[item.side] = item;
+      }
+    }
+    return location;
+  }
+
   const unloadPage = async function(pageDatum) {
     // console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
     itemMap[pageDatum.seq].page.toggle(false);
@@ -42,11 +57,11 @@
 
   const loadPage = async function(pageDatum, delta) {
     if (! pageDatum.loaded) {
-      console.log(":: loading", pageDatum.seq, queue.size, "->", pageDatum);
+      // console.log(":: loading", pageDatum.seq, queue.size, "->", pageDatum);
       pageDatum.loaded = true;
       pageDatum.page.toggle(true);
     } else {
-      console.log("$$ ignoring", pageDatum.seq, queue.size, "->", pageDatum);
+      // console.log("$$ ignoring", pageDatum.seq, queue.size, "->", pageDatum);
     }
     pageDatum.enqueued = false;
     return pageDatum;
@@ -139,6 +154,7 @@
   }
 
   let currentSeq = manifest.currentSeq;
+  let location = manifest.currentLocation;
 
   let zoom = 1;
   let zoomIndex = 0;
@@ -204,6 +220,35 @@
 
   console.log("-- spread", spreadData);
 
+  let focusSpread;
+  const focus = function() {
+    if ( focusSpread ) {
+      focusSpread.forEach((page) => {
+        page.unfocus();
+      })
+    }
+    focusSpread = [];
+    if ( $location.verso ) { focusSpread.push($location.verso.page); }
+    if ( $location.recto ) { focusSpread.push($location.recto.page); }
+    focusSpread.forEach((page) => {
+      page.focus();
+    })
+  }
+
+  const handleKeyDown = function(event) {
+    if ( event.target.closest('details') ) { return ; }
+    if ( event.target.closest('button') ) { return ; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    if ( event.code == 'Enter' ) {
+      let options = { delta: 1 };
+      if ( pageDiv.classList.contains('verso') ) {
+        options.delta = -1;
+      }
+      gotoPage(options);
+    }
+  }
+
   const handlePageClick = function(event) {
     if ( event.target.closest('details') ) { return ; }
     if ( event.target.closest('button') ) { return ; }
@@ -217,20 +262,26 @@
   }
 
   let doAutoLoad = true;
-  const gotoPage = function(options) {
+  const gotoPage = function(options, callback) {
     let target;
+    let distance = 0;
     let currentSpread = itemMap[$currentSeq].spreadIndex;
     if ( options.delta !== undefined ) {
       target = currentSpread + options.delta;
+      distance = Math.abs(target - currentSpread);
     } else if ( options.seq && ! isNaN(options.seq) ) {
       // target = Math.floor(options.seq / 2);
       target = itemMap[options.seq].spreadIndex;
+      distance = Math.abs(target - currentSpread);
       // doAutoLoad = ( Math.abs(options.seq - $currentSeq) >= 5 );
     } else {
       // invalid option;
       return;
     }
-    if ( target == currentSpread && isInitialized && options.delta != 0 ) { return ; }
+    if ( target == currentSpread && isInitialized && options.delta != 0 ) { 
+      if ( callback ) { callback(); }
+      return ; 
+    }
     if ( target < 0 ) { target = 0 ; }
     else if ( target > manifest.totalSeq ) {
       target = itemMap[manifest.totalSeq].spreadIndex;
@@ -240,8 +291,22 @@
 
     console.log("<< goto.page", options, ( ( innerWidth * target ) ) * ( direction ), target, currentSpread, spreadData[target], ":", $currentSeq);
     $currentSeq = spreadData[target].find(item => item).seq;
+    manifest.currentLocation.set(currentLocation());
 
-    inner.scrollLeft = ( ( innerWidth * target ) );
+    focus();
+
+    // default smooth behavior is still ridiculously slow
+    if ( false && distance <= 2 ) {
+      let scrollDelta = ( innerWidth * target ) - inner.scrollLeft;
+      inner.scrollBy({ left: scrollDelta, behavior: 'smooth' });
+    } else {
+      inner.scrollLeft = ( ( innerWidth * target ) );
+    }
+
+    if ( callback ) {
+      callback();
+    }
+
     // left = ( ( innerWidth * target ) ) * ( direction );
     // container.querySelector(`#spread${target}`).scrollIntoView({ behavior: 'instant' });
     
@@ -311,7 +376,7 @@
     resizeObserver.observe(container);
 
     return () => {
-      // resizeObserver.unobserve(container);
+      resizeObserver.disconnect();
       emitter.off('goto.page', gotoPage);
     }
   })
@@ -321,7 +386,6 @@
       io.disconnect();
     }
     inner.innerHTML = '';
-    resizeObserver.disconnect();
   })
 </script>
 
@@ -331,7 +395,7 @@
   style:--left={left}
   style:--columnWidth={zoom > 1 ? ( `${( innerWidth / 2 ) * zoom}px` ) : null}
   on:click={handlePageClick}
-  on:keydown={handlePageClick}
+  on:keydown={handleKeyDown}
   bind:this={inner}
   >
   {#if container == null}

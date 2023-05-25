@@ -1,3 +1,5 @@
+import { get } from 'svelte/store';
+
 export class Manifest {
   constructor(options={}) {
     this.currentSeq = options.seq || options.defaultSeq;
@@ -6,6 +8,8 @@ export class Manifest {
 
     Object.assign(this, options);
     
+    this.xget = get;
+
     this.items = this.featureList;
     this.totalSeq = this.featureList.length;
     this.defaultSeq = parseInt(this.defaultSeq, 10);

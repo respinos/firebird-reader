@@ -11,7 +11,15 @@
 
   let currentSeq = 1;
 
+  let instance;
+
   export let startSeq = 1;
+
+  export const currentLocation = function() {
+    return instance.currentLocation();
+  }
+
+  $: if ( instance ) { manifest.currentLocation.set(currentLocation()); }
 
   onMount(() => {
     console.log("-- itemCount", manifest.totalSeq, startSeq);
@@ -20,7 +28,7 @@
 
 <div class="view--container" bind:this={container}>
   {#if container}
-  <Inner {container} {startSeq}></Inner>
+  <Inner {container} {startSeq} bind:this={instance}></Inner>
   {/if}
 </div>
 

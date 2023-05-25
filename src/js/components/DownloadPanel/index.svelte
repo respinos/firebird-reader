@@ -16,6 +16,7 @@
 
   let currentView = manifest.currentView;
   let currentSeq = manifest.currentSeq;
+  let currentLocation = manifest.currentLocation;
   let format = 'pdf';
   let range = manifest.allowFullDownload ? 'volume' : 'current-page';
   
@@ -240,6 +241,7 @@
   $: action = buildAction(format);
   $: iframeName = `download-module-${tunnelFormAttempt}`;
   $: if ( ( format == 'plaintext-zip' || format == 'epub' ) && range != 'volume' ) { range = 'volume'; }
+  $: console.log($currentLocation);
 
   onMount(() => {
     if ( ! allowDownload ) {
@@ -345,30 +347,34 @@
           </label>
         </div>
         {:else if $currentView == '2up'}
-        <div class="form-check">
-          <input name="range" 
-            class="form-check-input" 
-            type="radio" 
-            value="current-page" 
-            id="range-current-verso-page" 
-            disabled={format == 'epub' || format == 'plaintext-zip'}
-            bind:group={range}>
-          <label class="form-check-label" for="range-current-verso-page">
-            Current verso page scan (#{$currentSeq})
-          </label>
-        </div>
-        <div class="form-check">
-          <input name="range" 
-            class="form-check-input" 
-            type="radio" 
-            value="current-page" 
-            id="range-current-recto-page" 
-            disabled={format == 'epub' || format == 'plaintext-zip'}
-            bind:group={range}>
-          <label class="form-check-label" for="range-current-recto-page">
-            Current recto page scan (#{$currentSeq+1})
-          </label>
-        </div>
+          {#if $currentLocation.verso}
+            <div class="form-check">
+              <input name="range" 
+                class="form-check-input" 
+                type="radio" 
+                value="current-page-verso" 
+                id="range-current-verso-page" 
+                disabled={format == 'epub' || format == 'plaintext-zip'}
+                bind:group={range}>
+              <label class="form-check-label" for="range-current-verso-page">
+                Current verso page scan (#{$currentLocation.verso.seq})
+              </label>
+            </div>
+          {/if}
+          {#if $currentLocation.recto}
+            <div class="form-check">
+              <input name="range" 
+                class="form-check-input" 
+                type="radio" 
+                value="current-page-recto" 
+                id="range-current-recto-page" 
+                disabled={format == 'epub' || format == 'plaintext-zip'}
+                bind:group={range}>
+              <label class="form-check-label" for="range-current-recto-page">
+                Current right page scan (#{$currentLocation.recto.seq})
+              </label>
+            </div>
+          {/if}
         {/if}
         {#if manifest.allowFullDownload}
         <div class="form-check">

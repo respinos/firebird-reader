@@ -239,10 +239,10 @@
 
 	.horizontal > .divider > button {
 		position: absolute;
-		top: 5%;
+		top: 15%;
 		left: 50%;
 		transform: translateY(-50%) translateX(-50%);
-		z-index: 10;
+		z-index: 100;
 	}
 
 	.horizontal > .divider.collapsed > button {
@@ -309,8 +309,12 @@
 		background: #fff;
 	}
 
-	.btn-outline-dark:hover {
+	.btn-outline-dark:hover, 
+	.btn-outline-dark:focus, 
+	.btn-outline-dark:active, 
+	.btn-outline-dark:focus-visible {
 		background-color: var(--bs-btn-hover-border-color);
+		color: white;
 	}
 
 	/* @container container (max-width: 700px) {

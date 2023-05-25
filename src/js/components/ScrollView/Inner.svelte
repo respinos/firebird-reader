@@ -37,6 +37,10 @@
     rootMargin: `200% 0% 200% 0%`
   });
 
+  export const currentLocation = function() {
+    return { page: itemMap[$currentSeq] };
+  }
+
   const unloadPage = async function(pageDatum) {
     // console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
     itemMap[pageDatum.seq].page.toggle(false);
@@ -187,6 +191,7 @@
       $currentSeq = max.seq;
     }
     focus($currentSeq);
+    manifest.currentLocation.set(currentLocation());
     // emitter.emit('update.seq', currentSeq);
   }
 
@@ -307,7 +312,9 @@
     if ( io ) {
       io.disconnect();
     }
-    inner.innerHTML = '';
+    if ( inner ) {
+      inner.innerHTML = '';
+    }
   })
 </script>
 

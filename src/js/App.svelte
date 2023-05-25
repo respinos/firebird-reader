@@ -39,19 +39,22 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '1up';
+	export let view = '2up';
 	export let format = 'image';
 
-	let lastView = '1up';
+	let lastView = '2up';
 	const currentView = writable(view);
 	const currentFormat = writable(format);
 	const currentSeq = writable(manifest.currentSeq);
+
+	let instance;
+	manifest.instance = instance;
+
 	manifest.currentView = currentView;
 	manifest.currentFormat = currentFormat;
 	manifest.currentSeq = currentSeq;
 	manifest.q1 = writable('');
-
-	console.log("App", $currentSeq);
+	manifest.currentLocation = writable({});
 
 	window.manifest = manifest;
 
@@ -67,9 +70,10 @@
 	// $: viewClass = ( view == 'search' ) ? 'search' : 'reader';
 	$: viewClass = ( views[view] ) ? 'reader' : view;
 
+	let targetView;
 	function switchView(options) {
 		console.log("-- switchView", options);
-		let targetView = options.view || lastView;
+		targetView = options.view || lastView;
 		if ( $currentView != 'thumb' ) {
 			lastView = $currentView;
 		}
@@ -80,6 +84,8 @@
 	}
 
 	emitter.on('switch.view', switchView);
+
+	// $: if ( instance ) { manifest.instance = instance; manifest.currentLocation.set(manifest.instance.currentLocation()); }
 
 	onMount(() => {
 		const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
@@ -143,6 +149,7 @@
 		<svelte:component 
 			this={views[$currentView]}
 			startSeq={$currentSeq}
+			bind:this={instance}
 			></svelte:component>
 		{/if}
 	</section>

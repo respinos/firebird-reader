@@ -11,6 +11,8 @@
   export let container;
   export let startSeq = 1;
 
+  let instance;
+
   const queue = new PQueue({
     concurrency: 5,
     interval: 500,
@@ -26,6 +28,10 @@
     intervalCap: 1,
     interval: 1500,
   })
+
+  export const currentLocation = function() {
+    return { page: itemMap[$currentSeq] };
+  }
 
   const { observer, io } = createObserver({
     root: container,
@@ -243,9 +249,33 @@
     })
   }
 
+  const handleFocusIn = function(event) {
+    let pageDiv = event.target.closest('div.page');
+    if ( pageDiv ) {
+      pageDiv.scrollIntoView();
+    }
+  }
+
+  const handleKeyDown = function(event) {
+    if ( event.target.closest('details') ) { return; }
+    if ( event.target.closest('button') ) { return ; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    if ( event.code == 'Enter' ) {
+      emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
+    } else if ( event.code == 'Tab' ) {
+      // let delta = event.shiftKey ? -1 : 1;
+      // let targetSeq = parseInt(pageDiv.dataset.seq, 10) + delta;
+      // if ( itemMap[targetSeq] ) {
+      //   itemMap[targetSeq].page.focus(true);
+      // }
+    }
+  }
+
   const handlePageClick = function(event) {
     if ( event.target.closest('details') ) { return ; }
     if ( event.target.closest('button') ) { return ; }
+    console.log(event);
     let pageDiv = event.target.closest('div.page');
     if ( ! pageDiv ) { return ; }
     emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
@@ -274,6 +304,21 @@
     })
     $currentSeq = max.seq;
     emitter.emit('update.seq', currentSeq);
+
+    focus();
+  }
+
+  let lastCurrentInView = new Set();
+  const focus = function() {
+    currentInView.forEach((seq) => {
+      itemMap[seq].page.focus();
+      lastCurrentInView.delete(seq);
+    })
+    lastCurrentInView.forEach((seq) => {
+      console.log("-- unfocusing", seq);
+      itemMap[seq].page.unfocus();
+    })
+    lastCurrentInView = new Set(currentInView);
   }
 
   emitter.on('goto.page', gotoPage);
@@ -326,11 +371,18 @@
     if ( io ) {
       io.disconnect();
     }
-    inner.innerHTML = '';
+    if ( inner ) {
+      inner.innerHTML = '';
+    }
   })
 </script>
 
-<div class="inner" on:click={handlePageClick} on:keydown={handlePageClick} bind:this={inner}>
+<div 
+  class="inner" 
+  on:click={handlePageClick} 
+  on:keydown={handleKeyDown} 
+  on:focusin={handleFocusIn}
+  bind:this={inner}>
   {#each itemData as canvas}
   <Page 
     bind:this={canvas.page}

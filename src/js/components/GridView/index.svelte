@@ -7,8 +7,15 @@
   const manifest = getContext('manifest');
 
   let container;
+  let instance;
 
   export let startSeq = 1;
+
+  export const currentLocation = function() {
+    return instance.currentLocation();
+  }
+
+  $: if ( instance ) { manifest.currentLocation.set(currentLocation()); }
 
   onMount(() => {
   })
@@ -16,7 +23,7 @@
 
 <div class="view--container" bind:this={container}>
   {#if container}
-  <Inner {container} {startSeq}></Inner>    
+  <Inner {container} {startSeq} bind:this={instance}></Inner>    
   {/if}
 </div>
 

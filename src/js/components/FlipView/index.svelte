@@ -9,12 +9,19 @@
 
   let container;
   let content;
+  let instance;
 
   export let startSeq = 1;
+
+  export const currentLocation = function() {
+    return instance.currentLocation();
+  }
 
   let zoom = 1;
   let zoomIndex = 0;
   const zoomScales = [ 1, 1.5, 1.75, 2, 2.5 ];
+
+  $: if ( instance ) { manifest.currentLocation.set(currentLocation()); }
 
   onMount(() => {
     // return () => {
@@ -25,7 +32,7 @@
 
 <div class="view--container" bind:this={container}>
   {#if container}
-  <Inner {container} {startSeq}></Inner>
+  <Inner {container} {startSeq} bind:this={instance}></Inner>
   {/if}
 </div>
 
