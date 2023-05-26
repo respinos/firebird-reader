@@ -250,6 +250,8 @@
   }
 
   const handleFocusIn = function(event) {
+    if ( event.target.closest('details') ) { return ; }
+    if ( event.target.closest('button') ) { return ; }
     let pageDiv = event.target.closest('div.page');
     if ( pageDiv ) {
       pageDiv.scrollIntoView();
@@ -392,7 +394,8 @@
     {handleUnintersecting}
     {innerHeight}
     area="thumb"
-    seq={canvas.seq} 
+    format="image"
+    seq={canvas.seq}
     bind:zoom={zoom}
     {thumbnailer}></Page>
   {/each}

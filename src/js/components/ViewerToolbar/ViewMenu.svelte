@@ -18,8 +18,9 @@
   function switchFormat(event) {
     let target = this;
     let value = target.dataset.value;
-    if ( vale != $format ) {
-      $format = value;
+    if ( value != $format ) {
+      // $format = value;
+      emitter.emit('switch.format', { format: value });
     }
   }
 </script>

@@ -20,6 +20,7 @@
   export let observer;
   export let handleIntersecting;
   export let handleUnintersecting;
+  export let format;
 
   let pageDiv;
 
@@ -105,6 +106,7 @@
   let pageTextIsLoaded = false;
   let objectUrl;
   let isLoaded = false;
+  let hasPageText = false;
 
   let timeout;
 
@@ -115,10 +117,14 @@
   export function toggle(visible) {
     isVisible = visible;
     if (visible) {
-      timeout = setTimeout(loadImage, 500);
-      // loadImage();
+      timeout = setTimeout(
+        format == 'image' ? loadImage : loadPageText, 
+        500)
+      ;
     } else {
-      unloadImage();
+      if ( format == 'image' ) {
+        unloadImage();
+      }
       unloadPageText();
     }
   }
@@ -130,7 +136,7 @@
 
   export const loadImage = function(reload=false) {
     timeout = null;
-    if ( image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
+    if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
     let action = ( $view == 'thumb' ) ? 'thumbnail' : 'image';
     let img_src = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
@@ -200,13 +206,17 @@
 
         // if ( ! pageText ) { return ; }
         // pageText = text.replace('<div class="ocr_page"', '<div class="ocr_page" data-words="[&quot;lowndes&quot;]"');
+        text = text.replace(/<span class="ocr_line"/g, '<span class="ocr_line" role="text"');
         const parser = new DOMParser();
         const ocr_div = parser.parseFromString(text, 'text/html').body.childNodes[0];
 
+        if ( ocr_div.textContent.trim() == "" || ! ocr_div.textContent.trim().match(/\w+/) ) {
+          ocr_div.innerHTML = `<div class="alert alert-block alert-secondary fs-1 fw-bold text-center">NO TEXT ON PAGE</div><p>This page does not contain any text recoverable by the OCR engine.</p>`;
+        }
+
         page_coords = parseCoords(ocr_div.dataset.coords);
-        // ocr_div.dataset.words = `["lowndes"]`;
-        ocr_div.classList.add('visually-hidden');
-        // pageText.append(ocr_div);
+        // -- do we need this?
+        // ocr_div.classList.add('visually-hidden');
         // console.log("loadPageText", seq, page_coords, ocr_div.dataset.words);
 
         // we have text so watch for updates
@@ -224,6 +234,11 @@
 
         matches = extractHighlights(words, ocr_div);
       })
+
+      if ( format == 'plaintext' && figCaption.dataset.configured != 'true' ) {
+        emitter.on('update.highlights', loadPageText);
+        figCaption.dataset.configured = true;
+      }
   }
 
   const imageOnLoad = function(event) {
@@ -288,6 +303,8 @@
   $: orientMargin = 0;
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
+  $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
+  $: if ( isVisible && format == 'plaintext' && ! figCaption ) { loadPageText(); }
 
   // $: console.log(">> zoom", zoom, pageZoom, scanHeight, scanWidth);
 
@@ -316,9 +333,14 @@
 
 <!--   inert={!focused ? true : null} ??? -->
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<div class="page" {style} data-seq={seq} data-height={Math.ceil(scanHeight)}
+<div 
+  class="page {format}" 
+  {style} 
+  data-seq={seq} 
+  data-height={Math.ceil(scanHeight)}
   style:--height={Math.ceil(scanHeight)}
   style:--width={Math.ceil(scanWidth)}
+  style:--zoom={zoom != 1 ? zoom : pageZoom}
   class:view-2up={$view == '2up'}
   class:view-1up={$view == '1up'}
   class:verso={area == 'verso'}
@@ -371,7 +393,7 @@
           class:fa-square-check={$selected.has(seq)}></i>
       </button>
       {/if}
-      {#if $view == '1up'}
+      {#if $view == '1up' && format == 'image'}
       <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
       {/if}
       {#if $view == '1up' || $view == '2up'}
@@ -390,20 +412,28 @@
     </div>
   </details>
 
-  <figure class="frame" class:adjusted={canvas.width > canvas.height} data-orient={orient} style:--orient-margin={orientMargin}>
+  <figure class="frame {format}" 
+    class:adjusted={canvas.width > canvas.height}
+    data-orient={orient}
+    style:--orient-margin={orientMargin}>
     {#if isVisible}
-    <img 
-      bind:this={image} 
-      src={defaultThumbnailSrc} 
-      alt="" 
-      style:height={imgHeight} 
-      style:width={imgWidth} 
-      class:zoomed={pageZoom > 1}
-      />
-      {#if area != 'thumb'}
-      <SearchHighlights image={image} page_coords={page_coords} matches={matches}></SearchHighlights>
-      <figcaption class="visually-hidden" bind:this={figCaption}>
-      </figcaption>
+      {#if format == 'image'}
+        <img 
+          bind:this={image} 
+          src={defaultThumbnailSrc} 
+          alt="" 
+          style:height={imgHeight} 
+          style:width={imgWidth} 
+          class:zoomed={pageZoom > 1}
+          />
+        {#if area != 'thumb'}
+        <SearchHighlights image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
+        <figcaption class="visually-hidden" bind:this={figCaption}>
+        </figcaption>
+        {/if}
+      {:else}
+        <SearchHighlights page_coords={page_coords} matches={matches} format="plaintext"></SearchHighlights>
+        <figcaption class="plaintext" bind:this={figCaption}></figcaption>
       {/if}
     {/if}
   </figure>
@@ -412,14 +442,14 @@
 <style lang="scss">
   .page {
     width: 100%;
-    /* background: #ddd;
-    border-bottom: 4px solid #666; */
 
-    display: flex;
-    flex-direction: column;
-    /* align-items: center; */
+    // display: flex;
+    // flex-direction: column;
+    // flex-direction: row;
 
-    flex-direction: row;
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-template-columns: 1fr;
 
     /* overflow: hidden; */
     position: relative;
@@ -434,9 +464,17 @@
 
     &.view-thumb {
       width: auto;
-      flex-direction: column;
+      // flex-direction: column;
       gap: 0.5rem;
-      // margin-bottom: 3rem;
+      grid-template-rows: min-content 1fr;
+
+      .page-menu {
+        grid-row: 1/2;
+      }
+
+      figure {
+        grid-row: 2/3;
+      }
     }
 
     &:focus-visible {
@@ -454,24 +492,36 @@
 
   .frame {
     display: flex;
-    align-items: center;
-    /* justify-content: center; */
-    /* border: 1px solid darkorange; */
-    /* padding: 1rem; */
-
-    height: calc(var(--height) * 0.9 * 1px);
-    width: calc(var(--width) * 0.9 * 1px);
-    max-width: 100%;
-    max-height: 100%; // maybe?
-
-    /* max-width: 400px; */
 
     margin: 0 auto;
     overflow: auto;
 
     position: relative;
 
-    /* box-shadow: 0 2px 2px 0 rgba(0,0,0,.14),0 3px 1px -2px rgba(0,0,0,.2),0 1px 5px 0 rgba(0,0,0,.12); */
+    grid-row: 1/2;
+    grid-column: 1/2;
+
+    &.image {
+      height: calc(var(--height) * 0.9 * 1px);
+      width: calc(var(--width) * 0.9 * 1px);
+      max-width: 100%;
+      max-height: 100%; // maybe?
+      align-items: center;
+    }
+
+    &.plaintext {
+      align-items: flex-start;
+      min-height: calc(var(--height) * 0.9 * 1px);
+      width: 80%;
+      max-width: 80rem;
+      padding: 2rem 1rem;
+
+      box-shadow: 0px 10px 13px -7px #000000, 0px 6px 15px 5px rgba(0, 0, 0, 0);
+      border: 1px solid #ddd;    
+
+      transition: height 100ms;
+    }
+
   }
 
   .frame:hover {
@@ -528,15 +578,25 @@
     margin-bottom: calc(var(--orient-margin) * 1px) !important;
   }
 
+  figcaption.plaintext {
+    --font-size: var(--page-text-font-size, 1.125rem);
+    font-size: calc(var(--font-size) * var(--zoom));
+    line-height: 1.25;
+  }
+
   .page-menu {
     order: 2;
     text-align: right;
-    // width: 11ch;
     padding: 0;
     margin: 0;
     z-index: 50;
     align-self: flex-start;
     // margin-left: -5rem;
+
+    grid-row: 1/2;
+    grid-column: 1/2;
+    align-self: start;
+    justify-self: end;
   }
 
   .page.view-1up {
@@ -544,17 +604,14 @@
       position: sticky;
       top: 0.5rem;
       right: 0.5rem;
-      margin-left: -5rem;
+      // margin-left: -5rem;
     }
   }
 
   .page.view-thumb {
     .page-menu {
-      // position: absolute;
-      // top: -3rem;
-      // right: 0.5rem;
-      align-self: flex-end;
-      order: 0;
+      // align-self: flex-end;
+      // order: 0;
 
       .menu-items {
         position: absolute;
@@ -565,15 +622,16 @@
 
   .page.view-2up {
     .page-menu {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
+      // position: absolute;
+      // top: 0.5rem;
+      // right: 0.5rem;
     }
 
     &.verso {
       .page-menu {
-        left: 0.5rem;
-        right: auto;
+        // left: 0.5rem;
+        // right: auto;
+        justify-self: start;
       }
 
       figure {
@@ -597,6 +655,10 @@
 
     figure {
       margin-top: 1rem;
+      
+      &.plaintext {
+        width: 85%;
+      }
     }
   }
 

@@ -39,10 +39,10 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '2up';
-	export let format = 'image';
+	export let view = '1up';
+	export let format = 'plaintext';
 
-	let lastView = '2up';
+	let lastView = '1up';
 	const currentView = writable(view);
 	const currentFormat = writable(format);
 	const currentSeq = writable(manifest.currentSeq);
@@ -86,7 +86,15 @@
 		$currentView = targetView;
 	}
 
+	function switchFormat(options) {
+		console.log("-- switchFormat", options);
+		if ( $currentFormat != options.format ) {
+			$currentFormat = options.format;
+		}
+	}
+
 	emitter.on('switch.view', switchView);
+	emitter.on('switch.format', switchFormat);
 
 	// $: if ( instance ) { manifest.instance = instance; manifest.currentLocation.set(manifest.instance.currentLocation()); }
 

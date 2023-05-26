@@ -10,7 +10,8 @@
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
   
-  let currentSeq = manifest.currentSeq;
+  const currentSeq = manifest.currentSeq;
+  const currentFormat = manifest.currentFormat;
 
   export let container;
   export let startSeq = 1;
@@ -326,6 +327,7 @@
     {canvas} 
     {handleIntersecting}
     {handleUnintersecting}
+    format={$currentFormat}
     seq={canvas.seq} 
     bind:zoom={zoom}
     ></Page>

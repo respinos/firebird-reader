@@ -4,9 +4,14 @@
 
   export let page_coords = [];
   export let matches = [];
-  export let image;
+  export let image = null;
+  export let format;
 
   let highlights = [];
+
+  const buildTextHighlights = function() {
+
+  }
 
   const buildHighlights = function() {
 
@@ -19,22 +24,25 @@
     var timestamp = (new Date).getTime();
 
     var scaling = {};
-    if ( image.hasAttribute('width') ) {
-      scaling.width = parseInt(image.getAttribute('width'), 10); 
-      scaling.height = parseInt(image.getAttribute('height'), 10);
-    } else {
-      scaling.width = image.width;
-      scaling.height = image.height;
+
+    if ( image ) {
+      if ( image.hasAttribute('width') ) {
+        scaling.width = parseInt(image.getAttribute('width'), 10); 
+        scaling.height = parseInt(image.getAttribute('height'), 10);
+      } else {
+        scaling.width = image.width;
+        scaling.height = image.height;
+      }
+
+      scaling.width = image.offsetWidth;
+      scaling.height = image.offsetHeight;
+
+      scaling.ratio = scaling.width / page_coords[2];
+      scaling.ratioY = scaling.height / page_coords[3];
+      scaling.padding = 0; // parseInt(window.getComputedStyle(page).marginTop) / 2;
+      scaling.ratioZ = 1.0;
+      scaling.ratio *= scaling.ratioZ;
     }
-
-    scaling.width = image.offsetWidth;
-    scaling.height = image.offsetHeight;
-
-    scaling.ratio = scaling.width / page_coords[2];
-    scaling.ratioY = scaling.height / page_coords[3];
-    scaling.padding = 0; // parseInt(window.getComputedStyle(page).marginTop) / 2;
-    scaling.ratioZ = 1.0;
-    scaling.ratio *= scaling.ratioZ;
 
     function textNodesUnder(el){
       var n, a=[], walk=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,null,false);
@@ -47,7 +55,7 @@
       // var span = text.parentNode;
       var span = matches[i];
 
-      if ( true ) {
+      if ( format == 'image' ) {
         var coords = parseCoords(span.dataset.coords);
         coords[0] *= scaling.ratio;
         coords[2] *= scaling.ratio;
@@ -97,39 +105,51 @@
         mark.innerText = span.innerText;
         mark.setAttribute('class', span.getAttribute('class'));
         mark.dataset.class = mark.getAttribute('class');
-        mark.classList.add('highlight--plaintext', `highlight_${highlight_idx}`);
+        mark.classList.add('highlight--plaintext', 'highlight'); // `highlight_${highlight_idx}`);
         mark.dataset.coords = span.dataset.coords;
-        span.parentElement.replaceChild(mark, span);
+        console.log("-- mark", mark, span, span.parentElement);
+        if ( span.parentElement ) {
+          span.parentElement.replaceChild(mark, span);
+        }
       }
     }
 
     highlights = highlights
   }
 
-  $: if (image && matches && matches.length) { console.log("AHOY building matches", matches); buildHighlights() }
+  $: if (format == 'image' && image && matches && matches.length) { console.log("AHOY building matches", matches); buildHighlights() }
+  $: if (format == 'plaintext' && matches && matches.length) { console.log("AHOY building matches"); buildHighlights(); }
 
 </script>
 
 <style>
 
-  :global(mark.highlight) {
+  :global(mark.image.highlight) {
     position: absolute;
-    background: #ffff00;
     opacity: 0.2;
   }
 
-  :global(html[data-show-highlights="false"] mark.highlight) {
+  :global(mark.highlight) {
+    background: #ffff00;
+  }
+
+  :global(html[data-show-highlights="false"] mark.image.highlight) {
     display: none !important;
+  }
+
+  :global(html[data-show-highlights="false"] mark.highlight) {
+    background: transparent;
   }
 
 </style>
 
+{#if format == 'image'}
 {#each highlights as highlight}
-  <mark class="highlight"
+  <mark class="image highlight"
         data-word={highlight.word} 
         style:width={highlight.width}
         style:height={highlight.height}
         style:top={highlight.top}
         style:left={highlight.left}></mark>
 {/each}
-
+{/if}

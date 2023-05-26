@@ -153,8 +153,9 @@
     if ( ! isInitialized ) { return ; }
   }
 
-  let currentSeq = manifest.currentSeq;
-  let location = manifest.currentLocation;
+  const currentSeq = manifest.currentSeq;
+  const location = manifest.currentLocation;
+  const currentFormat = manifest.currentFormat;
 
   let zoom = 1;
   let zoomIndex = 0;
@@ -250,6 +251,7 @@
   }
 
   const handlePageClick = function(event) {
+    if ( $currentFormat == 'plaintext' ) { return ; }
     if ( event.target.closest('details') ) { return ; }
     if ( event.target.closest('button') ) { return ; }
     let pageDiv = event.target.closest('div.page');
@@ -418,6 +420,7 @@
             {handleUnintersecting}
             {innerHeight}
             {innerWidth}
+            format={$currentFormat}
             seq={canvas.seq} 
             bind:zoom={zoom}
             ></Page>
