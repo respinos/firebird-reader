@@ -25,6 +25,7 @@
   let pageDiv;
 
   const view = manifest.currentView;
+  const minimalInterface = manifest.minimalInterface;
 
   export let seq;
   export let canvas;
@@ -270,7 +271,7 @@
     if ( canvas.height > canvas.width ) {
       return innerHeight / canvas.height;
     }
-    let width = window.innerWidth * 0.6;
+    let width = innerWidth * 0.6;
     let ratio = width / canvas.width;
     return ratio;
   }
@@ -359,6 +360,7 @@
   <details 
     class="page-menu" 
     class:sticky={get(manifest.currentView) == '1up'}
+    class:invisible={$minimalInterface}
     open={$selected.has(seq) ? true : null}
     >
     <summary 
@@ -418,16 +420,20 @@
     style:--orient-margin={orientMargin}>
     {#if isVisible}
       {#if format == 'image'}
+        <div class="image">
         <img 
           bind:this={image} 
           src={defaultThumbnailSrc} 
           alt="" 
-          style:height={imgHeight} 
-          style:width={imgWidth} 
+          style:height={imgHeight}
+          style:width={imgWidth}
           class:zoomed={pageZoom > 1}
           />
         {#if area != 'thumb'}
         <SearchHighlights image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
+        {/if}
+        </div>
+        {#if area != 'thumb'}
         <figcaption class="visually-hidden" bind:this={figCaption}>
         </figcaption>
         {/if}
@@ -502,11 +508,21 @@
     grid-column: 1/2;
 
     &.image {
-      height: calc(var(--height) * 0.9 * 1px);
-      width: calc(var(--width) * 0.9 * 1px);
+      // height: calc(var(--height) * 0.9 * 1px);
+      // width: calc(var(--width) * 0.9 * 1px);
       max-width: 100%;
+      height: 100%;
+      width: 100%; // maybe?
       max-height: 100%; // maybe?
       align-items: center;
+      overflow: hidden;
+
+      .image {
+        max-height: calc(var(--height) * 0.9 * 1px);
+        max-width: calc(var(--width) * 0.9 * 1px);
+        position: relative;
+        margin: 0 auto;
+      }
     }
 
     &.plaintext {
@@ -637,7 +653,7 @@
       figure {
         margin-right: 0px;
 
-        img {
+        .image, img {
           margin-right: 0px;
         }
       }
@@ -647,7 +663,7 @@
       figure {
         margin-left: 0px;
 
-        img {
+        .image, img {
           margin-left: 0px;
         }
       }

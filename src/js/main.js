@@ -1,5 +1,5 @@
 // @ts-nocheck
-import '../scss/styles.scss'
+import '../scss/v2.scss'
 
 import { setupHTEnv } from '~firebird-common/src/js/lib/utils';
 // Import all of Bootstrap's JS
@@ -14,7 +14,7 @@ window.bootstrap = bootstrap;
 //   title: function() { return this.getAttribute('aria-label'); }
 // });
 
-import App from './App.svelte'
+import App from './Reader.svelte'
 
 const toCamel = (s) => {
   return s.replace(/([-_][a-z])/gi, ($1) => {

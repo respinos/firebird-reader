@@ -33,7 +33,7 @@
       class:fa-book-open={$view == '2up'}
       class:fa-table-cells={$view == 'thumb'}
       aria-hidden="true"></i>
-    View
+    <span class="d-none d-md-inline">View</span>
   </button>
   <ul class="dropdown-menu">
     <li>

@@ -40,6 +40,7 @@
     "fsevents": "^2.0.0"
   },
   "dependencies": {
-    "firebird-common": "github:hathitrust/firebird-common"
+    "firebird-common": "github:hathitrust/firebird-common",
+    "screenfull": "^6.0.2"
   }
 }

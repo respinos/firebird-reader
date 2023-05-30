@@ -1,6 +1,6 @@
 <script>
   import { onMount, setContext } from 'svelte';
-	import { writable } from 'svelte/store';
+	import { writable, get } from 'svelte/store';
 
 	import { Manifest } from './lib/manifest';
 
@@ -39,8 +39,13 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '1up';
-	export let format = 'plaintext';
+	export let view = '2up';
+	export let format = 'image';
+
+	// && ! isEmbed
+	if ( window.innerWidth < 800 ) {
+		view = '1up';
+	}
 
 	let lastView = '1up';
 	const currentView = writable(view);
@@ -55,6 +60,10 @@
 	manifest.currentSeq = currentSeq;
 	manifest.q1 = writable('');
 	manifest.currentLocation = writable({});
+	manifest.minimalInterface = writable(false);
+	const minimalInterface = manifest.minimalInterface;
+	manifest.isFullscreen = writable(false);
+	const isFullscreen = manifest.isFullscreen;
 
 	const storedSelected = JSON.parse(sessionStorage.getItem(manifest.selectedKey) || '[]');
 	manifest.selected = writable(new Set(storedSelected));
@@ -73,10 +82,14 @@
 	// $: viewClass = ( view == 'search' ) ? 'search' : 'reader';
 	$: viewClass = ( views[view] ) ? 'reader' : view;
 
+	let splitPane;
 	let targetView;
 	function switchView(options) {
 		console.log("-- switchView", options);
 		targetView = options.view || lastView;
+		if ( targetView == '2up' && window.innerWidth < 800 ) {
+			targetView = '1up';
+		}
 		if ( $currentView != 'thumb' ) {
 			lastView = $currentView;
 		}
@@ -97,6 +110,9 @@
 	emitter.on('switch.format', switchFormat);
 
 	// $: if ( instance ) { manifest.instance = instance; manifest.currentLocation.set(manifest.instance.currentLocation()); }
+	$: console.log("-- app", $minimalInterface, splitPane);
+	$: if ( splitPane ) { if ( ! $isFullscreen ) { splitPane.togglePane($minimalInterface); } }
+	$: if ( splitPane ) { splitPane.togglePane($isFullscreen); }
 
 	onMount(() => {
 		const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
@@ -123,7 +139,9 @@
 </script>
 
 <hathi-website-header>
+	{#if !$minimalInterface}
 	<WebsiteHeader searchState="toggle" compact={true}></WebsiteHeader>
+	{/if}
 </hathi-website-header>
 <div class="stage" class:maximized={maximized} bind:this={stage}>
 	{#if maximized}
@@ -135,35 +153,45 @@
 	{#if ! maximized || ( maximized && ! expanded )}
 	<ViewerToolbar></ViewerToolbar>
 	{/if}
-	<SplitPane class="reader" type="horizontal" min="0%" max="50%" pos="30%" snap="10%" expanded={expanded} maximized={maximized} --color="#fff" --thickness="64px">
-	<aside slot="a" style="overflow: auto">
-		<div class="accordion" id="controls">
-			<MetadataPanel></MetadataPanel>
-			<DownloadPanel></DownloadPanel>
-			{#if view != 'search' && view != 'restricted' }
-			<SearchInItemPanel></SearchInItemPanel>
-			<JumpToSectionPanel></JumpToSectionPanel>
+	<SplitPane 
+		class="reader" 
+		type="horizontal" 
+		min="0%" max="50%" pos="30%" snap="10%" 
+		expanded={expanded} 
+		maximized={maximized} 
+		bind:this={splitPane}
+		--color="#fff" 
+		--thickness="64px">
+		<aside slot="a" style="overflow: auto">
+			<div 
+				class="accordion" 
+				id="controls">
+				<MetadataPanel></MetadataPanel>
+				<DownloadPanel></DownloadPanel>
+				{#if view != 'search' && view != 'restricted' }
+				<SearchInItemPanel></SearchInItemPanel>
+				<JumpToSectionPanel></JumpToSectionPanel>
+				{/if}
+				<GetThisItemPanel></GetThisItemPanel>
+				<CollectionsPanel></CollectionsPanel>
+				<SharePanel></SharePanel>
+			</div>
+			<VersionPanel></VersionPanel>
+		</aside>
+		<section class="pane--{viewClass}" slot="b">
+			{#if view == 'search'}
+			<SearchView></SearchView>
+			{:else if view == 'restricted'}
+			<RestrictedView></RestrictedView>
+			{:else}
+			<!-- <ViewerToolbar></ViewerToolbar> -->
+			<svelte:component 
+				this={views[$currentView]}
+				startSeq={$currentSeq}
+				bind:this={instance}
+				></svelte:component>
 			{/if}
-			<GetThisItemPanel></GetThisItemPanel>
-			<CollectionsPanel></CollectionsPanel>
-			<SharePanel></SharePanel>
-		</div>
-		<VersionPanel></VersionPanel>
-	</aside>
-	<section class="pane--{viewClass}" slot="b">
-		{#if view == 'search'}
-		<SearchView></SearchView>
-		{:else if view == 'restricted'}
-		<RestrictedView></RestrictedView>
-		{:else}
-		<!-- <ViewerToolbar></ViewerToolbar> -->
-		<svelte:component 
-			this={views[$currentView]}
-			startSeq={$currentSeq}
-			bind:this={instance}
-			></svelte:component>
-		{/if}
-	</section>
+		</section>
 </SplitPane>
 </div>
 

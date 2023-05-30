@@ -456,7 +456,8 @@
   .spread {
     height: 100%;
     min-width: calc(var(--width) * 1px);
-    width: calc(var(--width) * 1px);
+    // width: calc(var(--width) * 1px);
+    width: 100%;
     display: grid;
     grid-template-areas: "verso recto";
     grid-template-columns: var(--columnWidth, 50%) var(--columnWidth, 50%);

@@ -114,15 +114,36 @@
 		};
 	}
 
-	let lastPos = null;
-	function togglePane() {
-		console.log("-- pos", position);
-		if (lastPos === null) {
-			lastPos = pos;
+	let lastPos = null; let showDivider = true;
+	export function togglePane(force) {
+		console.log("-- pos", position, pos);
+		if (force === true) {
+			if ( lastPos === null ) { lastPos = position; }
+			position = '0%';
+			showDivider = ( document.fullscreenElement === null );
+		} else if ( force === false ) {
+			if ( lastPos ) {
+				position = lastPos;
+			}
+			showDivider = true;
+		} else if (lastPos === null) {
+			lastPos = position;
 			position = '0%';
 		} else {
 			position = lastPos;
 			lastPos = null;
+		}
+	}
+
+	let maybePos = null;
+	export function maybePane(toggle) {
+		console.log("-- maybePane", toggle, position);
+		if ( toggle ) {
+			maybePos = pos;
+			position = '0%';
+		} else if ( maybePos ) {
+			position = maybePos;
+			maybePos = null;
 		}
 	}
 
@@ -154,7 +175,7 @@
 		<slot name="b" />
 	</div>
 
-	{#if pos !== '0%' && pos !== '100%'}
+	{#if pos !== '0%' && pos !== '100%' && showDivider}
 		<div class="{type} divider" class:disabled class:collapsed={position == '0%'} use:drag={(e) => update(e.clientX, e.clientY, e)}>
 			<button 
 				type="button" 

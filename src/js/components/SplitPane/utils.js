@@ -15,6 +15,8 @@ export function constrain(element, size, min, max, pos, priority) {
 	if (min_px < 0) min_px += size;
 	if (max_px < 0) max_px += size;
 
+	console.log("-- constrain", size, min_px, max_px, pos_px);
+
 	pos_px =
 		priority === 'min'
 			? Math.max(min_px, Math.min(max_px, pos_px))
