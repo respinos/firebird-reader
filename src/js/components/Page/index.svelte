@@ -790,4 +790,8 @@
   img.zoomed {
     align-self: flex-start;
   }
+
+  .page-menu summary {list-style: none}
+  .page-menu summary::-webkit-details-marker {display: none; }
+
 </style>

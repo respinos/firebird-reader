@@ -309,7 +309,7 @@
     if ( ! isInitialized ) { return ; }
     let currentSpread = itemMap[$currentSeq].spreadIndex;
     // container.querySelector(`#spread${target}`).scrollIntoView({ behavior: 'instant' });
-    inner.scrollLeft = ( ( innerWidth * currentSpread ) );
+    // inner.scrollLeft = ( ( innerWidth * currentSpread ) );
     // left = ( ( innerWidth * currentSpread ) ) * ( -1 );
   }
 
