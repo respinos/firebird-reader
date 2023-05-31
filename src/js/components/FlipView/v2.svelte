@@ -159,7 +159,7 @@
 
   let zoom = 1;
   let zoomIndex = 0;
-  const zoomScales = [ 1, 1.5, 1.75, 2, 2.5 ];
+  const zoomScales = [ 0.5, 1, 1.5, 1.75, 2, 2.5 ];
 
   
   const itemData = [];
@@ -326,6 +326,11 @@
       zoomIndex = zoomScales.length - 1;
     }
     zoom = zoomScales[zoomIndex];
+
+    emitter.emit('enable.zoom', {
+      out: zoomIndex > 0,
+      in: zoomIndex < zoomScales.length - 1
+    });
   })
 
   $: if ( innerWidth ) { resetSpread() }
@@ -340,6 +345,11 @@
             console.log("-- initialize", startSeq);
             gotoPage({ seq: startSeq });
             isInitialized = true;
+
+            emitter.emit('enable.zoom', {
+              out: zoomIndex > 0,
+              in: zoomIndex < zoomScales.length - 1
+            });
           })
         } else {
           isInitialized = true;

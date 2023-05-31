@@ -14,6 +14,7 @@ export function tooltip(node) {
 
   return { 
     destroy() {
+      node.bs.disable();
       node.bs.dispose();
       node.removeEventListener('mouseleave', hide);
       node.removeEventListener('click', hide);

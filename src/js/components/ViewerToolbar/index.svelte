@@ -16,6 +16,15 @@
   const interfaceMode = manifest.interfaceMode;
   const isFullscreen =  manifest.isFullscreen;
 
+  let enableZoomIn = true;
+  let enableZoomOut = true;
+
+  const enableZoomOptions = function(args) {
+    console.log("-- enable.zoom", args);
+    enableZoomIn = args.in;
+    enableZoomOut = args.out;
+  }
+
   const goto = function(args) {
     console.log("-- goto.page", args);
     emitter.emit('goto.page', args);
@@ -24,6 +33,8 @@
   const zoom = function(delta) {
     emitter.emit('update.zoom', delta);
   }
+
+  emitter.on('enable.zoom', enableZoomOptions);
 
   const toggleInterface = function(event, mode) {
     if ( mode ) {
@@ -53,6 +64,7 @@
     window.screenfull = screenfull;
     return () => {
       // emitter.off('update.seq', updateSeq);
+      emitter.off('enable.zoom', enableZoomOptions);
     }
   })
 </script>
@@ -91,10 +103,22 @@
   <ViewMenu></ViewMenu>
 
   <div class="btn-group" role="group" aria-label="Zoom">
-    <button type="button" class="btn btn-outline-dark" aria-label="Zoom In" use:tooltip on:click={() => zoom(1)}>
+    <button 
+      type="button" 
+      class="btn btn-outline-dark" 
+      aria-label="Zoom In" 
+      disabled={!enableZoomIn}
+      use:tooltip 
+      on:click={() => zoom(1)}>
       <i class="fa-solid fa-plus"></i>
     </button>
-    <button type="button" class="btn btn-outline-dark" aria-label="Zoom Out" use:tooltip on:click={() => zoom(-1)}>
+    <button 
+      type="button" 
+      class="btn btn-outline-dark" 
+      aria-label="Zoom Out" 
+      disabled={!enableZoomOut}
+      use:tooltip 
+      on:click={() => zoom(-1)}>
       <i class="fa-solid fa-minus"></i>
     </button>
   </div>

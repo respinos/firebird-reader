@@ -127,6 +127,7 @@
         unloadImage();
       }
       unloadPageText();
+      isLoaded = false;
     }
   }
 
@@ -137,6 +138,14 @@
 
   let imageSrc;
   export const loadImage = function(reload=false) {
+    // return;
+    const isDebugging = true;
+    const delay = isDebugging ? 5 * 1000 : 0;
+    setTimeout(() => {
+      loadImageActual(reload);
+    }, delay);
+  }
+  export const loadImageActual = function(reload=false) {
     timeout = null;
     if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
@@ -317,6 +326,9 @@
   $: rotateX = 0;
   $: orientMargin = 0;
   $: isUnusual = checkForFoldout(canvas);
+  $: defaultPageHeight = ( $view == '2up' ) ? null : `${scanHeight}px`;
+  $: pageHeight = ( $view == 'thumb' || zoom > 1 ) ? `${innerHeight * zoom}px` : null;
+  $: pageWidth = ( $view == 'thumb' || zoom > 1 ) ? `${innerWidth * zoom}px` : null;
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
   $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
@@ -354,8 +366,8 @@
   {style} 
   data-seq={seq} 
   data-height={Math.ceil(scanHeight)}
-  style:--pageWidth={zoom > 1 ? `${( innerWidth / 2 ) * zoom}px` : null}
-  style:--pageHeight={zoom > 1 ? `${( innerHeight * zoom )}px` : null}
+  style:--pageWidth={pageWidth}
+  style:--pageHeight={pageHeight}
   style:--height={Math.ceil(scanHeight)}
   style:--width={Math.ceil(scanWidth)}
   style:--zoom={zoom != 1 ? zoom : pageZoom}
@@ -444,10 +456,27 @@
   </details>
 
   <figure class="frame {format}" 
+    class:pending={!isLoaded}
     class:adjusted={canvas.width > canvas.height}
     class:zoomed={pageZoom > 1}
     data-orient={orient}
+    style:--frameHeight={zoom > 1 ? `${( scanHeight )}px` : defaultPageHeight}
     style:--orient-margin={orientMargin}>
+    {#if !isLoaded}
+      <div class="d-flex align-items-center justify-content-center position-absolute"
+        style:left="50%"
+        style:transform="translateX(-50%)"
+        style:background="rgba(200,200,200,0.4)"
+        style:font-size="2rem"
+        style:height={`${scanHeight}px`}
+        style:width={`${scanWidth}px`}>
+        <i 
+          xxclass="fa-solid fa-spinner fa-spin opacity-25"
+          class="fa-solid fa-stroopwafel fa-2xl opacity-25"
+          class:fa-spin={isVisible}
+          aria-hidden="true"></i>
+      </div>
+    {/if}
     {#if isVisible}
       {#if format == 'image'}
         <div class="image">
@@ -500,8 +529,11 @@
     }
 
     &.view-thumb {
-      width: auto;
+      // width: auto;
       // flex-direction: column;
+
+      height: calc(var(--pageHeight) + 2.7rem);
+
       gap: 0.5rem;
       grid-template-rows: min-content 1fr;
 
@@ -511,6 +543,16 @@
 
       figure {
         grid-row: 2/3;
+        height: var(--frameHeight, '250px');
+      }
+    }
+
+    &.view-1up {
+      height: auto;
+      margin-bottom: 2rem;
+
+      .frame {
+        height: var(--frameHeight, '90dvh');
       }
     }
 
@@ -540,6 +582,17 @@
     grid-row: 1/2;
     grid-column: 1/2;
 
+    &.pending {
+
+      .spinner {
+
+      }
+
+      .image {
+        opacity: 0;
+      }
+    }
+
     &.image {
       max-width: 100%;
       height: 100%;
@@ -561,6 +614,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
+
+        transition: opacity 0.125s linear;
       }
     }
 
@@ -605,6 +660,7 @@
 
   figure.zoomed {
     overflow: auto !important;
+    align-items: start;
 
     img {
       max-height: none;

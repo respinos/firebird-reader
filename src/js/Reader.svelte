@@ -26,9 +26,9 @@
   // view components
 	import SearchView from './components/SearchView';
 	import RestrictedView from './components/RestrictedView';
-	import ScrollView from './components/ScrollView/Outer.svelte';
+	import ScrollView from './components/ScrollView/v2.svelte';
 	import FlipView from './components/FlipView/v2.svelte';
-	import GridView from './components/GridView';
+	import GridView from './components/GridView/v2.svelte';
 
   // set up context
 	const emitter = new Emittery();
@@ -43,11 +43,11 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '2up';
+	export let view = 'thumb';
 	export let format = 'image';
 
 	// && ! isEmbed
-	if ( window.innerWidth < 800 ) {
+	if ( window.innerWidth < 800 && manifest.ui != 'embed' ) {
 		view = '1up';
 	}
 
@@ -183,6 +183,32 @@
   // emitter.on('switch.view', switchView);
   emitter.on('open.lightbox', openLightbox);
 
+	let targetView;
+	function switchView(options) {
+		console.log("-- switchView", options);
+		targetView = options.view || lastView;
+		if ( targetView == '2up' && window.innerWidth < 800 ) {
+			targetView = '1up';
+		}
+		if ( $currentView != 'thumb' ) {
+			lastView = $currentView;
+		}
+		if ( options.seq ) {
+			$currentSeq = options.seq;
+		}
+		$currentView = targetView;
+	}
+
+	function switchFormat(options) {
+		console.log("-- switchFormat", options);
+		if ( $currentFormat != options.format ) {
+			$currentFormat = options.format;
+		}
+	}
+
+	emitter.on('switch.view', switchView);
+	emitter.on('switch.format', switchFormat);
+
   onMount(() => {
     container = document.querySelector('#root');
     w = container.clientWidth;
@@ -197,6 +223,9 @@
 
     return () => {
       resizeObserver.disconnect();
+			emitter.off('switch.view', switchView);
+			emitter.off('switch.format', switchFormat);
+			emitter.off('open.lightbox', openLightbox);
     }
   })
 

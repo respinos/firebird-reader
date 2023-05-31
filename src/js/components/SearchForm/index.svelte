@@ -73,45 +73,46 @@
     status = status;
   }
 
-  function onSubmit(event) {
-      let searchUrl = new URL(`${location.protocol}//${HT.service_domain}/cgi/pt/search`);
-      let searchParams = new URLSearchParams();
-      searchParams.set('id', manifest.id);
-      searchParams.set('start', start);
-      searchParams.set('sz', 25);
-      searchParams.set('q1', q1);
-      searchParams.set('sort', sort);
-      if ( ! showHighlights ) {
-        searchParams.set('hl', 'false');
-      }
+  function onSubmit(event, args) {
+    const params = Object.assign({}, args);
+    let searchUrl = new URL(`${location.protocol}//${HT.service_domain}/cgi/pt/search`);
+    let searchParams = new URLSearchParams();
+    searchParams.set('id', manifest.id);
+    searchParams.set('start', start);
+    searchParams.set('sz', 25);
+    searchParams.set('q1', q1);
+    searchParams.set('sort', params.sort || sort);
+    if ( ! showHighlights ) {
+      searchParams.set('hl', 'false');
+    }
 
-      if ( ! targetNewTab ) {
-        searchParams.set('format', 'json');
-      }
+    if ( ! targetNewTab ) {
+      searchParams.set('format', 'json');
+    }
 
-      searchUrl.search = searchParams.toString();
+    searchUrl.search = searchParams.toString();
 
-      if ( targetNewTab ) {
-        blankTabForm.submit();
-        return;
-      }
+    if ( targetNewTab ) {
+      blankTabForm.submit();
+      return;
+    }
 
-      updateStatus({ class: 'alert-primary', message: 'Searching...'});
-      payload = null;
+    updateStatus({ class: 'alert-primary', message: 'Searching...'});
+    payload = null;
 
-      fetch(searchUrl.toString(), { credentials: 'include' })
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          inFetch = true;
-          payload = data;
+    fetch(searchUrl.toString(), { credentials: 'include' })
+      .then((response) => {
+        return response.json();
+      })
+      .then((data) => {
+        inFetch = true;
+        payload = data;
 
-          configureNavigationLinks();
-          summarizePayload();
-          manifest.q1.set(q1);
-          emitter.emit('update.highlights', q1);
-        })
+        configureNavigationLinks();
+        summarizePayload();
+        manifest.q1.set(q1);
+        emitter.emit('update.highlights', q1);
+      })
     }
 
     function clearSearchForm() {
@@ -186,10 +187,22 @@
 {#if payload}
   <div class="d-flex align-items-center justify-content-between border rounded p-1 mb-3">
     <div class="btn-group" role="group" aria-label="Sort Results">
-      <button type="button" class="btn btn-outline-secondary" class:active={sort == 'score'} use:tooltip aria-label="Sort by relevance">
+      <button 
+        type="button" 
+        class="btn btn-outline-secondary" 
+        class:active={sort == 'score'} 
+        use:tooltip 
+        aria-label="Sort by relevance"
+        on:click={(event) => { sort = 'score'; onSubmit() }}>
         <i class="fa-solid fa-arrow-down-wide-short" aria-hidden="true"></i>
       </button>
-      <button type="button" class="btn btn-outline-secondary" class:active={sort == 'seq'} use:tooltip aria-label="Sort by page scan">
+      <button 
+        type="button" 
+        class="btn btn-outline-secondary" 
+        class:active={sort == 'seq'} 
+        use:tooltip 
+        aria-label="Sort by page scan"
+        on:click={(event) => { sort = 'seq'; onSubmit() }}>
         <i class="fa-solid fa-arrow-up-1-9" aria-hidden="true"></i>
       </button>
     </div>
