@@ -27,7 +27,7 @@
 	import SearchView from './components/SearchView';
 	import RestrictedView from './components/RestrictedView';
 	import ScrollView from './components/ScrollView/Outer.svelte';
-	import FlipView from './components/FlipView';
+	import FlipView from './components/FlipView/v2.svelte';
 	import GridView from './components/GridView';
 
   // set up context
@@ -64,8 +64,8 @@
 	manifest.currentSeq = currentSeq;
 	manifest.q1 = writable('');
 	manifest.currentLocation = writable({});
-	manifest.minimalInterface = writable(false);
-	const minimalInterface = manifest.minimalInterface;
+	manifest.interfaceMode = writable(document.body.dataset.interface);
+  const interfaceMode = manifest.interfaceMode;
 	manifest.isFullscreen = writable(false);
 	const isFullscreen = manifest.isFullscreen;
 
@@ -86,9 +86,8 @@
   let pos = `${26 * 16}px`; // '26rem';
   let min = `${10 * 16}px`; // '10rem';
   let max = '50%';
-
-  let maximized = false;
-  let expanded = false;
+  
+  let stage;
 
   /**
    * @param {HTMLElement} node
@@ -147,32 +146,58 @@
 
 		position = pos.endsWith('%') ? `${(100 * pos_px) / size}%` : `${pos_px}px`;
     console.log("-- position", position);
-    container.style.setProperty('--aside-width', position);
+    document.body.style.setProperty('--aside-width', position);
 		// dispatch('change');
 	}
 
   let lastPosition;
   let asideExpanded = true;
   function togglePane() {
-    let minWidth;
-    console.log("-- toggle.pane", lastPosition, position);
     asideExpanded = ! asideExpanded;
-    container.style.setProperty(
+    document.body.style.setProperty(
       '--aside-collapsed-width', 
       asideExpanded ? null : '16px');
-    container.style.setProperty(
-      '--header-collapsed-height', 
-      asideExpanded ? null : '0px');
   }
 
+  let optionsToggled = false;
   function toggleOptions() {
-
+    optionsToggled = !optionsToggled;
+    document.body.dataset.optionsToggled = optionsToggled;
   }
+
+  let lightboxModal;
+  let lightboxImg;
+  function openLightbox(options) {
+    lightboxImg.style.visibility = 'hidden';
+    lightboxImg.addEventListener('load', () => lightboxImg.style.visibility = 'visible', { once: true });
+    lightboxImg.src = options.src;
+    lightboxImg.alt = options.alt;
+    lightboxModal.showModal();
+  }
+
+  function closeLightbox(event) {
+    event.stopPropagation();
+    lightboxModal.close();
+  }
+
+  // emitter.on('switch.view', switchView);
+  emitter.on('open.lightbox', openLightbox);
 
   onMount(() => {
     container = document.querySelector('#root');
     w = container.clientWidth;
-    maximized = ( w <= 700 );
+
+		const resizeObserver = new ResizeObserver((entries) => {
+			const entry = entries[0];
+			const contentBoxSize = entry.contentBoxSize[0];
+      w = contentBoxSize.inlineSize;
+		})
+
+		resizeObserver.observe(container);
+
+    return () => {
+      resizeObserver.disconnect();
+    }
   })
 
 	$: position = pos;
@@ -181,22 +206,32 @@
 		position = constrain(container, size, min, max, position, priority);
 	}
   $: console.log(":: position", position, w, h, min, max);
-  $: if ( w ) { maximized = ( w <= 700 ); }
 
 </script>
 
-<hathi-website-header></hathi-website-header>
+<hathi-website-header>
+	<WebsiteHeader searchState="toggle" compact={true}></WebsiteHeader>
+</hathi-website-header>
 <div style="grid-area: options">
-  {#if maximized}
-  <button style="grid-area: options" class="btn btn-dark shadow rounded-0 w-100 d-flex justify-content-between align-items-center" on:click={toggleOptions}>
+  <button 
+    data-action="toggle-options" 
+    style="grid-area: options" 
+    class="btn btn-dark shadow rounded-0 w-100 d-flex justify-content-between align-items-center d-md-none" 
+    class:d-none={$interfaceMode == 'minimal'}
+    on:click={toggleOptions}>
     <span>Options</span>
-    <i class="fa-solid fa-angle-down" class:fa-rotate-180={expanded} aria-hidden="true"></i>
+    <i 
+      class="fa-solid fa-angle-down" 
+      class:fa-rotate-180={optionsToggled} 
+      aria-hidden="true"></i>
   </button>
-  {/if}
 </div>
 <ViewerToolbar></ViewerToolbar>
 <aside>
-  <div class="inner">
+  <div 
+    class="inner"
+    class:invisible={!asideExpanded}
+    >
     <div 
       class="accordion" 
       id="controls">
@@ -224,13 +259,44 @@
       aria-hidden="true"></i>
   </button>
 </div>
-<main>
-  <div class="page" style="width: 75dvw; height: 90dvh; margin: 1rem auto; border: 2px solid black;"></div>
+<main bind:this={stage}>
+  {#if stage}
+    {#if view == 'search'}
+    <SearchView></SearchView>
+    {:else if view == 'restricted'}
+    <RestrictedView></RestrictedView>
+    {:else}
+    <!-- <ViewerToolbar></ViewerToolbar> -->
+    <svelte:component 
+      this={views[$currentView]}
+      startSeq={$currentSeq}
+      container={stage}
+      ></svelte:component>
+    {/if}
+  {/if}
 </main>
 
 {#if dragging}
 	<div class="mousecatcher" />
 {/if}
+
+<dialog 
+  bind:this={lightboxModal} 
+  class="lightbox border-0 rounded">
+  <div class="d-flex align-items-center justify-content-center h-100 w-100 overflow-auto position-relative">
+    <button
+      type="button"
+      class="btn btn-outline-dark text-uppercase shadow"
+      style="position: absolute; top: 0; right: 0"
+      aria-label="Close Modal"
+      on:click={closeLightbox}>Close <i class="fa-solid fa-xmark" aria-hidden="true" /></button
+    >
+    <img 
+      alt=""
+      bind:this={lightboxImg} 
+      class="h-auto w-auto mw-100 mh-100 border border-dark" />
+  </div>
+</dialog>
 
 <style>
 	.mousecatcher {
@@ -241,4 +307,21 @@
 		height: 100%;
 		background: rgba(255, 255, 255, 0.0001);
 	}
+
+  .lightbox {
+    width: 98dvw;
+    height: 98dvh;
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: 0 auto;
+
+    background: #ddd;
+    z-index: 5000;
+  }
+
+  .lightbox::backdrop {
+    background: rgba(0,0,0,0.5);
+  }
+
 </style>

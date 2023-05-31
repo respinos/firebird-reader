@@ -135,13 +135,14 @@
     page_coords = [ ...coords ];
   }
 
+  let imageSrc;
   export const loadImage = function(reload=false) {
     timeout = null;
     if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
     let action = ( $view == 'thumb' ) ? 'thumbnail' : 'image';
-    let img_src = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
-    fetch(img_src)
+    imageSrc = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
+    fetch(imageSrc)
       .then((response) => {
         let size = response.headers.get('x-image-size');
         // console.log(...response.headers);
@@ -150,6 +151,7 @@
         let width = Math.ceil(parseInt(parts[0], 10) * ratio);
         canvas.width = width;
         canvas.useWidth = Math.ceil(canvas.useHeight * ( canvas.width / canvas.height ));
+        canvas = canvas;
         // console.log("--", seq, size, `${canvas.width}x${canvas.height}`);
         return response.blob();
       })
@@ -291,6 +293,18 @@
     return `${Math.ceil(value * scanRatio * zoom)}px`;
   }
 
+  function checkForFoldout() {
+    if ( $view == 'thumb' || format != 'image' ) { return false; }
+    if ( canvas.width < canvas.height ) { return false; }
+    console.log("-- checkForFoldout", manifest.checkFeatures(seq, "FOLDOUT"));
+    return (
+      manifest.checkFeatures(seq, "FOLDOUT") && 
+      ! manifest.checkFeatures(seq, "BLANK")
+    ) || (
+      ( canvas.width / canvas.height ) > ( 4 / 3 )
+    );
+  }
+
   $: isVisible = false;
   $: scanZoom = calculateZoom(zoom, 1);
   $: scanRatio = calculateRatio(canvas);
@@ -302,6 +316,7 @@
   $: orient = 0;
   $: rotateX = 0;
   $: orientMargin = 0;
+  $: isUnusual = checkForFoldout(canvas);
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
   $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
@@ -339,6 +354,8 @@
   {style} 
   data-seq={seq} 
   data-height={Math.ceil(scanHeight)}
+  style:--pageWidth={zoom > 1 ? `${( innerWidth / 2 ) * zoom}px` : null}
+  style:--pageHeight={zoom > 1 ? `${( innerHeight * zoom )}px` : null}
   style:--height={Math.ceil(scanHeight)}
   style:--width={Math.ceil(scanWidth)}
   style:--zoom={zoom != 1 ? zoom : pageZoom}
@@ -395,6 +412,18 @@
           class:fa-square-check={$selected.has(seq)}></i>
       </button>
       {/if}
+      {#if isUnusual}
+      <button 
+        type="button"
+        class="btn btn-light border border-dark"
+        use:tooltip
+        on:click={(event) => emitter.emit('open.lightbox', { src: imageSrc, alt: `Page scan #${seq}` })}
+        data-bs-placement={area == 'verso' ? 'right' : 'left'}
+        aria-label="Open foldout for page scan #{seq}"><i 
+          aria-hidden="true"
+          class="fa-solid fa-up-right-from-square fa-flip-horizontal"></i>
+        </button>
+      {/if}
       {#if $view == '1up' && format == 'image'}
       <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
       {/if}
@@ -416,6 +445,7 @@
 
   <figure class="frame {format}" 
     class:adjusted={canvas.width > canvas.height}
+    class:zoomed={pageZoom > 1}
     data-orient={orient}
     style:--orient-margin={orientMargin}>
     {#if isVisible}
@@ -447,7 +477,8 @@
 
 <style lang="scss">
   .page {
-    width: 100%;
+    width: var(--pageWidth, 100%);
+    height: var(--pageHeight, 100%);
 
     // display: flex;
     // flex-direction: column;
@@ -504,12 +535,12 @@
 
     position: relative;
 
+    background: darkkhaki;
+
     grid-row: 1/2;
     grid-column: 1/2;
 
     &.image {
-      // height: calc(var(--height) * 0.9 * 1px);
-      // width: calc(var(--width) * 0.9 * 1px);
       max-width: 100%;
       height: 100%;
       width: 100%; // maybe?
@@ -518,10 +549,18 @@
       overflow: hidden;
 
       .image {
-        max-height: calc(var(--height) * 0.9 * 1px);
-        max-width: calc(var(--width) * 0.9 * 1px);
+        // max-height: calc(var(--height) * 0.9 * 1px);
+        // max-width: calc(var(--width) * 0.9 * 1px);
+
+        height: 100%;
+        width: auto;
+
         position: relative;
         margin: 0 auto;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 
@@ -547,7 +586,7 @@
   figure img {
     // height: 99%;
     display: block;
-    margin: 0 auto;
+    margin: auto;
 
     max-height: 99%;
     max-width: 100%;
@@ -562,6 +601,15 @@
   figure.adjusted {
     /* max-width: 100%; */
     margin: auto;
+  }
+
+  figure.zoomed {
+    overflow: auto !important;
+
+    img {
+      max-height: none;
+      max-width: none;
+    }
   }
 
   figure.adjusted img {

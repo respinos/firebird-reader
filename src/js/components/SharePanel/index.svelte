@@ -114,8 +114,8 @@
   </slot:fragment>
 </Panel>
 <Modal bind:this={modal}>
-  <svelte:fragment slot="modal-title">Embed this item</svelte:fragment>
-  <svelte:fragment slot="modal-body">
+  <svelte:fragment slot="title">Embed this item</svelte:fragment>
+  <svelte:fragment slot="body">
     <div class="mb-3" bind:this={modalBody}>
       <p id="embed-help-info">
         Copy the code below and paste it into the HTML of any website or blog.

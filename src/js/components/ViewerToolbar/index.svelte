@@ -13,7 +13,7 @@
   $: seq = $currentSeq;
   $: console.log("ViewerToolbar", seq);
 
-  const minimalInterface = manifest.minimalInterface;
+  const interfaceMode = manifest.interfaceMode;
   const isFullscreen =  manifest.isFullscreen;
 
   const goto = function(args) {
@@ -25,13 +25,20 @@
     emitter.emit('update.zoom', delta);
   }
 
-  const toggleInterface = function() {
-    $minimalInterface = ! $minimalInterface;
-    emitter.emit('toggle.interface', minimalInterface);
+  const toggleInterface = function(event, mode) {
+    if ( mode ) {
+      $interfaceMode = mode;
+    } else {
+      console.log("-- toggleInterface", $interfaceMode);
+      $interfaceMode = ( $interfaceMode == 'default' ) ? 'minimal' : 'default';
+    }
+    document.body.dataset.interface = $interfaceMode;
+    emitter.emit('toggle.interface', $interfaceMode);
   }
 
-  const toggleFullscreen = function() {
-    screenfull.toggle(document.querySelector('.stage')).then(() => {
+  const toggleFullscreen = function(event) {
+    toggleInterface(event, screenfull.isFullscreen ? 'default' : 'minimal');
+    screenfull.toggle(document.querySelector('#root')).then(() => {
       console.log("-- toggleFullScreen", screenfull.isFullscreen);
       $isFullscreen = screenfull.isFullscreen;
     })
@@ -39,9 +46,7 @@
 
   let isFullscreenEnabled = false;
 
-  // emitter.on('update.seq', updateSeq);
-
-  $: console.log("-- view.toolbar minimalInterface", $minimalInterface);
+  $: console.log("-- view.toolbar interfaceMode", $interfaceMode);
 
   onMount(() => {
     isFullscreenEnabled = screenfull.isEnabled;
@@ -56,15 +61,15 @@
   <button 
     type="button" 
     class="btn btn-outline-dark" 
-    class:active={$minimalInterface}
-    aria-label={$minimalInterface ? 'Show Controls' : 'Hide Controls'} 
+    class:active={$interfaceMode == 'minimal'}
+    aria-label={$interfaceMode == 'minimal' ? 'Show Controls' : 'Hide Controls'} 
     use:tooltip 
     on:click={toggleInterface}>
     <i 
-      class:fa-solid={!$minimalInterface}
-      class:fa-eye={!$minimalInterface}
-      class:fa-regular={$minimalInterface}
-      class:fa-eye-slash={$minimalInterface}
+      class:fa-solid={$interfaceMode == 'default'}
+      class:fa-eye={$interfaceMode == 'default'}
+      class:fa-regular={$interfaceMode == 'minimal'}
+      class:fa-eye-slash={$interfaceMode == 'minimal'}
       ></i>
   </button>
 
@@ -72,7 +77,7 @@
     <i class="fa-regular fa-circle-question"></i>
   </button> -->
 
-  {#if ! $minimalInterface}
+  {#if $interfaceMode == 'default'}
   <!-- navigation form -->
   <form class="d-none d-sm-block">
     <div class="d-flex align-items-center gap-1 bg-dark text-light p-1 px-2 rounded">
@@ -141,6 +146,10 @@
 
   :global(.stage::backdrop) {
     background-color: #fff;
+  }
+
+  :global(.apps[data-options-toggled="true"] .view--toolbar) {
+    display: none;
   }
 
 </style>

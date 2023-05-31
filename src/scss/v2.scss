@@ -16,11 +16,13 @@
   height: 100dvh;
   width: 100dvw;
 
-  #root {
-    --aside-width: 20rem;
-    --aside-min-width: 10rem;
+  --aside-width: 20rem;
+  --aside-min-width: 10rem;
 
-    --aside-maximized-width: 0%;
+  --aside-maximized-width: 0%;
+
+
+  #root {
 
     height: 100dvh;
     width: 100dvw;
@@ -34,7 +36,7 @@
       "options options options"
       "aside divider reader";
     grid-template-rows: 
-      var(--header-collapsed-height, min-content)
+      var(--header-height, min-content)
       min-content
       minmax(0, 1fr);
     grid-template-columns: 
@@ -42,7 +44,8 @@
       min-content 
       minmax(0, 1fr);
 
-    @media ( max-width: 700px ) {
+    
+    @media ( max-width: 768px ) {
       grid-template-areas: 
         "header header"
         "options options"
@@ -50,12 +53,17 @@
       grid-template-columns:
         0% 100%;
 
+      hathi-website-header {
+        overflow-y: auto;
+      }
+
       .divider {
         display: none;
       }
-
+      
       main {
         width: 100dvw;
+        min-height: 100dvh;
       }
 
       &[data-aside-expanded="true"] {
@@ -66,9 +74,28 @@
 
 }
 
+.apps[data-interface="minimal"] {
+  --aside-width: 0rem !important;
+  --aside-min-width: 0rem !important;
+  --header-height: 0rem;
+
+  #root {
+    .divider {
+      display: none !important;
+    }
+  }
+}
+
+.apps[data-options-toggled="true"] {
+  #root {
+    grid-template-columns: 100% 0%;
+  } 
+}
+
 hathi-website-header  {
   grid-area: header;
-  min-height: 5rem;
+  z-index: 1000;
+  max-height: 100dvh;
   background: darkorange;
 }
 
@@ -76,6 +103,9 @@ hathi-website-header  {
   grid-area: reader;
 }
 
+// button[data-action="toggle-options"] {
+//   display: none !important;
+// }
 
 
 aside {
@@ -91,13 +121,18 @@ aside {
 }
 
 main {
-  display: grid;
   position: relative;
-  grid-template-rows: minmax(0, 1fr);
+  min-height: 100%;
+  overflow: auto;
+
+  // display: grid;
+  // grid-template-rows: minmax(0, 1fr);
 
   grid-area: reader;
 
   background: darkolivegreen;
+
+  scroll-snap-type: y mandatory;
 }
 
 .divider {
