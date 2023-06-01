@@ -41,17 +41,29 @@
     tooltip.setContent({ '.tooltip-inner': 'Copied' });
   }
 
-  onMount(() => {
-    // btnShareHandle.bs = new bootstrap.Tooltip(btnShareHandle, { title: getLabel });
-    // btnShareHandleLink.bs = new bootstrap.Tooltip(btnShareHandleLink, { title: getLabel });
-    // btnCodeBlock.bs = new bootstrap.Tooltip(btnCodeBlock, { title: getLabel, container: modalBody });
-
+  $: {
     [ btnShareHandle, btnShareHandleLink, btnCodeBlock ].forEach((el) => {
+      if ( ! el ) { return; }
+      if ( el._listening ) { return ; }
+      el._listening = true;
       el.addEventListener('hidden.bs.tooltip', () => {
         let tooltip = bootstrap.Tooltip.getInstance(el);
         tooltip.setContent({ '.tooltip-inner': el.getAttribute('aria-label') });
       })
     })
+  }    
+
+  onMount(() => {
+    // btnShareHandle.bs = new bootstrap.Tooltip(btnShareHandle, { title: getLabel });
+    // btnShareHandleLink.bs = new bootstrap.Tooltip(btnShareHandleLink, { title: getLabel });
+    // btnCodeBlock.bs = new bootstrap.Tooltip(btnCodeBlock, { title: getLabel, container: modalBody });
+
+    // [ btnShareHandle, btnShareHandleLink, btnCodeBlock ].forEach((el) => {
+    //   el.addEventListener('hidden.bs.tooltip', () => {
+    //     let tooltip = bootstrap.Tooltip.getInstance(el);
+    //     tooltip.setContent({ '.tooltip-inner': el.getAttribute('aria-label') });
+    //   })
+    // })
 
     return () => {
       // emitter.off('update.seq', updateSeq);
