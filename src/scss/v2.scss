@@ -79,6 +79,10 @@
   --aside-min-width: 0rem !important;
   --header-height: 0rem;
 
+  hathi-website-header > div {
+    display: none;
+  }
+
   #root {
     .divider {
       display: none !important;
@@ -109,8 +113,8 @@ hathi-website-header  {
 
 
 aside {
-  // min-width: 20rem;
-  background: darkgoldenrod;
+  // // --- debug background
+  // background: darkgoldenrod;
   overflow: auto;
 
   .inner {
@@ -130,7 +134,8 @@ main {
 
   grid-area: reader;
 
-  background: darkolivegreen;
+  // // --- debug background
+  // background: darkolivegreen;
 
   scroll-snap-type: y mandatory;
 }
@@ -149,7 +154,7 @@ main {
     display: block;
     content: "";
     position: absolute;
-    background: black;
+    background: transpraent; // black;
     top: 0;
     bottom: 0;
     left: 50%;
@@ -167,19 +172,9 @@ main {
   }
 
   &:hover {
-    background: darkturquoise;
-
-    // &::before {
-    //   display: block;
-    //   content: "";
-    //   position: absolute;
-    //   top: 0;
-    //   bottom: 0;
-    //   left: 0;
-    //   right: 0;
-    //   background: darkturquoise;
-    // }
-
+    // background: rgba(0,0,0,0.25);
+    background-color: #DFDBE5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath fill-rule='evenodd' d='M0 0h4v4H0V0zm4 4h4v4H4V4z'/%3E%3C/g%3E%3C/svg%3E");
   }
 }
 
@@ -224,4 +219,10 @@ button:hover i.border-dark {
     15.7px 31.4px 39.5px -1.8px hsl(var(--shadow-color) / 0.48),
     23.9px 47.8px 60.1px -2.1px hsl(var(--shadow-color) / 0.48),
     35.3px 70.5px 88.7px -2.5px hsl(var(--shadow-color) / 0.48);
+
+}
+
+.tooltip {
+  --bs-tooltip-bg: var(--color-primary-700);
+  --bs-tooltip-opacity: 1.0;
 }

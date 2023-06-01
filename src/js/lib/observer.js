@@ -43,7 +43,6 @@ export function createObserver(options = {}) {
     });
   };
   if (typeof window !== 'undefined') {
-    console.log("")
     io = new IntersectionObserver(cb, io_options);
     observer = (node, {
       once = false
@@ -51,7 +50,7 @@ export function createObserver(options = {}) {
       node.dataset.ioOnce = once.toString();
       io.observe(node);
       observer.observedIdx += 1;
-      console.log("-- observer.add", observer.observedIdx, observer.totalIdx);
+      // console.log("-- observer.add", observer.observedIdx, observer.totalIdx);
       return {
         update(nextOption) {
           const current_once = node.dataset.ioOnce;

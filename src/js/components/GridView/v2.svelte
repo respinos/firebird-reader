@@ -145,8 +145,10 @@
 
   const handleUnintersecting = (({detail}) => {
     // observer.observedIdx += 1;
-    console.log("- un/intersecting", detail.target.dataset.seq);
+    // console.log("- un/intersecting", detail.target.dataset.seq);
     if ( observer.observedIdx < manifest.totalSeq ) { return ; }
+    if ( detail.target.dataset.loaded != 'true' ) { return ; }
+
     let seq = parseInt(detail.target.dataset.seq);
     // console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
@@ -407,9 +409,8 @@
     if ( io ) {
       io.disconnect();
     }
-    if ( inner ) {
-      inner.innerHTML = '';
-    }
+    // container.innerHTML = ''; 
+    inner.innerHTML = '';
   })
 </script>
 

@@ -31,6 +31,8 @@
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
     rootMargin: `0% 200% 0% 200%`
   })
+  observer.observedIdx = 0;
+  observer.totalIdx = manifest.totalSeq;
 
   export const currentLocation = function() {
     let location = {};
@@ -135,7 +137,7 @@
   })
 
   const handleUnintersecting = (({detail}) => {
-    return;
+    if ( observer.observedIdx < manifest.totalSeq ) { return ; }
     let seq = parseInt(detail.target.dataset.seq);
     // console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
@@ -339,7 +341,7 @@
   let isInitialized = false;
   afterUpdate(() => {
     if ( itemMap[manifest.totalSeq].page ) {
-      if ( ! isInitialized ) {
+      if ( ! isInitialized && observer.observedIdx == manifest.totalSeq ) {
         if ( startSeq > 1 ) {
           setTimeout(() => {
             console.log("-- initialize", startSeq);
@@ -392,7 +394,7 @@
     if ( io ) {
       io.disconnect();
     }
-    inner.innerHTML = '';
+    // container.innerHTML = '';
   })
 </script>
 
@@ -416,18 +418,19 @@
         {handleIntersecting}
         {handleUnintersecting}
         {innerHeight}
-        {innerWidth}
+        innerWidth={innerWidth / 2}
         format={$currentFormat}
         seq={canvas.seq} 
         bind:zoom={zoom}
         ></Page>
       {:else}
       <div 
-        class="placeholder"
+        class="blank"
         class:verso={canvasIdx == 0}
         class:recto={canvasIdx == 1}
         style:--width={innerWidth * 0.125}
-        ></div>
+        ><i class="text-black-50 fa-solid fa-diamond fa-2xl opacity-25" aria-hidden="true"></i>
+      </div>
       {/if}
     {/each}
   </div>
@@ -450,11 +453,12 @@
   }
 
   .spread {
-    // height: calc(100% * var(--zoom));
-    // width: calc(100% * var(--zoom));
-    height: 100%;
+    height: calc(100dvh - ( var(--stage-header-height) * 1px));
     width: var(--width, 100%);
-    // width: calc(var(--width) * var(--zoom) * 1px);
+
+    // // --- debug border
+    // border: 8px solid darkgoldenrod;
+
     display: grid;
     grid-template-areas: "verso recto";
     grid-template-columns: var(--columnWidth, 50%) var(--columnWidth, 50%);
@@ -462,10 +466,13 @@
     position: relative;
     overflow: hidden;
 
+    // bottom padding keeps the spread from overlapping with
+    // the view toolbar
     padding: 1rem;
     padding-bottom: 5.5rem;
 
-    border: 8px solid yellow;
+    // // --- debug border
+    // border: 8px solid yellow;
 
     scroll-snap-align: start;
 
@@ -475,6 +482,8 @@
   }
 
   .spread-idx {
+    // // -- displaying the spread-idx is useful for debugging spreads
+    display: none;
     position: absolute;
     top: 50%;
     left: 1rem;
@@ -487,14 +496,20 @@
     z-index: 500;
   }
 
-  .placeholder {
-    border: 1px dotted #ddd;
-    background: #ddd;
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  .blank {
+    // border: 1px dotted #ddd;
+    // background: #ddd;
+    // clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
     height: calc(var(--width) * 1px);
     width: calc(var(--width) * 1px);
     align-self: center;
     justify-self: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 2rem;
 
     &.verso {
       grid-area: verso;

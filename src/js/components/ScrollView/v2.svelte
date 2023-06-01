@@ -9,6 +9,7 @@
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
+  const currentView = manifest.currentView;
   
   const currentSeq = manifest.currentSeq;
   const currentFormat = manifest.currentFormat;
@@ -38,6 +39,7 @@
     rootMargin: `200% 0% 200% 0%`
   });
   observer.observedIdx = 0;
+  observer.totalIdx = manifest.totalSeq;
 
   export const currentLocation = function() {
     return { page: itemMap[$currentSeq] };
@@ -45,7 +47,7 @@
 
   const unloadPage = async function(pageDatum) {
     let percentage = itemMap[pageDatum.seq].page.visible(viewport);    
-    console.log("!! unloading", pageDatum.seq, percentage, queue.size, "->", pageDatum);
+    console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
     if ( pageDatum.intersectionRatio > 0 ) { return ; }
     itemMap[pageDatum.seq].page.toggle(false);
     currentInView.delete(pageDatum.seq);
@@ -161,7 +163,9 @@
 
   const handleUnintersecting = (({detail}) => {
     // observer.observedIdx += 1;
+    // console.log("-- scroll.unintersecting", detail.target.dataset.seq, observer.observedIdx, isInitialized, detail.target.dataset.loaded);
     if ( observer.observedIdx < manifest.totalSeq ) { return ; }
+    if ( detail.target.dataset.loaded != 'true' ) { return ; }
     let seq = parseInt(detail.target.dataset.seq);
     // console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
@@ -303,6 +307,8 @@
     resizeTimeout = null;
   }
 
+  $: console.log("-- scroll", $currentView);
+
   let isInitialized = false;
   afterUpdate(() => {
     if ( itemMap[manifest.totalSeq].page ) {
@@ -355,9 +361,11 @@
     resizeObserver.observe(container);
 
     return () => {
+      let t0 = (new Date).getTime();
       emitter.off('goto.page', gotoPage);
       container.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
+      console.log("-- scroll.demount", (new Date).getTime() - t0);
     }
   })
 
@@ -369,13 +377,12 @@
     if ( io ) {
       io.disconnect();
     }
-    if ( inner ) {
-      inner.innerHTML = '';
-    }
+    // container.innerHTML = '';
   })
 </script>
 
-{#each itemData as canvas}
+<div class="inner" bind:this={inner}>
+{#each itemData as canvas (canvas.seq)}
 <Page 
   bind:this={canvas.page}
   {observer} 
@@ -389,6 +396,7 @@
   bind:zoom={zoom}
   ></Page>
 {/each}
+</div>
 
 <style lang="scss">
 

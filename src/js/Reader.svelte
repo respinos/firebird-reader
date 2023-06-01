@@ -46,7 +46,7 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = 'thumb';
+	export let view = '1up';
 	export let format = 'image';
 
 	// && ! isEmbed
@@ -215,7 +215,7 @@
 	emitter.on('switch.view', switchView);
 	emitter.on('switch.format', switchFormat);
 
-  $: if ( stage ) { stage.style.setProperty('--header-height', document.querySelector('hathi-website-header').clientHeight); }
+  $: if ( stage ) { stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight); }
 
   onMount(() => {
     container = document.querySelector('#root');
@@ -225,7 +225,7 @@
 			const entry = entries[0];
 			const contentBoxSize = entry.contentBoxSize[0];
       w = contentBoxSize.inlineSize;
-      stage.style.setProperty('--header-height', document.querySelector('hathi-website-header').clientHeight);
+      stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight);
     })
 
 		resizeObserver.observe(container);
