@@ -42,8 +42,8 @@
   export let innerHeight = window.innerHeight;
   export let innerWidth = window.innerWidth;
 
-  export const scrollIntoView = function() {
-    pageDiv.scrollIntoView({ behavior: 'instant'});
+  export const scrollIntoView = function(params) {
+    pageDiv.scrollIntoView(params);
   }
 
   export const focus = function(invoke=false) {
@@ -138,8 +138,8 @@
 
   let imageSrc;
   export const loadImage = function(reload=false) {
-    // return;
-    const isDebugging = true;
+    return;
+    const isDebugging = false;
     const delay = isDebugging ? 5 * 1000 : 0;
     setTimeout(() => {
       loadImageActual(reload);
@@ -158,10 +158,27 @@
         let parts = size.split('x');
         let ratio = canvas.height / parseInt(parts[1], 10);
         let width = Math.ceil(parseInt(parts[0], 10) * ratio);
+
         canvas.width = width;
         canvas.useWidth = Math.ceil(canvas.useHeight * ( canvas.width / canvas.height ));
         canvas = canvas;
-        // console.log("--", seq, size, `${canvas.width}x${canvas.height}`);
+        let update = {
+          height: canvas.height,
+          width: width,
+          size: {
+            width: parseInt(parts[0], 10),
+            height: parseInt(parts[1], 10)
+          }
+        };
+
+        let resolution = response.headers.get('x-image-resolution');
+        if ( resolution ) {
+          update.resolution = resolution.replace("/1", "").replace(/\.0+ /, ' ');
+          const r = 300 / parseInt(update.resolution, 10);
+          update.screenResolution = `${Math.ceil(update.size.width * r)}x${Math.ceil(update.size.height * r)}`
+        }
+
+        manifest.update(seq, update);
         return response.blob();
       })
       .then(blob => {
@@ -278,7 +295,7 @@
     // emitter.emit('update.zoom.page', { seq, delta });
   };
 
-  function calculateRatio(canvas) {
+  function calculateRatio(innerHeight, canvas) {
     if ( canvas.height > canvas.width ) {
       return innerHeight / canvas.height;
     }
@@ -287,7 +304,7 @@
     return ratio;
   }
 
-  function calculate(value, zoom) {
+  function calculate(innerHeight, value, zoom) {
     // console.log("calculate", value, scanRatio, zoom);
     return Math.ceil(value * scanRatio * zoom);
   }
@@ -297,7 +314,7 @@
     return zoom;
   }
 
-  function calculatePage(value, zoom) {
+  function calculatePage(innerHeight, value, zoom) {
     if ( zoom == 1 ) { return null; }
     return `${Math.ceil(value * scanRatio * zoom)}px`;
   }
@@ -316,11 +333,11 @@
 
   $: isVisible = false;
   $: scanZoom = calculateZoom(zoom, 1);
-  $: scanRatio = calculateRatio(canvas);
-  $: scanHeight = calculate(canvas.height, scanZoom) || '99%';
-  $: scanWidth = calculate(canvas.width, scanZoom) || 'auto';
-  $: imgHeight = calculatePage(canvas.height, pageZoom);
-  $: imgWidth = calculatePage(canvas.width, pageZoom);
+  $: scanRatio = calculateRatio(innerHeight, canvas);
+  $: scanHeight = calculate(innerHeight, canvas.height, scanZoom) || '99%';
+  $: scanWidth = calculate(innerHeight, canvas.width, scanZoom) || 'auto';
+  $: imgHeight = calculatePage(innerHeight, canvas.height, pageZoom);
+  $: imgWidth = calculatePage(innerHeight, canvas.width, pageZoom);
   $: scanAdjusted = false;
   $: orient = 0;
   $: rotateX = 0;
@@ -340,7 +357,7 @@
 
   onMount(() => {
     // console.log("-- page.mount", seq, style);
-    console.log("-- page.mount", seq, isVisible);
+    // console.log("-- page.mount", seq, isVisible);
 
     return () => { 
       // console.log("-- page.unmount", seq);

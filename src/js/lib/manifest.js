@@ -57,6 +57,7 @@ export class Manifest {
       rotation: meta.rotation || 0,
       ratio: meta.height / meta.width,
       resolution: meta.resolution,
+      screenResolution: meta.screenResolution,
       size: meta.size
     }
   }

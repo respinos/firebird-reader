@@ -5,7 +5,7 @@
   import PQueue from "p-queue";
   import { debounce } from '../../lib/debounce';
 
-  import Page from '../Page/index.svelte';
+  import Page from '../Page/v2.svelte';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
@@ -37,13 +37,16 @@
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
     rootMargin: `200% 0% 200% 0%`
   });
+  observer.observedIdx = 0;
 
   export const currentLocation = function() {
     return { page: itemMap[$currentSeq] };
   }
 
   const unloadPage = async function(pageDatum) {
-    // console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
+    let percentage = itemMap[pageDatum.seq].page.visible(viewport);    
+    console.log("!! unloading", pageDatum.seq, percentage, queue.size, "->", pageDatum);
+    if ( pageDatum.intersectionRatio > 0 ) { return ; }
     itemMap[pageDatum.seq].page.toggle(false);
     currentInView.delete(pageDatum.seq);
     pageDatum.loaded = pageDatum.inView = false;
@@ -119,6 +122,7 @@
     // currentInView.push(...newInView);
   }
 
+  let seqTimeout;
   const handleIntersecting = (({detail}) => {
     let seq = parseInt(detail.target.dataset.seq);
     // console.log("$$ looking for currentSeq", seq);
@@ -126,7 +130,7 @@
     if ( detail.isIntersecting ) {
       pageDatum.intersectionRatio = detail.intersectionRatio;
       if ( pageDatum.loaded ) {
-        // console.log("# intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
+        console.log("# scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
         // but maybe we have pages that haven't been loaded!
         // if ( pageDatum.timeout ) { clearTimeout(pageDatum.timeout); }
         // pageDatum.timeout = setTimeout(() => {
@@ -134,7 +138,7 @@
         //   loadPages(seq);
         // }, 1000);
       } else {
-        // console.log("+ intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
+        console.log("+ scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
         // pageDatum.page.toggle(true);
         // pageDatum.inView = true;
         if ( pageDatum.timeout ) { clearTimeout(pageDatum.timeout); }
@@ -142,18 +146,22 @@
           // console.log("$ intersecting", seq);
           loadPages(seq);
         }, 1000);
-        // loadPages(seq);
       }
-      // currentInView.push(seq);
       currentInView.add(seq);
+      // console.log("? scroll.intersecting", seq, Array.from(currentInView));
     } else {
       // console.log("? intersecting", seq, detail.isIntersecting, detail.intersectionRatio, pageDatum.isVisible);
     }
     // console.log("!! currentInView", Array.from(currentInView));
-    setCurrentSeq();
+    if ( seqTimeout ) {
+      clearTimeout(seqTimeout);
+    }
+    seqTimeout = setTimeout(setCurrentSeq, 100);
   })
 
   const handleUnintersecting = (({detail}) => {
+    // observer.observedIdx += 1;
+    if ( observer.observedIdx < manifest.totalSeq ) { return ; }
     let seq = parseInt(detail.target.dataset.seq);
     // console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
@@ -178,7 +186,6 @@
   const setCurrentSeq = function() {
     if ( ! isInitialized ) { return ; }
 
-    // isInViewport(el)
     let max = { seq: -1, percentage: 0 };
     let possibles = Array.from(currentInView).sort((a,b) => a-b);
     possibles.forEach((seq) => {
@@ -188,12 +195,12 @@
         max.percentage = percentage;
       }
     })
+    // console.log("-- scroll.setCurrentSeq", max.seq, $currentSeq, possibles, Array.from(currentInView));
     if ( max.seq > 0 ) {
       $currentSeq = max.seq;
     }
     focus($currentSeq);
     manifest.currentLocation.set(currentLocation());
-    // emitter.emit('update.seq', currentSeq);
   }
 
   let focusSeq;
@@ -217,7 +224,10 @@
   const itemMap = {};
   const currentInView = new Set;
 
-  let baseHeight = Math.ceil(window.innerHeight * 0.90) * zoom;
+  let innerHeight = container.clientHeight;
+  let innerWidth = container.clientWidth;
+
+  let baseHeight = Math.ceil(innerHeight * 0.90) * zoom;
   for(let seq = 1; seq <= manifest.totalSeq; seq++) {
     let item = {};
     item.id = manifest.id;
@@ -248,7 +258,7 @@
       // invalid option;
       return;
     }
-    if ( target == $currentSeq ) { return ; }
+    if ( target == $currentSeq && ! options.force ) { return ; }
     if ( target < 1 ) { target = 1 ; }
     else if ( target > manifest.totalSeq ) {
       target = manifest.totalSeq;
@@ -257,12 +267,16 @@
     console.log("<< goto.page", options, target, $currentSeq);
     setTimeout(() => {
       itemMap[target].page.scrollIntoView();
+      if ( resizeSeq ) { resizeSeq = null; }
     })
   }
 
   emitter.on('goto.page', gotoPage);
 
   emitter.on('update.zoom', delta => {
+    startSeq = $currentSeq;
+    isInitialized = false;
+
     console.log('<< update.zoom', zoomIndex, delta, zoom);
     zoomIndex += delta;
     if ( zoomIndex < 0 ) { zoomIndex = 0; }
@@ -277,23 +291,33 @@
     });
   })
 
-  let resizeTimeout;
+  let resizeTimeout; let resizeSeq;
   function handleResize(entry) {
     innerWidth = entry.contentRect.width;
     innerHeight = entry.contentRect.height;
     console.log("-- resizeObserver", innerWidth, innerHeight);
+    setTimeout(() => { 
+      console.log("-- scroll.resize", resizeSeq);
+      gotoPage({ seq: resizeSeq, force: true }) 
+    });
     resizeTimeout = null;
   }
 
   let isInitialized = false;
   afterUpdate(() => {
     if ( itemMap[manifest.totalSeq].page ) {
-      if ( ! isInitialized ) {
+      if ( ! isInitialized && observer.observedIdx == manifest.totalSeq ) {
         if ( startSeq > 1 ) {
+          console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
           setTimeout(() => {
-            console.log("-- initialize", startSeq);
-            itemMap[startSeq].page.scrollIntoView({ behavior: 'instant'});
+            itemMap[startSeq].page.scrollIntoView({ 
+              behavior: 'instant',
+              block: "start", 
+              inline: "nearest"
+            });
             isInitialized = true;
+
+            $currentSeq = startSeq;
 
             emitter.emit('enable.zoom', {
               out: zoomIndex > 0,
@@ -321,6 +345,10 @@
     const resizeObserver = new ResizeObserver(entries => {
       const entry = entries.at(0);
       if ( resizeTimeout ) { clearTimeout(resizeTimeout); }
+      if ( resizeSeq == null ) { 
+        console.log("-- scroll.resizeObserver", $currentSeq);
+        resizeSeq = $currentSeq; 
+      }
       resizeTimeout = setTimeout(() => handleResize(entry), 100);
     })
 
@@ -354,6 +382,8 @@
   {canvas} 
   {handleIntersecting}
   {handleUnintersecting}
+  {innerHeight}
+  {innerWidth}
   format={$currentFormat}
   seq={canvas.seq} 
   bind:zoom={zoom}

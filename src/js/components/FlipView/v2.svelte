@@ -3,7 +3,7 @@
 	import { createObserver } from '../../lib/observer';
   import PQueue from "p-queue";
 
-  import Page from '../Page/index.svelte';
+  import Page from '../Page/v2.svelte';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');

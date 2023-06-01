@@ -9,11 +9,13 @@
   const manifest = getContext('manifest');
   const emitter = getContext('emitter');
 
-  // const updateSeq = function(data) {
-  //   if ( data ) { currentSeq = data; }
-  // }
-
-  // emitter.on('update.seq', updateSeq);
+  const formatTitle = {};
+  formatTitle['pdf'] = 'PDF';
+  formatTitle['epub'] = 'EPUB';
+  formatTitle['plaintext'] = 'Text (.txt)'
+  formatTitle['plaintext-zip'] = 'Text (.zip)';
+  formatTitle['image-jpeg'] = 'Image (JPEG)';
+  formatTitle['image-tiff'] = 'Image (TIFF)';
 
   let currentView = manifest.currentView;
   let currentSeq = manifest.currentSeq;
@@ -44,6 +46,7 @@
   let allowDownload = manifest.allowSinglePageDownload || manifest.allowFullDownload;
 
   function callback(argv) {
+    console.log("-- callback", downloadInProgress, argv);
     if(downloadInProgress) {
       [progressUrl, downloadUrl, totalPages] = argv;
       if (trackerInterval) {
@@ -83,6 +86,7 @@
       percent = 100;
       downloadInProgress = false;
     } else {
+      status.done = false;
       current = data.current_page;
       percent = 100 * ( current / totalPages );
     }
@@ -99,6 +103,7 @@
     }
 
     status.percent = percent;
+    console.log("-- updateStatus", status);
     status = status;
   }
 
@@ -124,7 +129,7 @@
     let cancelUrl = new URL(`${location.protocol}//${HT.service_domain}${action}`);
     let params = new URLSearchParams();
     params.set('id', manifest.id);
-    params.set('callback', 'callback');
+    params.set('callback', 'tunnelCallback');
     params.set('stop', '1');
     params.set('_', (new Date).getTime());
     cancelUrl.search = params.toString();
@@ -143,9 +148,10 @@
 
     let selection = { pages: [] };
     if ( range == 'selected-pages' ) {
-      selection.pages = [ 1, 10, 15 ];
+      selection.pages = Array.from($selected);
       selection.isSelection = true;
-      if (select.pages.legnth == 0) {
+      console.log("-- selection", selection);
+      if (selection.pages.length == 0) {
         return;
       }
     } else if ( range.startsWith('current-page') ) {
@@ -209,7 +215,7 @@
           params.set('bundle_format', 'text');
           break;
       }
-      params.set('callback', 'callback');
+      params.set('callback', 'tunnelCallback');
       params.set('_', (new Date).getTime());
       
       requestUrl.search = params.toString();
@@ -264,7 +270,12 @@
         list[i] = tmp[0] + "-" + tmp[1];
       }
     }
-    return list;
+    // return list;
+    if ( JSON.stringify(list) != JSON.stringify(flattenedSelection) ) {
+      flattenedSelection = list;
+      return true;
+    }
+    return false;
   }
 
   function gotoSelection(sel) {
@@ -272,12 +283,16 @@
     emitter.emit('goto.page', { seq: tmp[0] });
   }
 
+  let flattenedSelection = [];
+
   $: action = buildAction(format);
   $: iframeName = `download-module-${tunnelFormAttempt}`;
   $: if ( ( format == 'plaintext-zip' || format == 'epub' ) && range != 'volume' ) { range = 'volume'; }
-  $: flattenedSelection = flattenSelection($selected);
+  $: if ( flattenSelection($selected) ) { range = 'selected-pages'; }
   $: console.log("-- download flatten", flattenedSelection);
-  $: if ( flattenedSelection.length ) { range = 'selected-pages'; }
+  $: meta = manifest.meta($currentSeq);
+  $: console.log($currentSeq, meta);
+  // $: if ( flattenedSelection.length ) { range = 'selected-pages'; }
 
   onMount(() => {
     if ( ! allowDownload ) {
@@ -288,7 +303,7 @@
     tunnelWindow = tunnelFrame.contentWindow;
 
     // assign global callback
-    tunnelWindow.callback = function() {
+    tunnelWindow.tunnelCallback = function() {
       callback(arguments);
     };
 
@@ -356,12 +371,18 @@
           <input name="target-ppi" class="form-check-input" type="radio" value="300" id="image-target-ppi-300" bind:group={targetPPI}>
           <label class="form-check-label" for="image-target-ppi-300">
             High / 300 dpi
+            {#if meta.resolution}
+            ({meta.screenResolution})
+            {/if}
           </label>
         </div>        
         <div class="form-check">
           <input name="target-ppi" class="form-check-input" type="radio" value="0" id="image-target-ppi-full" bind:group={targetPPI}>
           <label class="form-check-label" for="image-target-ppi-full">
             Full / 600 dpi
+            {#if meta.resolution}
+            ({meta.size.width}x{meta.size.height})
+            {/if}
           </label>
         </div>        
       </fieldset>
@@ -515,10 +536,13 @@
   </svelte:fragment>
 </Panel>
 <Modal bind:this={modal}>
-  <svelte:fragment slot="modal-title">
-    Download {format}
+  <svelte:fragment slot="title">
+    Building your {formatTitle[format]}
+      {#if $selected.size > 0}
+        ({$selected.size} page{$selected.size > 1 ? 's' : ''})
+      {/if}
   </svelte:fragment>
-  <svelte:fragment slot="modal-body">
+  <svelte:fragment slot="body">
     <div style="width: 30rem">
       {#if status.percent < 100}
       <p>Please wait while we build your {format}.</p>
@@ -537,7 +561,7 @@
       {/if}
     </div>
   </svelte:fragment>
-  <svelte:fragment slot="modal-footer">
+  <svelte:fragment slot="footer">
     <div class="d-flex gap-1 align-items-center justify-content-end">
       <button type="button" class="btn btn-secondary" on:click={cancelDownload}>Cancel</button>
       <!-- <button 

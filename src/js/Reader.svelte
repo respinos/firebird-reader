@@ -3,6 +3,7 @@
 	import { writable, get } from 'svelte/store';
 
 	import { Manifest } from './lib/manifest';
+  import { updateHistory } from './lib/history';
 	import Emittery from 'emittery';
 
   // import { drag } from './lib/drag';
@@ -37,6 +38,8 @@
 	const manifest = new Manifest(HT.params);
 	setContext('manifest', manifest);
 
+  document.documentElement.dataset.originalTitle = document.title;
+
   // build environment
 	const views = {};
 	views['1up'] = ScrollView;
@@ -55,6 +58,7 @@
 	const currentView = writable(view);
 	const currentFormat = writable(format);
 	const currentSeq = writable(manifest.currentSeq);
+  console.log("-- startup", $currentSeq);
 	
 	let instance;
 	manifest.instance = instance;
@@ -197,17 +201,21 @@
 			$currentSeq = options.seq;
 		}
 		$currentView = targetView;
+    updateHistory({ view: targetView, seq: $currentSeq });
 	}
 
 	function switchFormat(options) {
 		console.log("-- switchFormat", options);
 		if ( $currentFormat != options.format ) {
 			$currentFormat = options.format;
+      updateHistory({ format: options.format });
 		}
 	}
 
 	emitter.on('switch.view', switchView);
 	emitter.on('switch.format', switchFormat);
+
+  $: if ( stage ) { stage.style.setProperty('--header-height', document.querySelector('hathi-website-header').clientHeight); }
 
   onMount(() => {
     container = document.querySelector('#root');
@@ -217,7 +225,8 @@
 			const entry = entries[0];
 			const contentBoxSize = entry.contentBoxSize[0];
       w = contentBoxSize.inlineSize;
-		})
+      stage.style.setProperty('--header-height', document.querySelector('hathi-website-header').clientHeight);
+    })
 
 		resizeObserver.observe(container);
 
@@ -235,6 +244,7 @@
 		position = constrain(container, size, min, max, position, priority);
 	}
   $: console.log(":: position", position, w, h, min, max);
+  $: if ( currentSeq ) { updateHistory({ seq: $currentSeq }); }
 
 </script>
 

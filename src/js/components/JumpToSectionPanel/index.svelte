@@ -97,8 +97,8 @@
   </slot:fragment>
 </Panel>
 <Modal bind:this={modal}>
-  <svelte:fragment slot="modal-title">Jump to page scan</svelte:fragment>
-  <svelte:fragment slot="modal-body">
+  <svelte:fragment slot="title">Jump to page scan</svelte:fragment>
+  <svelte:fragment slot="body">
     <div class="mb-3">
       <p class="fs-7 mb-2">Jump to a page scan by 
         {#if hasPageNum}
@@ -155,7 +155,7 @@
       </li>
     </ul>
   </svelte:fragment>
-  <svelte:fragment slot="modal-footer">
+  <svelte:fragment slot="footer">
     <div class="d-flex gap-1 align-items-center justify-content-end">
       <button type="button" class="btn btn-secondary" on:click={modal.hide()}>Cancel</button>
       <button type="button" class="btn btn-primary" on:click={jump}>Jump</button>

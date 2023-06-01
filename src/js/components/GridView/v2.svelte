@@ -4,7 +4,7 @@
   import PQueue from "p-queue";
   import { debounce } from '../../lib/debounce';
 
-  import Page from '../Page/index.svelte';
+  import Page from '../Page/v2.svelte';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
@@ -38,6 +38,8 @@
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
     rootMargin: `200% 0% 200% 0%`
   });
+  observer.observedIdx = 0;
+  observer.totalIdx = manifest.totalSeq;
 
   const unloadPage = async function(pageDatum) {
     console.log("!! unloading", pageDatum.seq, queue.size, "->", pageDatum);
@@ -142,8 +144,11 @@
   })
 
   const handleUnintersecting = (({detail}) => {
+    // observer.observedIdx += 1;
+    console.log("- un/intersecting", detail.target.dataset.seq);
+    if ( observer.observedIdx < manifest.totalSeq ) { return ; }
     let seq = parseInt(detail.target.dataset.seq);
-    console.log("- un/intersecting", seq);
+    // console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
     if (itemMap[seq].timeout) {
       clearTimeout(itemMap[seq].timeout);
@@ -250,12 +255,16 @@
     })
   }
 
+  let focusTimeout;
   const handleFocusIn = function(event) {
+    console.log("handleFocusIn", event);
     if ( event.target.closest('details') ) { return ; }
     if ( event.target.closest('button') ) { return ; }
     let pageDiv = event.target.closest('div.page');
     if ( pageDiv ) {
-      pageDiv.scrollIntoView();
+      focusTimeout = setTimeout(() => {
+        pageDiv.scrollIntoView();
+      }, 100);
     }
   }
 
@@ -265,6 +274,7 @@
     let pageDiv = event.target.closest('div.page');
     if ( ! pageDiv ) { return ; }
     if ( event.code == 'Enter' ) {
+      clearTimeout(focusTimeout);
       emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
     } else if ( event.code == 'Tab' ) {
       // let delta = event.shiftKey ? -1 : 1;
@@ -276,11 +286,14 @@
   }
 
   const handlePageClick = function(event) {
+    console.log(event);
     if ( event.target.closest('details') ) { return ; }
     if ( event.target.closest('button') ) { return ; }
-    console.log(event);
+    event.stopPropagation();
     let pageDiv = event.target.closest('div.page');
     if ( ! pageDiv ) { return ; }
+    clearTimeout(focusTimeout);
+    console.log("-- thumb.handlePageClick", pageDiv.dataset.seq);
     emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
   }
 
@@ -300,6 +313,9 @@
     let possibles = Array.from(currentInView).sort((a,b) => a-b);
     possibles.forEach((seq) => {
       let percentage = itemMap[seq].page.visible(viewport);
+      if ( percentage ) {
+
+      }
       if ( percentage > max.percentage ) {
         max.seq = seq;
         max.percentage = percentage;
@@ -314,6 +330,7 @@
   let lastCurrentInView = new Set();
   const focus = function() {
     currentInView.forEach((seq) => {
+      console.log("++ focusing", seq);
       itemMap[seq].page.focus();
       lastCurrentInView.delete(seq);
     })
@@ -345,12 +362,15 @@
   let isInitialized = false;
   afterUpdate(() => {
     if ( itemMap[manifest.totalSeq].page ) {
-      if ( ! isInitialized ) {
+      console.log("-- thumb.afterUpdate", isInitialized, startSeq, observer.observedIdx, manifest.totalSeq);
+      if ( ! isInitialized && observer.observedIdx == manifest.totalSeq ) {
         if ( startSeq > 1 ) {
           setTimeout(() => {
-            console.log("-- initialize", startSeq);
+            console.log("--! initialize", startSeq);
             itemMap[startSeq].page.scrollIntoView({ behavior: 'instant'});
             isInitialized = true;
+
+            $currentSeq = startSeq;
 
             emitter.emit('enable.zoom', {
               out: zoomIndex > 0,
@@ -359,6 +379,7 @@
 
           })
         } else {
+          console.log("--: initialize", startSeq);
           isInitialized = true;
         }
       }
@@ -392,6 +413,7 @@
   })
 </script>
 
+<!-- on:focusin={handleFocusIn} -->
 <div 
   class="inner" 
   on:click={handlePageClick} 
