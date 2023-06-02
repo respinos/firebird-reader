@@ -46,7 +46,7 @@
 	views['2up'] = FlipView;
 	views['thumb'] = GridView;
 
-	export let view = '1up';
+	export let view = '2up';
 	export let format = 'image';
 
 	// && ! isEmbed

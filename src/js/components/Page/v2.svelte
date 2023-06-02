@@ -138,7 +138,7 @@
 
   let imageSrc;
   export const loadImage = function(reload=false) {
-    // return;
+    return;
     const isDebugging = false;
     const delay = isDebugging ? 5 * 1000 : 0;
     setTimeout(() => {

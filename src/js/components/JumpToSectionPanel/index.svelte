@@ -52,7 +52,6 @@
       event.stopPropagation();
       event.preventDefault();
       showError = ! handleValue();
-      console.log("AHOY jump.keyDown", showError);
       if ( ! showError ) {
         modal.hide();
         value = '';
@@ -62,7 +61,7 @@
   }
 
   function goto(seq) {
-    alert(seq);
+    emitter.emit('goto.page', { seq: seq });
   }
 
   function jump() {
