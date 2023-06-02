@@ -20,16 +20,11 @@
     interval: 5000,
   })
 
-  const thumbnailer = new PQueue({
-    concurrency: 1,
-    intervalCap: 1,
-    interval: 1500,
-  })
-
+  // -- if we were oriented horizontally: `0% 200% 0% 200%`
   const { observer, io }= createObserver({
     root: container,
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
-    rootMargin: `0% 200% 0% 200%`
+    rootMargin: `200% 0% 200% 0%`
   })
   observer.observedIdx = 0;
   observer.totalIdx = manifest.totalSeq;

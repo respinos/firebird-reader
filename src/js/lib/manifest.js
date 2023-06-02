@@ -20,7 +20,8 @@ export class Manifest {
       width: parseInt(this.defaultImage.width, 10),
       rotation: 0
     };
-    this.defaultImage.ratio = this.defaultImage.height / this.defaultImage.width;
+    // firebird: ratio is based around height * ratio
+    this.defaultImage.ratio = this.defaultImage.width / this.defaultImage.height;
     this.featureMap = {};
     this._seq2num = {};
     this._num2seq = {};
@@ -50,16 +51,28 @@ export class Manifest {
     }
     // ... which will help with switching lanes and rotating
     if ( this.manifest[seq] && this.manifest[seq].width ) { return ; }
-    const ratio = this.defaultImage.width / meta.width;
+
+    const ratio = this.defaultImage.height / meta.height;
     this.manifest[seq] = {
-      width: this.defaultImage.width,
-      height: meta.height * ratio,
+      width: meta.width * ratio,
+      height: this.defaultImage.height,
       rotation: meta.rotation || 0,
-      ratio: meta.height / meta.width,
+      ratio: meta.width / meta.height,
       resolution: meta.resolution,
       screenResolution: meta.screenResolution,
       size: meta.size
     }
+
+    // const ratio = this.defaultImage.width / meta.width;
+    // this.manifest[seq] = {
+    //   width: this.defaultImage.width,
+    //   height: meta.height * ratio,
+    //   rotation: meta.rotation || 0,
+    //   ratio: meta.height / meta.width,
+    //   resolution: meta.resolution,
+    //   screenResolution: meta.screenResolution,
+    //   size: meta.size
+    // }
   }
 
   meta(seq) {

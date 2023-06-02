@@ -9,11 +9,17 @@
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
+
+  // const {
+  //   q1,
+  //   selected
+  // } = { manifest };
+
   const q1 = manifest.q1;
   const selected = manifest.selected;
 
-  import PageText from '../PageText/index.svelte';
   import SearchHighlights from '../SearchHighlights/index.svelte';
+  import PageMenu from './PageMenu';
 
   import { extractHighlights } from '../../lib/highlights';
 
@@ -21,26 +27,44 @@
   export let handleIntersecting;
   export let handleUnintersecting;
   export let format;
-
-  let pageDiv;
-
-  const view = manifest.currentView;
-  const minimalInterface = manifest.minimalInterface;
+  export let view;
 
   export let seq;
   export let canvas;
   export let zoom;
   export let style = null;
-  export let area = null;
-  export let mode = 'page';
+  export let side = null;
+  
+  export let innerHeight
+  export let innerWidth;
+
+  let pageDiv;
+  let includePageText = ( view != 'thumb' );
 
   let focused = false;
   let invoked = false;
 
   let pageNum = manifest.pageNum(seq);
 
-  export let innerHeight = window.innerHeight;
-  export let innerWidth = window.innerWidth;
+  let pageZoom = 1;
+
+  let scan;
+  let image;
+  let imageSrc;
+  let text;
+  let matches;
+  let page_coords;
+  let pageText;
+  let figCaption;
+  let pageTextIsLoaded = false;
+  let objectUrl;
+  let isLoaded = false;
+  let hasPageText = false;
+
+  let timeout;
+
+  // cgi/imgsrv/thumbnail?id={canvas.id}&seq={seq}
+  let defaultThumbnailSrc = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=`;
 
   export const scrollIntoView = function(params) {
     pageDiv.scrollIntoView(params);
@@ -95,26 +119,6 @@
     return percentage;
   }
 
-  let pageZoom = 1;
-
-  let scan;
-  let image;
-  let text;
-  let matches;
-  let page_coords;
-  let pageText;
-  let figCaption;
-  let pageTextIsLoaded = false;
-  let objectUrl;
-  let isLoaded = false;
-  let hasPageText = false;
-
-  let timeout;
-
-  // cgi/imgsrv/thumbnail?id={canvas.id}&seq={seq}
-  let defaultThumbnailSrc = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=`;
-  export let thumbnailSrc = defaultThumbnailSrc;
-
   export function toggle(visible) {
     isVisible = visible;
     if (visible) {
@@ -136,9 +140,8 @@
     page_coords = [ ...coords ];
   }
 
-  let imageSrc;
   export const loadImage = function(reload=false) {
-    // return;
+    return;
     const isDebugging = true;
     const delay = isDebugging ? 5 * 1000 : 0;
     setTimeout(() => {
@@ -149,7 +152,7 @@
     timeout = null;
     if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
     let height = scanHeight * window.devicePixelRatio;
-    let action = ( $view == 'thumb' ) ? 'thumbnail' : 'image';
+    let action = ( view == 'thumb' ) ? 'thumbnail' : 'image';
     imageSrc = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
     fetch(imageSrc)
       .then((response) => {
@@ -215,9 +218,7 @@
 
     if ( ! figCaption ) { return ; }
 
-    if ( mode != 'page' ) { return ; }
-
-    // console.log("-- loadPageText", mode, $q1);
+    if ( ! includePageText ) { return ; }
 
     function parseCoords(value) {
       var values = value.split(' ')
@@ -227,7 +228,6 @@
     // if ( pageText && pageText.querySelector('.ocr_page') ) { return ; }
     let text_src = `/cgi/imgsrv/html?id=${canvas.id}&seq=${seq}`;
     if ( $q1 ) { text_src += `&q1=${$q1}`; }
-    // need to deal with q1
     fetch(text_src)
       .then((response) => {
         return response.text();
@@ -268,7 +268,6 @@
         // if no words match, there's no highlighting
         let words = JSON.parse(ocr_div.dataset.words || '[]');
         if ( ! words || ! words.length ) { return ; }
-
 
         matches = extractHighlights(words, ocr_div);
       })
@@ -331,7 +330,7 @@
   }
 
   function checkForFoldout() {
-    if ( $view == 'thumb' || format != 'image' ) { return false; }
+    if ( view == 'thumb' || format != 'image' ) { return false; }
     if ( canvas.width < canvas.height ) { return false; }
     console.log("-- checkForFoldout", manifest.checkFeatures(seq, "FOLDOUT"));
     return (
@@ -342,33 +341,32 @@
     );
   }
 
+  function openLightbox() {
+
+  }
+
   $: isVisible = false;
   $: scanZoom = calculateZoom(zoom, 1);
   $: scanRatio = calculateRatio(innerHeight, canvas);
   $: scanHeight = calculate(innerHeight, canvas.height, scanZoom);
   $: scanWidth = calculate(innerHeight, canvas.width, scanZoom);
-  $: imgHeight = calculatePage(innerHeight, canvas.height, pageZoom);
-  $: imgWidth = calculatePage(innerHeight, canvas.width, pageZoom);
+  // $: imgHeight = calculatePage(innerHeight, canvas.height, pageZoom);
+  // $: imgWidth = calculatePage(innerHeight, canvas.width, pageZoom);
   $: scanAdjusted = false;
   $: orient = 0;
   $: rotateX = 0;
   $: orientMargin = 0;
   $: isUnusual = checkForFoldout(canvas);
-  $: defaultPageHeight = ( $view == '2up' || $view == '1up' ) ? null : `${scanHeight}px`;
-  $: pageHeight = ( $view == 'thumb' || zoom > 1 ) ? `${innerHeight * zoom}px` : null;
-  $: pageWidth = ( $view == 'thumb' || zoom > 1 ) ? `${innerWidth * zoom}px` : null;
+  $: defaultPageHeight = ( view == '2up' || view == '1up' ) ? null : `${scanHeight}px`;
+  $: pageHeight = ( view == 'thumb' || zoom > 1 ) ? `${innerHeight * zoom}px` : null;
+  $: pageWidth = ( view == 'thumb' || zoom > 1 ) ? `${innerWidth * zoom}px` : null;
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
   $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
-  // $: if ( isVisible && format == 'plaintext' && ( ! figCaption || ( isLoaded && figCaption && ! image ) ) ) { loadPageText(image === null); }
   $: if ( isVisible && format == 'plaintext' && ( ! figCaption || figCaption.dataset.loaded == 'false' ) ) { loadPageText(); }
   $: if ( isVisible & format == 'plaintext' && figCaption && ! image ) { console.log("-- wtf", seq, isVisible, isLoaded, figCaption, image, figCaption.dataset.loaded); }
 
-  let testWidth, testHeight;
-
   onMount(() => {
-    // console.log("-- page.mount", seq, style);
-    // console.log("-- page.mount", seq, isVisible);
 
     return () => { 
       // console.log("-- page.unmount", seq);
@@ -393,18 +391,16 @@
   class="page {format}" 
   {style} 
   data-seq={seq} 
-  data-height={Math.ceil(scanHeight)}
-  style:--pageWidth={pageWidth}
-  style:--pageHeight={pageHeight}
-  style:--height={format == 'image' ? Math.ceil(scanHeight) : null}
-  style:--width={format == 'image' ? Math.ceil(scanWidth) : null}
   style:--zoom={zoom != 1 ? zoom : pageZoom}
   style:--ratio={scanRatio}
-  class:view-2up={$view == '2up'}
-  class:view-1up={$view == '1up'}
-  class:verso={area == 'verso'}
-  class:recto={area == 'recto'}
-  class:view-thumb={area == 'thumb'}
+  style:--paddingBottom={view == '2up' ? 5.5 * 16 : 0}
+  style:--scanHeight={scanZoom != 1 ? scanHeight : null}
+  style:--scanWidth={scanZoom != 1 ? scanWidth : null}
+  class:view-2up={view == '2up'}
+  class:view-1up={view == '1up'}
+  class:view-thumb={view == 'thumb'}
+  class:verso={side == 'verso'}
+  class:recto={side == 'recto'}
   id="p{seq}" 
   aria-hidden={!focused}
   aria-label="Page scan {seq}"
@@ -415,86 +411,24 @@
   on:unintersecting={handleUnintersecting}
   bind:this={pageDiv}>
 
-  <details 
-    class="page-menu" 
-    class:sticky={get(manifest.currentView) == '1up'}
-    class:invisible={$minimalInterface}
-    open={$selected.has(seq) ? true : null}
-    >
-    <summary 
-      class="btn-dark"
-      aria-hidden={!focused}
-      tabindex={focused ? 0 : -1}
-      >
-      <div class="d-flex align-items-center justify-content-between shadow px-2 py-1 gap-2 rounded">
-        <span class="seq">
-          #{seq}
-          {#if pageNum}
-            ({pageNum})
-          {/if}
-        </span>
-        <span class="arrow">
-          <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
-        </span>
-      </div>
-    </summary>
-    <div class="d-flex flex-column gap-1 align-items-center width-min-content menu-items">
-      {#if manifest.allowFullDownload}
-      <button 
-        type="button" 
-        class="btn btn-light border border-dark"
-        use:tooltip
-        on:click={(event) => manifest.select(seq, event)}
-        aria-label={$selected.has(seq) ? `Page scan #${seq} is selected` : `Select page scan #${seq}`}
-        aria-pressed={$selected.has(seq)}
-        ><i 
-          class="fa-regular"
-          class:fa-square={!$selected.has(seq)}
-          class:fa-square-check={$selected.has(seq)}></i>
-      </button>
-      {/if}
-      {#if isUnusual}
-      <button 
-        type="button"
-        class="btn btn-light border border-dark"
-        use:tooltip
-        on:click={(event) => emitter.emit('open.lightbox', { src: imageSrc, alt: `Page scan #${seq}` })}
-        data-bs-placement={area == 'verso' ? 'right' : 'left'}
-        aria-label="Open foldout for page scan #{seq}"><i 
-          aria-hidden="true"
-          class="fa-solid fa-up-right-from-square fa-flip-horizontal"></i>
-        </button>
-      {/if}
-      {#if $view == '1up' && format == 'image'}
-      <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
-      {/if}
-      {#if $view == '1up' || $view == '2up'}
-      <div class="btn-group-vertical" role="group">
-        <button 
-          type="button" 
-          class="btn btn-light border border-dark" 
-          disabled={pageZoom == 2.5}
-          use:tooltip
-          aria-label="Zoom in #{seq}"
-          on:click={() => updateZoom(0.5)}>
-          <i class="fa-solid fa-plus" aria-hidden="true"></i>
-        </button>
-        <button 
-          type="button" 
-          class="btn btn-light border border-dark" 
-          disabled={pageZoom == 1}
-          use:tooltip
-          aria-label="Zoom out #{seq}"
-          on:click={() => updateZoom(-0.5)}>
-          <i class="fa-solid fa-minus" aria-hidden="true"></i>
-        </button>
-      </div>
-      {/if}
-      <!-- <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}>
-        <i class="fa-solid fa-download" aria-hidden="true"></i>
-      </button> -->
-    </div>
-  </details>
+  <PageMenu
+    {seq}
+    {pageNum}
+    {focused}
+    {isUnusual}
+    {side}
+    {view}
+    {pageZoom}
+    {rotateScan}
+    {updateZoom}
+    {openLightbox}
+    sticky={view == '1up'}
+    allowRotate={view == '1up'}
+    allowPageZoom={view != 'thumb'}
+    allowFullDownload={manifest.allowFullDownload}
+    selected={$selected.has(seq)}
+    togglePageSelection={(event) => manifest.select(seq, event)}
+    />
 
   <figure class="frame {format}" 
     class:pending={!isLoaded}
@@ -504,9 +438,9 @@
     style:--frameHeight={zoom > 1 ? `${( scanHeight )}px` : defaultPageHeight}
     style:--orient-margin={orientMargin}>
     {#if !isLoaded}
-      <div class="loader d-flex align-items-center justify-content-center position-absolute mh-100 w-100"
-        style:xxheight={`${scanHeight}px`}
-        style:xxwidth={`${scanWidth}px`}>
+      <div 
+        class="loader d-flex align-items-center justify-content-center position-absolute mh-100 w-100"
+        >
         <i 
           class="fa-solid fa-stroopwafel fa-2xl opacity-25"
           class:fa-spin={isVisible}
@@ -520,15 +454,13 @@
           bind:this={image} 
           src={defaultThumbnailSrc} 
           alt="" 
-          style:height={imgHeight}
-          style:width={imgWidth}
           class:zoomed={pageZoom > 1}
           />
-        {#if area != 'thumb'}
+        {#if side != 'thumb'}
         <SearchHighlights image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
         {/if}
         </div>
-        {#if area != 'thumb'}
+        {#if side != 'thumb'}
         <figcaption class="visually-hidden" bind:this={figCaption}>
         </figcaption>
         {/if}
@@ -542,43 +474,48 @@
 
 <style lang="scss">
   .page {
-    // width: var(--pageWidth, 100%);
-    // height: var(--pageHeight, 100%);
-
-    height: calc(100dvh - ( var(--stage-header-height) * 1px));
+    --defaultPageHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
+    height: var(--pageHeight, var(--defaultPageHeight));
     width: 100%;
+
+    margin: auto;
 
     display: grid;
     grid-template-rows: 1fr;
     grid-template-columns: 1fr;
 
-    /* overflow: hidden; */
     position: relative;
 
-    &.verso {
+    &.view-2up {
+      height: auto;
+      margin-bottom: 5.5rem;
+      // aspect-ratio: var(--ratio);
+
+      .frame {
+        height: auto;
+        aspect-ratio: var(--ratio);
+      }
+    }
+
+    &.view-2up.verso {
       grid-area: verso;
 
-      .loader {
-        left: unset !important;
-        right: 0 !important;
-        transform: none !important;
+      .frame {
+        margin-right: 0;
       }
     }
 
     &.recto {
       grid-area: recto;
 
-      .loader {
-        left: 0 !important;
-        transform: none !important;
+      .frame {
+        margin-left: 0;
       }
     }
 
     &.view-thumb {
-      // width: auto;
-      // flex-direction: column;
-
-      height: calc(var(--pageHeight) + 2.7rem);
+      // height: calc(var(--pageHeight) + 2.7rem);
+      height: auto;
 
       gap: 0.5rem;
       grid-template-rows: min-content 1fr;
@@ -590,49 +527,12 @@
       figure {
         grid-row: 2/3;
         height: var(--frameHeight, '250px');
-      }
-    }
-
-    &.view-2up {
-      &.plaintext {
-        height: calc(100dvh - ( var(--stage-header-height) * 1px) - 2rem);
-
-        .frame {
-          min-height: 96%;
-          height: auto;
-          margin-bottom: 4rem;
-          padding-bottom: 4rem;
-          figcaption {
-            width: 80%;
-            margin: 0 auto;
-          }
-        }
+        height: 250px;
       }
     }
 
     &.view-1up {
-      // height: auto;
-      height: var(--pageHeight, calc(100dvh - ( var(--stage-header-height) * 1px)));
       margin-bottom: 2rem;
-
-      .frame {
-        // height: var(--frameHeight, '90dvh');
-        height: var(--frameHeight, calc(100dvh - var(--stage-header-height) * 1px - 0rem));
-      }
-
-      &.plaintext {
-        min-height: calc(100dvh - ( var(--stage-header-height) * 1px));
-        height: auto;
-
-        .frame {
-          min-height: calc(100dvh - ( var(--stage-header-height) * 1px) - 2rem);
-          height: auto;
-          figcaption {
-            width: 80%;
-            margin: 0 auto;
-          }
-        }
-      }
     }
 
     &:focus-visible {
@@ -643,12 +543,12 @@
         outline: 0;
         box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
       }
-      
     }
   }
 
   .frame {
-    --frameHeight: calc(100dvh * 0.99 - ( var(--stage-header-height) * 1px));
+    // --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
+    --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));    
     height: var(--frameHeight);
     width: calc(var(--frameHeight) * var(--ratio));
 
@@ -659,8 +559,8 @@
 
     position: relative;
 
-    // // --- debug background
-    // background: darkkhaki;
+    // --- debug background
+    background: darkkhaki;
 
     grid-row: 1/2;
     grid-column: 1/2;
@@ -693,16 +593,11 @@
 
     &.image {
       max-width: 100%;
-      // height: 100%;
-      // width: 100%; // maybe?
       max-height: 100%; // maybe?
       align-items: center;
       overflow: hidden;
 
       .image {
-        // max-height: calc(var(--height) * 0.9 * 1px);
-        // max-width: calc(var(--width) * 0.9 * 1px);
-
         height: 100%;
         width: auto;
 
@@ -802,145 +697,8 @@
     line-height: 1.25;
   }
 
-  .page-menu {
-    order: 2;
-    text-align: right;
-    padding: 0;
-    margin: 0;
-    z-index: 50;
-    align-self: flex-start;
-    // margin-left: -5rem;
-
-    grid-row: 1/2;
-    grid-column: 1/2;
-    align-self: start;
-    justify-self: end;
-  }
-
-  .page.view-1up {
-    .page-menu {
-      position: sticky;
-      top: 0.5rem;
-      right: 0.5rem;
-      // margin-left: -5rem;
-    }
-  }
-
-  .page.view-thumb {
-    .page-menu {
-      // align-self: flex-end;
-      // order: 0;
-
-      .menu-items {
-        position: absolute;
-        right: 0;
-      }
-    }
-  }
-
-  .page.view-2up {
-
-    &.verso {
-      .page-menu {
-        // left: 0.5rem;
-        // right: auto;
-        justify-self: start;
-      }
-
-      figure {
-        margin-right: 0px;
-
-        .image, img {
-          margin-right: 0px;
-        }
-      }
-    }
-
-    &.recto {
-      figure {
-        margin-left: 0px;
-
-        .image, img {
-          margin-left: 0px;
-        }
-      }
-    }
-
-    figure {
-      margin-top: 1rem;
-      
-      &.plaintext {
-        width: 85%;
-      }
-    }
-  }
-
-
-  .page-menu[open] .arrow i::before {
-    content: "\F077";
-  }
-
-
-  .page-menu summary {
-    --bs-btn-focus-box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);
-    list-style: none;
-
-    font-size: 0.875rem;
-
-    color: var(--bs-btn-color);
-    background-color: var(--bs-btn-bg);
-    margin: 0.25rem;
-
-    border: 2px solid var(--bs-btn-border-color);
-
-    border-radius: 4px;
-
-    font-family: "Roboto Mono", monospace;
-
-    &:hover {
-      background-color: var(--bs-btn-hover-bg);
-      border-color: var(--bs-btn-hover-border-color);
-      color: var(--bs-btn-hover-color);
-    }
-
-    &:focus-visible {
-      color: var(--bs-btn-hover-color);
-      background-color: var(--bs-btn-hover-bg);
-      border-color: var(--bs-btn-hover-border-color);
-      outline: 0;
-      box-shadow: var(--bs-btn-focus-box-shadow);
-    }
-  }
-
-  .page-menu > div {
-    margin-top: 0.5rem;
-    margin: 0.5rem auto;
-    font-size: 1.5rem;
-    --bs-btn-font-size: 1.5rem !important;
-  }
-
-  .page-menu .btn {
-    --bs-btn-font-size: 1.5rem;
-  }
-
-  .page-menu.deux {
-    width: auto;
-    text-align: center;
-  }
-
-  .width-min-content {
-    width: min-content;
-  }
-
-  .bg-vaguely-white {
-    background-color: rgba(255,255,255,0.5) !important;
-  }
-
   img.zoomed {
     align-self: flex-start;
   }
-
-  .page-menu summary {list-style: none}
-  .page-menu summary::-webkit-details-marker {display: none; }
 
 </style>

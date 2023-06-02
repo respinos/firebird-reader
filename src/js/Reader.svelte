@@ -27,9 +27,13 @@
   // view components
 	import SearchView from './components/SearchView';
 	import RestrictedView from './components/RestrictedView';
-	import ScrollView from './components/ScrollView/v2.svelte';
-	import FlipView from './components/FlipView/v2.svelte';
-	import GridView from './components/GridView/v2.svelte';
+	// import ScrollView from './components/ScrollView/v2.svelte';
+	// import FlipView from './components/FlipView/v2.svelte';
+	// import GridView from './components/GridView/v2.svelte';
+
+  import OneUpView from './components/V04/OneUpView';
+  import TwoUpView from './components/V04/TwoUpView';
+  import GridView from './components/V04/GridView';
 
   // set up context
 	const emitter = new Emittery();
@@ -42,11 +46,11 @@
 
   // build environment
 	const views = {};
-	views['1up'] = ScrollView;
-	views['2up'] = FlipView;
+	views['1up'] = OneUpView;
+	views['2up'] = TwoUpView;
 	views['thumb'] = GridView;
 
-	export let view = '2up';
+	export let view = '1up';
 	export let format = 'image';
 
 	// && ! isEmbed

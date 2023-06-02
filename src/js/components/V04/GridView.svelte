@@ -1,0 +1,31 @@
+<script>
+  import { onMount, afterUpdate, onDestroy, getContext } from 'svelte';
+  import View from './View.svelte';
+
+  const emitter = getContext('emitter');
+  const manifest = getContext('manifest');
+
+  export let container;
+  export let startSeq = 1;
+
+  const currentSeq = manifest.currentSeq;
+
+  let view;
+
+  export const currentLocation = function() {
+    return { page: view.item($currentSeq) };
+  }
+</script>
+
+  <View
+    {container}
+    {startSeq}
+    {currentLocation}
+    innerHeight={250}
+    innerWidth={250}
+    bind:this={view}
+   />
+
+<style>
+
+</style>
