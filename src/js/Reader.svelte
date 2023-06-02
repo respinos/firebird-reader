@@ -200,8 +200,12 @@
 		if ( options.seq ) {
 			$currentSeq = options.seq;
 		}
-		$currentView = targetView;
-    updateHistory({ view: targetView, seq: $currentSeq });
+		// $currentView = targetView;
+    // updateHistory({ view: targetView, seq: $currentSeq });
+    setTimeout(() => {
+      $currentView = targetView;
+      updateHistory({ view: targetView, seq: $currentSeq });
+    }, 0);
 	}
 
 	function switchFormat(options) {
