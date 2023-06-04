@@ -106,6 +106,13 @@ export class Manifest {
     return false;
   }
 
+  direction() {
+    if ( this.readingOrder == 'right-to-left' ) {
+      return 'rtl';
+    }
+    return 'ltr';
+  }
+
   ownerid(seq) {
     const data = this.featureMap[seq];
     if ( data && data.ownerid ) {

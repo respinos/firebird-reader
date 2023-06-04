@@ -350,6 +350,7 @@
   $: scanRatio = calculateRatio(innerHeight, canvas);
   $: scanHeight = calculate(innerHeight, canvas.height, scanZoom);
   $: scanWidth = calculate(innerHeight, canvas.width, scanZoom);
+  $: scanUseRatio = manifest.meta(canvas.seq).ratio;
   // $: imgHeight = calculatePage(innerHeight, canvas.height, pageZoom);
   // $: imgWidth = calculatePage(innerHeight, canvas.width, pageZoom);
   $: scanAdjusted = false;
@@ -392,7 +393,7 @@
   {style} 
   data-seq={seq} 
   style:--zoom={zoom != 1 ? zoom : pageZoom}
-  style:--ratio={scanRatio}
+  style:--ratio={scanUseRatio}
   style:--paddingBottom={view == '2up' ? 5.5 * 16 : 0}
   style:--scanHeight={scanZoom != 1 ? scanHeight : null}
   style:--scanWidth={scanZoom != 1 ? scanWidth : null}
@@ -505,7 +506,7 @@
       }
     }
 
-    &.recto {
+    &.view-2up.recto {
       grid-area: recto;
 
       .frame {
@@ -516,6 +517,7 @@
     &.view-thumb {
       // height: calc(var(--pageHeight) + 2.7rem);
       height: auto;
+      width: auto;
 
       gap: 0.5rem;
       grid-template-rows: min-content 1fr;

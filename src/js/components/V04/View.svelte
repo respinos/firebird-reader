@@ -404,6 +404,7 @@
     id="spread{spreadIdx}"
     class="spread"
     class:zoomed={zoom > 1}
+    class:direction-rtl={manifest.direction() == 'rtl'}
     style:--columnWidth={columnWidth}>
 
     {#each spread as canvas, canvasIdx}
@@ -442,6 +443,10 @@
     display: none;
   }
 
+  .spread {
+    display: contents;
+  }
+
   .inner.view-thumb {
     display: flex;
     flex-direction: row;
@@ -476,6 +481,11 @@
     // border: 8px solid yellow;
 
     scroll-snap-align: start;
+
+    &.direction-rtl {
+      direction: rtl;
+      // and more spread madness
+    }
     
     &.zoomed {
       overflow: auto;
