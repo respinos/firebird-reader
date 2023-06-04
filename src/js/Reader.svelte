@@ -34,6 +34,7 @@
   import OneUpView from './components/V04/OneUpView';
   import TwoUpView from './components/V04/TwoUpView';
   import GridView from './components/V04/GridView';
+  import Loading from './components/V04/Loading';
 
   // set up context
 	const emitter = new Emittery();
@@ -44,6 +45,9 @@
 
   document.documentElement.dataset.originalTitle = document.title;
 
+  let isBuildingView = true;
+  let showLoadingView = false;
+
   // build environment
 	const views = {};
 	views['1up'] = OneUpView;
@@ -51,12 +55,14 @@
 	views['thumb'] = GridView;
 
 	export let view = '2up';
-	export let format = 'image';
+	export let format = 'image';  
 
 	// && ! isEmbed
 	if ( window.innerWidth < 800 && manifest.ui != 'embed' ) {
 		view = '1up';
 	}
+
+  let isReaderView = views[view] != null;
 
 	let lastView = '1up';
 	const currentView = writable(view);
@@ -206,6 +212,7 @@
 		}
 		// $currentView = targetView;
     // updateHistory({ view: targetView, seq: $currentSeq });
+    setupLoadingView();
     setTimeout(() => {
       $currentView = targetView;
       updateHistory({ view: targetView, seq: $currentSeq });
@@ -220,12 +227,32 @@
 		}
 	}
 
+  let loadingTimeout;
+  function setupLoadingView() {
+    if ( ! isReaderView ) { return ; }
+    isBuildingView = true;
+    loadingTimeout = setTimeout(() => {
+      showLoadingView = true;
+    }, 500);
+  }
+
+  function hideLoadingView() {
+    clearTimeout(loadingTimeout);
+    showLoadingView = false;
+    setTimeout(() => {
+      isBuildingView = false;
+    }, 500);
+  }
+
 	emitter.on('switch.view', switchView);
 	emitter.on('switch.format', switchFormat);
+  emitter.on('view.ready', hideLoadingView);
 
   $: if ( stage ) { stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight); }
 
   onMount(() => {
+    setupLoadingView();
+
     container = document.querySelector('#root');
     w = container.clientWidth;
 
@@ -284,7 +311,7 @@
       id="controls">
       <MetadataPanel></MetadataPanel>
       <DownloadPanel></DownloadPanel>
-      {#if view != 'search' && view != 'restricted' }
+      {#if ! isReaderView }
       <SearchInItemPanel></SearchInItemPanel>
       <JumpToSectionPanel></JumpToSectionPanel>
       {/if}
@@ -322,6 +349,9 @@
     {/if}
   {/if}
 </main>
+{#if isBuildingView}
+<Loading show={showLoadingView} />
+{/if}
 
 {#if dragging}
 	<div class="mousecatcher" />

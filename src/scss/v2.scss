@@ -107,6 +107,11 @@ hathi-website-header  {
   grid-area: reader;
 }
 
+.loading-reader {
+  grid-area: reader;
+  z-index: 100;
+}
+
 // button[data-action="toggle-options"] {
 //   display: none !important;
 // }

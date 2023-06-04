@@ -343,9 +343,11 @@
               in: zoomIndex < zoomScales.length - 1
             });
 
+            emitter.emit('view.ready');
           })
         } else {
           isInitialized = true;
+          emitter.emit('view.ready');
         }
       }
     }
