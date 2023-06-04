@@ -8,7 +8,7 @@ export class Manifest {
 
     Object.assign(this, options);
     
-    this.xget = get;
+    this._ = get;
 
     this.selectedKey = `selection-${this.id}`;
     this.items = this.featureList;
@@ -20,6 +20,12 @@ export class Manifest {
       width: parseInt(this.defaultImage.width, 10),
       rotation: 0
     };
+
+    this.bestHeights = [];
+    [ 1, 1.5, 2, 2.5 ].forEach((factor) => {
+      this.bestHeights.push(this.defaultImage.height * factor);
+    })
+
     // firebird: ratio is based around height * ratio
     this.defaultImage.ratio = this.defaultImage.width / this.defaultImage.height;
     this.featureMap = {};
@@ -153,6 +159,25 @@ export class Manifest {
     return this._num2seq[pageNum] || pageNum;
   }
 
+  guess(value) {
+    let seq;
+    if ( value.substr(0, 2) == 'p.' ) {
+      // sequence
+      seq = this.seq(value.substr(2));
+    } else if ( value.substr(0, 1) == 'p' ) {
+      seq = this.seq(value.substr(1));
+    } else if ( value.substr(0, 1) == '#' || value.substr(0, 1) == 'n' ) {
+      seq = parseInt(value.substr(1), 10);
+    } else {
+      seq = parseInt(value, 10);
+      seq = this.seq(value);
+    }
+    if ( seq && seq >= 1 && seq <= this.featureList.length ) {
+      return seq;
+    }
+    return false;
+  }
+
   hasFrontCover() {
     return (
       this.checkFeatures(1, "FRONT_COVER") || 
@@ -206,5 +231,9 @@ export class Manifest {
     this.selected.set(new Set());
     sessionStorage.setItem(this.selectedKey, JSON.stringify(Array.from(get(this.selected))));
     this._lastSelectedSeq = null;
+  }
+
+  fit(height) {
+    return this.bestHeights.find((value) => height <= value) || this.bestHeight.at(-1);
   }
 }

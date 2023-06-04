@@ -43,8 +43,8 @@
     {container}
     {startSeq}
     {currentLocation}
-    innerHeight={250}
-    innerWidth={250}
+    maxHeight={250}
+    zoomScales={[0.5, 0.75, 1.0]}
     {handleClick}
     bind:this={view}
    />

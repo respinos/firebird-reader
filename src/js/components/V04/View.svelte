@@ -22,6 +22,8 @@
   export let innerHeight = container.clientHeight;
   export let innerWidth = container.clientWidth;
 
+  export let maxHeight = -1;
+
   export let currentLocation = function() { };
   export let handleClick = function() { };
   export let handleKeydown = function() { }
@@ -42,8 +44,9 @@
   const itemMap = {};
   const currentInView = new Set;
 
-  let zoomIndex = 2;
-  let zoom = zoomScales[zoomIndex];
+  let zoom = 1; // on startup
+  let zoomIndex = zoomScales.indexOf(zoom);
+  console.log("-- view.startup", zoomScales, zoom, zoomIndex);
 
   let seqTimeout;
   let viewport = {};
@@ -144,9 +147,9 @@
     if ( detail.isIntersecting ) {
       pageDatum.intersectionRatio = detail.intersectionRatio;
       if ( pageDatum.loaded ) {
-        console.log("# scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
+        // console.log("# scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
       } else {
-        console.log("+ scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
+        // console.log("+ scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
         if ( pageDatum.timeout ) { clearTimeout(pageDatum.timeout); }
         pageDatum.timeout = setTimeout(() => {
           loadPages(seq);
@@ -242,7 +245,7 @@
     }
     if ( targetSeq == $currentSeq && ! options.force ) { return ; }
     targetSeq = Math.max(1, Math.min(targetSeq, manifest.totalSeq));
-    return itemMap[target].page;
+    return itemMap[targetSeq].page;
   }
 
   const gotoPage = function(options) {
@@ -258,9 +261,12 @@
 
   function handleResize(entry) {
     if ( innerWidth != entry.contentRect.width || innerHeight != entry.contentRect.height ) {
-      innerWidth = entry.contentRect.width;
-      innerHeight = entry.contentRect.height;
-      console.log("-- resizeObserver", innerWidth, innerHeight);
+      if ( true || maxHeight > 0 ) {
+        innerWidth = entry.contentRect.width;
+        innerHeight = entry.contentRect.height;
+      }
+
+      console.log("-- view.resizeObserver", maxHeight, innerWidth, innerHeight);
 
       if ( $currentView == '2up' ) {
         container.style.setProperty('--min-reader-width', Math.ceil(innerHeight * 0.8 * 2));
@@ -344,7 +350,7 @@
   }
 
   $: columnWidth = ( zoom > 1 ) ? innerWidth / 2 * zoom : null;
-  $: console.log("-- view", columnWidth);
+  $: console.log("-- view", columnWidth, innerHeight);
   // $: if ( handleClick ) { container.addEventListener('click', handleClick) ; }
   // $: if ( handleKeydown ) { container.addEventListener('keydown', handleKeydown) ; }
 
@@ -373,6 +379,12 @@
           })
         } else {
           isInitialized = true;
+
+          emitter.emit('enable.zoom', {
+            out: zoomIndex > 0,
+            in: zoomIndex < zoomScales.length - 1
+          });
+
           emitter.emit('view.ready');
         }
       }
@@ -447,8 +459,8 @@
           {canvas} 
           {handleIntersecting}
           {handleUnintersecting}
-          {innerHeight}
-          {innerWidth}
+          innerHeight={$currentView == 'thumb' ? 250 : innerHeight}
+          innerWidth={$currentView == 'thumb' ? 250 : innerWidth}
           view={$currentView}
           format={$currentFormat}
           seq={canvas.seq} 

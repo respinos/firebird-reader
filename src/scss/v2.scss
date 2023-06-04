@@ -53,9 +53,9 @@
       grid-template-columns:
         0% 100%;
 
-      hathi-website-header {
-        overflow-y: auto;
-      }
+      // hathi-website-header {
+      //   overflow-y: auto;
+      // }
 
       .divider {
         display: none;
@@ -101,6 +101,9 @@ hathi-website-header  {
   z-index: 1000;
   max-height: 100dvh;
   background: darkorange;
+
+  max-height: 100dvh;
+  overflow-y: auto;
 }
 
 .reader {

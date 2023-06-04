@@ -10,11 +10,6 @@
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
 
-  // const {
-  //   q1,
-  //   selected
-  // } = { manifest };
-
   const q1 = manifest.q1;
   const selected = manifest.selected;
 
@@ -145,7 +140,6 @@
   }
 
   export const loadImage = function(reload=false) {
-    return;
     const isDebugging = true;
     const delay = isDebugging ? 5 * 1000 : 0;
     setTimeout(() => {
@@ -155,7 +149,7 @@
   export const loadImageActual = function(reload=false) {
     timeout = null;
     if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
-    let height = scanHeight * window.devicePixelRatio;
+    let height = ( view == 'thumb' ) ? 250 : manifest.fit(scanHeight) * window.devicePixelRatio;
     let action = ( view == 'thumb' ) ? 'thumbnail' : 'image';
     imageSrc = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
     fetch(imageSrc)
@@ -219,7 +213,6 @@
   }
 
   export const loadPageText = function() {
-
     if ( ! figCaption ) { return ; }
 
     if ( ! includePageText ) { return ; }
@@ -248,7 +241,7 @@
 
         if ( ocr_div.textContent.trim() == "" || ! ocr_div.textContent.trim().match(/\w+/) ) {
           ocr_div.innerHTML = `
-            <div class="w-75 m-auto mt-3">
+            <div class="w-100 m-auto mt-3">
               <div class="alert alert-block alert-secondary fs-1 fw-bold text-center text-uppercase">
                 No text on page
               </div>
@@ -362,12 +355,13 @@
   $: rotateX = 0;
   $: orientMargin = 0;
   $: isUnusual = checkForFoldout(canvas);
-  $: defaultPageHeight = ( view == '2up' || view == '1up' ) ? null : `${scanHeight}px`;
+  $: defaultPageHeight = null; // ( view == '2up' || view == '1up' ) ? null : `${scanHeight}px`;
   $: pageHeight = ( view == 'thumb' || zoom > 1 ) ? `${innerHeight * zoom}px` : null;
   $: pageWidth = ( view == 'thumb' || zoom > 1 ) ? `${innerWidth * zoom}px` : null;
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
   $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
+  // $: if ( isVisible && format == 'image' && image && image.src == defaultThumbnailSrc ) { loadImage(true); }
   $: if ( isVisible && format == 'plaintext' && ( ! figCaption || figCaption.dataset.loaded == 'false' ) ) { loadPageText(); }
   $: if ( isVisible & format == 'plaintext' && figCaption && ! image ) { console.log("-- wtf", seq, isVisible, isLoaded, figCaption, image, figCaption.dataset.loaded); }
 
@@ -441,7 +435,7 @@
     class:adjusted={canvas.width > canvas.height}
     class:zoomed={pageZoom > 1}
     data-orient={orient}
-    style:--frameHeight={zoom > 1 ? `${( scanHeight )}px` : defaultPageHeight}
+    style:--frameHeight={zoom != 1 ? `${( scanHeight )}px` : defaultPageHeight}
     style:--orient-margin={orientMargin}>
     {#if !isLoaded}
       <div 
@@ -459,6 +453,7 @@
         <img 
           bind:this={image} 
           src={defaultThumbnailSrc} 
+          data-loaded="false"
           alt="" 
           class:zoomed={pageZoom > 1}
           />
@@ -493,11 +488,20 @@
     position: relative;
 
     &.view-2up {
-      height: auto;
       margin-bottom: 5.5rem;
       // aspect-ratio: var(--ratio);
 
-      .frame {
+      &.image {
+        height: auto;
+      }
+
+      &.plaintext .frame {
+        padding-top: 3rem;
+        padding-bottom: 5rem;
+        width: 100%;
+      }
+
+      &.image .frame {
         height: auto;
         aspect-ratio: var(--ratio);
       }
@@ -535,6 +539,8 @@
 
     &.view-thumb {
       // height: calc(var(--pageHeight) + 2.7rem);
+      --defaultPageHeight: 250px;
+
       height: auto;
       width: auto;
 
@@ -546,14 +552,20 @@
       }
 
       figure {
+        --frameHeight: 250px;
         grid-row: 2/3;
-        height: var(--frameHeight, '250px');
-        height: 250px;
+        // height: var(--frameHeight, '250px');
+        // height: 250px;
       }
     }
 
     &.view-1up {
       margin-bottom: 2rem;
+
+      &.plaintext {
+        min-height: var(--pageHeight, var(--defaultPageHeight));
+        height: auto;
+      }
     }
 
     &:focus-visible {
@@ -602,9 +614,11 @@
 
       .loader {
         left: 50%;
-        transform: translateX(-50%);
+        top: 50%;
+        transform: translateX(-50%) translateY(-50%);
         background: rgba(200,200,200,0.4);
         font-size: 2rem;
+        background: transparent;
       }
 
       .image {
@@ -636,10 +650,12 @@
     &.plaintext {
       align-items: flex-start;
       min-height: calc(var(--height) * 0.9 * 1px);
+      height: auto;
       width: 80%;
       max-width: 80rem;
       padding: 2rem 1rem;
 
+      background: #fff;
       box-shadow: 0px 10px 13px -7px #000000, 0px 6px 15px 5px rgba(0, 0, 0, 0);
       border: 1px solid #ddd;    
 
@@ -716,6 +732,9 @@
     --font-size: var(--page-text-font-size, 1.125rem);
     font-size: calc(var(--font-size) * var(--zoom));
     line-height: 1.25;
+    width: 100%;
+    padding: 0 1rem;
+    max-width: 65ch;
   }
 
   img.zoomed {

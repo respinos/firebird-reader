@@ -29,6 +29,8 @@
   class="page-menu {side} view-{view}" 
   class:sticky-top={sticky}
   open={isOpen}
+  aria-hidden={!focused}
+  tabindex={focused ? 0 : -1}
   >
   <summary 
     class="btn-dark"
@@ -56,6 +58,8 @@
       on:click|stopPropagation={togglePageSelection}
       aria-label={selected ? `Page scan #${seq} is selected` : `Select page scan #${seq}`}
       aria-pressed={selected}
+      aria-hidden={!focused}
+      tabindex={focused ? 0 : -1}
       ><i 
         class="fa-regular"
         class:fa-square={!selected}
@@ -69,13 +73,24 @@
       use:tooltip
       on:click|stopPropagation={openLightbox}
       data-bs-placement={side == 'verso' ? 'right' : 'left'}
-      aria-label="Open foldout for page scan #{seq}"><i 
+      aria-label="Open foldout for page scan #{seq}"
+      aria-hidden={!focused}
+      tabindex={focused ? 0 : -1}
+      ><i 
         aria-hidden="true"
         class="fa-solid fa-up-right-from-square fa-flip-horizontal"></i>
       </button>
     {/if}
     {#if allowRotate}
-    <button type="button" class="btn btn-light border border-dark" on:click|stopPropagation={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+    <button
+      type="button" 
+      class="btn btn-light border border-dark" 
+      use:tooltip
+      aria-label="Rotate page"
+      aria-hidden={!focused}
+      tabindex={focused ? 0 : -1}
+      on:click|stopPropagation={rotateScan}
+     ><i class="fa-solid fa-rotate-right"></i></button>
     {/if}
     {#if allowPageZoom}
     <div class="btn-group-vertical" role="group">
@@ -85,6 +100,8 @@
         disabled={pageZoom == 2.5}
         use:tooltip
         aria-label="Zoom in #{seq}"
+        aria-hidden={!focused}
+        tabindex={focused ? 0 : -1}
         on:click|stopPropagation={() => updateZoom(0.5)}>
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
       </button>
@@ -94,6 +111,8 @@
         disabled={pageZoom == 1}
         use:tooltip
         aria-label="Zoom out #{seq}"
+        aria-hidden={!focused}
+        tabindex={focused ? 0 : -1}
         on:click|stopPropagation={() => updateZoom(-0.5)}>
         <i class="fa-solid fa-minus" aria-hidden="true"></i>
       </button>

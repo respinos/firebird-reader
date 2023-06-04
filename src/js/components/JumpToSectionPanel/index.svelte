@@ -27,24 +27,13 @@
       return true;
     }
 
-    if ( value.substr(0, 2) == 'p.' ) {
-      // sequence
-      seq = manifest.seq(value.substr(2));
-    } else if ( value.substr(0, 1) == 'p' ) {
-      seq = manifest.seq(value.substr(1));
-    } else if ( value.substr(0, 1) == '#' || value.substr(0, 1) == 'n' ) {
-      seq = parseInt(value.substr(1), 10);
-    } else {
-      seq = parseInt(value, 10);
-      seq = manifest.seq(value);
-    }
-    if ( seq && seq >= 1 && seq <= HT.params.featureList.length ) {
-      emitter.emit('goto.page', { seq: seq });
+    seq = manifest.guess(value);
+    if ( seq ) {
+      emitter.emit('goto.page', { delta: delta * value });
       return true;
-    } else {
-      retval = false;
     }
-    return retval;    
+
+    return false;
   }
 
   function handleKeydown(event) {

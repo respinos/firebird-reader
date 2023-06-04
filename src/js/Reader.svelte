@@ -5,6 +5,7 @@
 	import { Manifest } from './lib/manifest';
   import { updateHistory } from './lib/history';
 	import Emittery from 'emittery';
+  import { tooltip } from './lib/tooltip';
 
   // import { drag } from './lib/drag';
 	import { constrain } from './components/SplitPane/utils.js';
@@ -54,7 +55,7 @@
 	views['2up'] = TwoUpView;
 	views['thumb'] = GridView;
 
-	export let view = '2up';
+	export let view = '1up';
 	export let format = 'image';  
 
 	// && ! isEmbed
@@ -326,6 +327,8 @@
   <button 
     type="button" 
     class="btn x-btn-lg btn-outline-dark shadow rounded-circle"
+    use:tooltip
+    aria-label="{asideExpanded ? 'Close sidebar' : 'Open sidebar'}"
     on:click={togglePane}>
     <i 
       class="fa-solid fa-arrow-right-from-bracket"  

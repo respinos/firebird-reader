@@ -55,6 +55,35 @@
     })
   }
 
+  const handleValue = function(event) {
+    let value = event.target.value;
+    if ( value.substr(0, 1) == '+' || value.substr(0, 1) == '-' ) {
+      let delta = value.substr(0, 1) == '+' ? +1 : -1;
+      value = parseInt(value.substr(1), 10);
+      emitter.emit('goto.page', { delta: delta * value });
+      return;
+    }
+
+    if ( value.match(/^\d+$/) ) {
+      value = `#${value}`;
+    }
+
+    seq = manifest.guess(value);
+    if ( seq ) {
+      emitter.emit('goto.page', { seq: seq });
+    }
+  }
+
+  const handleKeydown = function(event) {
+    let delta = 0;
+    if ( event.code == 'ArrowDown' ){
+      delta = -1;
+    } else if ( event.code == 'ArrowUp' ) {
+      delta = 1;
+    }
+    emitter.emit('goto.page', { delta : delta });
+  }
+
   let isFullscreenEnabled = false;
   let isRTL = manifest.direction() == 'rtl';
 
@@ -94,8 +123,19 @@
   <!-- navigation form -->
   <form class="d-none d-sm-block">
     <div class="d-flex align-items-center gap-1 bg-dark text-light p-1 px-2 rounded">
-      <span>#</span>
-      <input bind:value={seq} type="number" class="form-control text-center" min="1" max={manifest.totalSeq} on:change={() => goto({ seq: seq })} on:blur={() => goto({ seq: seq })} />
+      <label for="toolbar-seq">
+        <span>#</span>
+        <span class="visually-hidden">Page Sequence</span>
+      </label>
+      <input 
+        id="toolbar-seq"
+        name="seq"
+        bind:value={seq} 
+        type="text" 
+        class="form-control text-center" 
+        on:change={handleValue} 
+        on:blur={handleValue}
+        on:keydown={handleKeydown} />
       <span>/</span>
       <span>{manifest.totalSeq}</span>
     </div>
@@ -193,6 +233,10 @@
 
   :global(.apps[data-options-toggled="true"] .view--toolbar) {
     display: none;
+  }
+
+  input[name="seq"] {
+    max-width: 6ch;
   }
 
 </style>
