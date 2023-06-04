@@ -4,13 +4,15 @@
   const context = getContext('context');
   const manifest = getContext('manifest');
 
+  const currentSeq = manifest.currentSeq;
+
   let button;
   let popover;
   let popoverContent = `This is the date when this item was last updated. 
   Version dates are updated when improvements such as 
   higher quality scans or more complete scans have been made.`;
 
-  let ownerId;
+  $: ownerid = manifest.ownerid($currentSeq);
 
   onMount(() => {
     popover = new bootstrap.Popover(button);
@@ -23,11 +25,11 @@
 
 {#if manifest.versionLabel}
 <div class="alert alert-light mt-4" role="alert">
-  <h3 class="fs-7">Version</h3>
+  <h2 class="fs-7">Version</h2>
   <p class="fs-7">
     <span>{manifest.versionLabel}</span>
-    {#if ownerId}
-      <span>{ownerId}</span>
+    {#if ownerid}
+      <span>OwnerID: {ownerid} / Seq: {manifest.physicalSeq($currentSeq)}</span>
     {/if}
     <br />
     <button 

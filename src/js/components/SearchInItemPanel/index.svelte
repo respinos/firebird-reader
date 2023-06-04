@@ -12,13 +12,12 @@
 
   function onClick(event) {
     let seq = event.target.dataset.seq;
-    console.log("onClick", event, event.target);
     emitter.emit('goto.page', { seq : seq });
   }
 
 </script>
 
-<Panel parent="#controls" expanded={true}>
+<Panel parent="#controls" expanded={false}>
   <i class="fa-solid fa-magnifying-glass" slot="icon"></i>
   <svelte:fragment slot="title">Search in This Text</svelte:fragment>
   <svelte:fragment slot="body">

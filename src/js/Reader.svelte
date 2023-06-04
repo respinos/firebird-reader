@@ -16,7 +16,7 @@
   import ViewerToolbar from './components/ViewerToolbar';
 	import Panel from './components/Panel';
 
-	import MetadataPanel from './components/MetadataPanel';
+	import MetadataPanel from './components/MetadataPanel/index.svelte';
 	import VersionPanel from './components/VersionPanel';
 	import JumpToSectionPanel from './components/JumpToSectionPanel';
 	import GetThisItemPanel from './components/GetThisItemPanel';
@@ -312,7 +312,7 @@
       id="controls">
       <MetadataPanel></MetadataPanel>
       <DownloadPanel></DownloadPanel>
-      {#if ! isReaderView }
+      {#if isReaderView }
       <SearchInItemPanel></SearchInItemPanel>
       <JumpToSectionPanel></JumpToSectionPanel>
       {/if}

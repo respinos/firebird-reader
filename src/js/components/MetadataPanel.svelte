@@ -11,7 +11,7 @@
 <h1 class="p-3" style="font-size: 1.2rem">{manifest.metadata.title}</h1>
 <div class="accordion-item">
   <h2 class="accordion-header">
-    <span class="accordion-button fixed">
+    <span class="accordion-button xxfixed">
       <div class="d-flex align-items-center gap-2">
         <i class="fa-solid fa-circle-info"></i>
         About this Item
