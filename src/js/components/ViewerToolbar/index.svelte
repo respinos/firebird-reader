@@ -56,6 +56,7 @@
   }
 
   let isFullscreenEnabled = false;
+  let isRTL = manifest.direction() == 'rtl';
 
   $: console.log("-- view.toolbar interfaceMode", $interfaceMode);
 
@@ -124,6 +125,23 @@
   </div>
   {/if}
 
+  <!-- this is shameless and obvious -->
+  {#if isRTL}
+  <div class="btn-group" role="group" aria-label="Pagination">
+    <button type="button" class="btn btn-outline-dark d-none d-md-block" aria-label="Last Page" use:tooltip on:click={() => goto({ seq: manifest.totalSeq })}>
+      <i class="fa-solid fa-chevron-left border-start border-3 border-dark"></i>
+    </button>
+    <button type="button" class="btn btn-outline-dark" aria-label="Next Page" use:tooltip on:click={() => goto({ delta: 1 })}>
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+    <button type="button" class="btn btn-outline-dark" aria-label="Previous Page" use:tooltip on:click={() => goto({ delta: -1 })}>
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+    <button type="button" class="btn btn-outline-dark d-none d-md-block" aria-label="First Page" use:tooltip on:click={() => goto({ seq: 1 })}>
+      <i class="fa-solid fa-chevron-right border-end border-3 border-dark"></i>
+    </button>
+  </div>
+  {:else}
   <div class="btn-group" role="group" aria-label="Pagination">
     <button type="button" class="btn btn-outline-dark d-none d-md-block" aria-label="First Page" use:tooltip on:click={() => goto({ seq: 1 })}>
       <i class="fa-solid fa-chevron-left border-start border-3 border-dark"></i>
@@ -138,6 +156,7 @@
       <i class="fa-solid fa-chevron-right border-end border-3 border-dark"></i>
     </button>
   </div>
+  {/if}
 
   {#if isFullscreenEnabled}
   <button 

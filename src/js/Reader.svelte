@@ -50,7 +50,7 @@
 	views['2up'] = TwoUpView;
 	views['thumb'] = GridView;
 
-	export let view = '1up';
+	export let view = '2up';
 	export let format = 'image';
 
 	// && ! isEmbed

@@ -61,6 +61,8 @@
   let isLoaded = false;
   let hasPageText = false;
 
+  let isRTL = manifest.direction() == 'rtl';
+
   let timeout;
 
   // cgi/imgsrv/thumbnail?id={canvas.id}&seq={seq}
@@ -402,6 +404,7 @@
   class:view-thumb={view == 'thumb'}
   class:verso={side == 'verso'}
   class:recto={side == 'recto'}
+  class:direction-rtl={isRTL}
   id="p{seq}" 
   aria-hidden={!focused}
   aria-label="Page scan {seq}"
@@ -501,6 +504,13 @@
     &.view-2up.verso {
       grid-area: verso;
 
+      &.direction-rtl {
+        .frame {
+          margin-right: auto;
+          margin-left: 0;
+        }
+      }
+
       .frame {
         margin-right: 0;
       }
@@ -508,6 +518,13 @@
 
     &.view-2up.recto {
       grid-area: recto;
+
+      &.direction-rtl {
+        .frame {
+          margin-right: 0;
+          margin-left: auto;
+        }
+      }
 
       .frame {
         margin-left: 0;
