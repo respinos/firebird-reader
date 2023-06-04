@@ -143,6 +143,13 @@ main {
   // background: darkolivegreen;
 
   scroll-snap-type: y mandatory;
+
+  &[data-view="2up"] {
+    .inner {
+      min-width: calc(var(--min-reader-width) * 1px);
+    }
+  }
+
 }
 
 .divider {

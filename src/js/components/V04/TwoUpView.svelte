@@ -9,6 +9,7 @@
   export let startSeq = 1;
 
   const currentSeq = manifest.currentSeq;
+  const currentFormat = manifest.currentFormat;
 
   let view;
   let isInitialized = true;
@@ -28,46 +29,59 @@
     }
     return location;
   }
-  
-  const gotoPage = function(options, callback) {
-    let target;
-    let distance = 0;
+
+  const findTarget = function(options) {
+    let targetIdx;
     let item = view.item($currentSeq);
     let currentSpread = item.spreadIndex;
     if ( options.delta !== undefined ) {
-      target = currentSpread + options.delta;
+      targetIdx = currentSpread + options.delta;
     } else if ( options.seq && ! isNaN(options.seq) ) {
-      target = view.item(options.seq).spreadIndex;
+      targetIdx = view.item(options.seq).spreadIndex;
     } else {
       // invalid option;
       return;
     }
-    if ( target == currentSpread && isInitialized && options.delta != 0 ) { 
-      if ( callback ) { callback(); }
-      return ; 
-    }
-    if ( target < 0 ) { target = 0 ; }
-    else if ( target > manifest.totalSeq ) {
-      target = view.item(manifest.totalSeq).spreadIndex;
-    }
-
-    const spread = view.spread(target);
-    spread.el.scrollIntoView({ behavior: 'instant', block: 'nearest'});
-    console.log("-- spread", spread);
-
-    $currentSeq = spread.items.find(item => item).seq;
-    manifest.currentLocation.set(currentLocation());
-
-    // focus();
-
-    if ( callback ) {
-      callback();
-    }    
+    // console.log("-- 2up.findTarget", currentSpread, targetIdx);
+    return view.spread(targetIdx).el;
   }
 
-  function setCurrentSeq() {
-
+  const findFocusItems = function(seq) {
+    let pages = [];
+    let item = view.item($currentSeq);
+    const spread = view.spread(item.spreadIndex);
+    console.log("-- 2up.findFocusPages", item, spread);
+    pages = Array.from(spread.items);
+    console.log(pages);
+    return pages;
   }
+  
+  const handleClick = function(event) {
+    if ( $currentFormat == 'plaintext' ) { return ; }
+    if ( event.target.closest('details') ) { return ; }
+    // if ( event.target.closest('button') ) { return ; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    let options = { delta: 1 };
+    if ( pageDiv.classList.contains('verso') ) {
+      options.delta = -1;
+    }
+    emitter.emit('goto.page', options);
+  }
+
+  const handleKeydown = function(event) {
+    console.log("-- 2up.keydown", event);
+    if ( event.target.closest('details') ) { return ; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    if ( event.code == 'Enter' ) {
+      let options = { delta: 1 };
+      if ( pageDiv.classList.contains('verso') ) {
+        options.delta = -1;
+      }
+      emitter.emit('goto.page', options);
+    }
+  }  
 
 </script>
 
@@ -75,8 +89,10 @@
     {container}
     {startSeq}
     {currentLocation}
-    {setCurrentSeq}
-    {gotoPage}
+    {findTarget}
+    {findFocusItems}
+    {handleClick}
+    {handleKeydown}
     bind:this={view}
    />
 

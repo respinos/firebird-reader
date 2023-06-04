@@ -88,8 +88,10 @@
   }
 
   export const visible = function(viewport) {
-    let top = pageDiv.offsetTop;
-    let height = parseInt(pageDiv.dataset.height, 10);
+    // because we have spreads
+    let top = pageDiv.parentElement.offsetTop + pageDiv.offsetTop;
+    // let height = parseInt(pageDiv.dataset.height, 10);
+    let height = pageDiv.clientHeight;
     let bottom = top + height;
 
     let rootMargin = 0;
@@ -557,7 +559,7 @@
     &:focus-visible {
       outline: 0;
 
-      .frame img {
+      .frame {
         --bs-btn-focus-shadow-rgb: 66,70,73;
         outline: 0;
         box-shadow: 0 0 0 0.25rem rgba(var(--bs-btn-focus-shadow-rgb), .5);

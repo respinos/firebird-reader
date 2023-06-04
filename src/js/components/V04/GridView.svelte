@@ -15,6 +15,28 @@
   export const currentLocation = function() {
     return { page: view.item($currentSeq) };
   }
+
+  const handleClick = function(event) {
+    console.log(event);
+    if ( event.target.closest('details') ) { return ; }
+    event.stopPropagation();
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    console.log("-- thumb.handlePageClick", pageDiv.dataset.seq);
+    emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
+  }
+
+  const handleKeydown = function(event) {
+    if ( event.target.closest('details') ) { return; }
+    let pageDiv = event.target.closest('div.page');
+    if ( ! pageDiv ) { return ; }
+    if ( event.code == 'Enter' ) {
+      emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
+    } else if ( event.code == 'Tab' ) {
+      // should grid view be different about 
+      // handling which pages are focus-able?
+    }
+  }
 </script>
 
   <View
@@ -23,6 +45,7 @@
     {currentLocation}
     innerHeight={250}
     innerWidth={250}
+    {handleClick}
     bind:this={view}
    />
 

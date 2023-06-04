@@ -23,6 +23,9 @@
   export let innerWidth = container.clientWidth;
 
   export let currentLocation = function() { };
+  export let handleClick = function() { };
+  export let handleKeydown = function() { }
+
   export function item(seq) {
     return itemMap[seq];
   }
@@ -44,7 +47,7 @@
 
   let seqTimeout;
   let viewport = {};
-  let focusSeq;
+  let currentFocusItems = [];
 
   let resizeTimeout; 
   let resizeSeq;
@@ -184,14 +187,14 @@
   }
   updateViewport();
 
-  export let setCurrentSeq = function() {
+  const setCurrentSeq = function() {
     if ( ! isInitialized ) { return ; }
 
     let max = { seq: -1, percentage: 0 };
     let possibles = Array.from(currentInView).sort((a,b) => a-b);
     possibles.forEach((seq) => {
-      console.log("-- view.setCurrentSeq", seq, itemMap[seq].page);
       let percentage = itemMap[seq].page.visible(viewport);
+      // console.log("-- view.setCurrentSeq", seq, percentage);
       if ( percentage > max.percentage ) {
         max.seq = seq;
         max.percentage = percentage;
@@ -205,33 +208,50 @@
     manifest.currentLocation.set(currentLocation());
   }
 
-  const focus = function(seq) {
-    if ( focusSeq ) {
-      itemMap[focusSeq].page.unfocus();
-    }
-    itemMap[seq].page.focus();
-    focusSeq = seq;
+  export let findFocusItems = function(seq) {
+    return [ itemMap[seq] ];
   }
 
-  export let gotoPage = function(options) {
-    let target;
+  const focus = function(seq) {
+    console.log("view.focus", isInitialized, seq);
+    const currentFocusSeq = currentFocusItems.map((item) => item.seq);
+    if ( currentFocusSeq.indexOf(seq) > -1 ) { return ; }
+    currentFocusItems.forEach((item) => {
+      console.log("view.focus - unfocus", item);
+      item.page.unfocus();
+    })
+    currentFocusItems = findFocusItems(seq);
+    currentFocusItems.forEach((item) => {
+      if ( item === false ) { return ; }
+      console.log('-- view.focus', item.seq);
+      item.page.focus();
+    })
+    // itemMap[seq].page.focus();
+    // focusSeq = seq;
+  };
+
+  export let findTarget = function(options) {
+    let targetSeq;
     if ( options.delta ) {
-      target = $currentSeq + options.delta;
+      targetSeq = $currentSeq + options.delta;
     } else if ( options.seq && ! isNaN(options.seq) ) {
-      target = options.seq;
+      targetSeq = options.seq;
     } else {
       // invalid option;
       return;
     }
-    if ( target == $currentSeq && ! options.force ) { return ; }
-    if ( target < 1 ) { target = 1 ; }
-    else if ( target > manifest.totalSeq ) {
-      target = manifest.totalSeq;
-    }
+    if ( targetSeq == $currentSeq && ! options.force ) { return ; }
+    targetSeq = Math.max(1, Math.min(targetSeq, manifest.totalSeq));
+    return itemMap[target].page;
+  }
 
-    console.log("<< goto.page", options, target, $currentSeq, itemMap[target]);
+  const gotoPage = function(options) {
+    let target = findTarget(options);
+    if ( ! target ) { return ; }
+
     setTimeout(() => {
-      itemMap[target].page.scrollIntoView();
+      // itemMap[target].page.scrollIntoView();
+      target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
       if ( resizeSeq ) { resizeSeq = null; }
     })
   }
@@ -241,6 +261,10 @@
       innerWidth = entry.contentRect.width;
       innerHeight = entry.contentRect.height;
       console.log("-- resizeObserver", innerWidth, innerHeight);
+
+      if ( $currentView == '2up' ) {
+        container.style.setProperty('--min-reader-width', Math.ceil(innerHeight * 0.8 * 2));
+      }
 
       setTimeout(() => { 
         console.log("-- scroll.resize", resizeSeq);
@@ -321,6 +345,8 @@
 
   $: columnWidth = ( zoom > 1 ) ? innerWidth / 2 * zoom : null;
   $: console.log("-- view", columnWidth);
+  // $: if ( handleClick ) { container.addEventListener('click', handleClick) ; }
+  // $: if ( handleKeydown ) { container.addEventListener('keydown', handleKeydown) ; }
 
   let isInitialized = false;
   afterUpdate(() => {
@@ -361,6 +387,7 @@
       setCurrentSeq();
     }, 100);
 
+    container.dataset.view = $currentView;
     container.addEventListener('scroll', handleScroll);
 
     const resizeObserver = new ResizeObserver(entries => {
@@ -400,7 +427,10 @@
   class:view-2up={$currentView =='2up'}
   class:view-1up={$currentView == '1up'}
   class:view-thumb={$currentView == 'thumb'}
-  bind:this={inner}>
+  bind:this={inner}
+  on:click={handleClick}
+  on:keydown={handleKeydown}
+  >
   {#each spreadData as spread, spreadIdx}
   <div 
     id="spread{spreadIdx}"

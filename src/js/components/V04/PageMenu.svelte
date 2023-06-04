@@ -53,7 +53,7 @@
       type="button" 
       class="btn btn-light border border-dark"
       use:tooltip
-      on:click={togglePageSelection}
+      on:click|stopPropagation={togglePageSelection}
       aria-label={selected ? `Page scan #${seq} is selected` : `Select page scan #${seq}`}
       aria-pressed={selected}
       ><i 
@@ -67,7 +67,7 @@
       type="button"
       class="btn btn-light border border-dark"
       use:tooltip
-      on:click={openLightbox}
+      on:click|stopPropagation={openLightbox}
       data-bs-placement={side == 'verso' ? 'right' : 'left'}
       aria-label="Open foldout for page scan #{seq}"><i 
         aria-hidden="true"
@@ -75,7 +75,7 @@
       </button>
     {/if}
     {#if allowRotate}
-    <button type="button" class="btn btn-light border border-dark" on:click={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
+    <button type="button" class="btn btn-light border border-dark" on:click|stopPropagation={rotateScan}><i class="fa-solid fa-rotate-right"></i></button>
     {/if}
     {#if allowPageZoom}
     <div class="btn-group-vertical" role="group">
@@ -85,7 +85,7 @@
         disabled={pageZoom == 2.5}
         use:tooltip
         aria-label="Zoom in #{seq}"
-        on:click={() => updateZoom(0.5)}>
+        on:click|stopPropagation={() => updateZoom(0.5)}>
         <i class="fa-solid fa-plus" aria-hidden="true"></i>
       </button>
       <button 
@@ -94,7 +94,7 @@
         disabled={pageZoom == 1}
         use:tooltip
         aria-label="Zoom out #{seq}"
-        on:click={() => updateZoom(-0.5)}>
+        on:click|stopPropagation={() => updateZoom(-0.5)}>
         <i class="fa-solid fa-minus" aria-hidden="true"></i>
       </button>
     </div>
