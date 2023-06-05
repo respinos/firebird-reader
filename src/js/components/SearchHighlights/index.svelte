@@ -117,6 +117,10 @@
     highlights = highlights
   }
 
+  $: if ( format == 'image' && image ) { console.log("-- search.highlights : image"); }
+  $: if ( format == 'image' && matches && matches.length ) { console.log("-- search.highlights : matches"); }
+  $: if ( format == 'image' && image && matches && matches.length ) { console.log("-- search.highlights : image + matches"); }
+
   $: if (format == 'image' && image && matches && matches.length) { buildHighlights() }
   $: if (format == 'plaintext' && matches && matches.length) { buildHighlights(); }
 
