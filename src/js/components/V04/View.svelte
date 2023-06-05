@@ -265,6 +265,19 @@
   }
 
   function handleResize(entry) {
+    let minHeight = innerHeight;
+    if ( minHeight < 600 ) {
+      minHeight = 600;
+    }
+    container.style.setProperty('--clampHeight', `${minHeight}px`);
+    if ( $currentView == '2up' ) {
+      let minWidth = minHeight * manifest.defaultImage.ratio * 2 + ( 2 * 16 );
+      console.log("WHY", innerHeight, manifest.defaultImage.ratio);
+      container.style.setProperty('--min-reader-width', Math.ceil(minWidth));
+    }
+
+    if ( ! isInitialized ) { return ; }
+
     if ( innerWidth != entry.contentRect.width || innerHeight != entry.contentRect.height ) {
       if ( true || maxHeight > 0 ) {
         innerWidth = entry.contentRect.width;
@@ -272,10 +285,6 @@
       }
 
       // console.log("-- view.resizeObserver", maxHeight, innerWidth, innerHeight);
-
-      if ( $currentView == '2up' ) {
-        container.style.setProperty('--min-reader-width', Math.ceil(innerHeight * 0.8 * 2));
-      }
 
       container.parentElement.scrollTop = 0; // force this
 
@@ -418,7 +427,6 @@
 
     const resizeObserver = new ResizeObserver(entries => {
       const entry = entries.at(0);
-      if ( ! isInitialized ) { return ; }
       if ( resizeTimeout ) { clearTimeout(resizeTimeout); }
       if ( resizeSeq == null ) { 
         // console.log("-- scroll.resizeObserver", $currentSeq, isInitialized);
@@ -521,7 +529,8 @@
 
   .inner.view-2up .spread {
     --gridColumn: calc(var(--columnWidth) * 1px);
-    height: calc(100dvh - ( var(--stage-header-height) * 1px));
+    --spreadHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
+    height: clamp(var(--clampHeight, 0), var(--spreadHeight), var(--spreadHeight));
     width: var(--width, 100%);
 
     display: grid;

@@ -490,7 +490,7 @@
   .page {
     --defaultPageHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
     --actualPageHeight: var(--scanHeight, var(--defaultPageHeight));
-    height: clamp(75vw, var(--actualPageHeight), var(--actualPageHeight));
+    height: clamp(var(--clampHeight), var(--actualPageHeight), var(--actualPageHeight));
     width: 100%;
 
     margin: auto;
@@ -596,7 +596,7 @@
   .frame {
     // --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
     --defaultframeHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
-    --frameHeight: clamp(75vw, var(--defaultframeHeight), var(--defaultframeHeight));
+    --frameHeight: clamp(var(--clampHeight), var(--defaultframeHeight), var(--defaultframeHeight));
     // height: clamp(60vw, var(--frameHeight), var(--frameHeight));
     height: var(--frameHeight);
     width: calc(var(--frameHeight) * var(--ratio));

@@ -55,8 +55,8 @@
 	views['2up'] = TwoUpView;
 	views['thumb'] = GridView;
 
-	export let view = '1up';
-	export let format = 'image';  
+	export let view = manifest.view;
+	export let format = manifest.format || 'image';
 
 	// && ! isEmbed
 	if ( window.innerWidth < 800 && manifest.ui != 'embed' ) {
