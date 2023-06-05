@@ -138,6 +138,7 @@ main {
   
   position: relative;
   min-height: 100%;
+  min-height: calc(100dvh - var(--stage-header-height, 0) * 1px);
   overflow: auto;
 
   // display: grid;
