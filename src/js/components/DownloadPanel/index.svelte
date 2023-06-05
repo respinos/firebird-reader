@@ -28,6 +28,7 @@
   let tunnelFrame;
   let tunnelWindow;
   let tunnelForm;
+  let tunnelFormTracker;
   let tunnelFormAttempt = 0;
   let downloadInProgress = false;
   let trackerInterval;
@@ -36,6 +37,7 @@
   let status = { done: false, percent: -1 };
   let numAttempts = 0;
   let numProcessed = 0;
+  let selection = { pages: [], seq: [] };
 
   let targetPPI = '300';
   let sizeValue = ''
@@ -146,7 +148,7 @@
     numAttempts = 0;
     numProcessed = 0;
 
-    let selection = { pages: [] };
+    selection.pages.length = 0;
     if ( range == 'selected-pages' ) {
       selection.pages = Array.from($selected);
       selection.isSelection = true;
@@ -176,14 +178,30 @@
     if ( selection.pages.length > 0 ) {
       selection.seq = selection.pages;
     }
+    selection = selection;
+    console.log("-- download selection", selection);
 
     let partialUpperLimit = format == 'image-tiff' ? 1 : 10;
     if ( isPartialDownload() && selection.pages.length <= partialUpperLimit ) {
       // use the tunnel
       tunnelFormAttempt = tunnelFormAttempt + 1;
       downloadInProgress = true;
+
+      tunnelFormTracker.value = `D${tunnelFormAttempt}`;
+
+      tunnelForm.querySelectorAll('input[name="seq"]').forEach((inputEl) => {
+        inputEl.remove();
+      })
+
+      selection.seq.forEach((seq) => {
+        let inputEl = document.createElement('input');
+        inputEl.type = 'hidden';
+        inputEl.name = 'seq';
+        inputEl.value = seq;
+        tunnelForm.appendChild(inputEl);
+      })
       
-      setInterval(trackInterval, 100);
+      trackerInterval = setInterval(trackInterval, 100);
       tunnelForm.submit();
 
     } else {
@@ -204,7 +222,7 @@
       switch (format) {
         case 'image-jpeg':
         case 'image-tiff':
-          params.seq('format', format == 'image-tiff' ? 'image/tiff' : 'image/jpeg');
+          params.set('format', format == 'image-tiff' ? 'image/tiff' : 'image/jpeg');
           params.set('target_ppi', targetPPI);
           params.set('bundle_format', 'zip');
           break;
@@ -228,7 +246,7 @@
 
   function buildAction(format) {
     let action = '/cgi/imgsrv/';
-    if ( format.startsWith('image-') ) {
+    if ( format.startsWith('image-') && range.startsWith('current-page') ) {
       action += 'image';
       sizeAttr = 'size';
       sizeValue = targetPPI == '0' ? 'full' : `ppi:${targetPPI}`
@@ -284,8 +302,8 @@
 
   let flattenedSelection = [];
 
-  $: action = buildAction(format);
-  $: iframeName = `download-module-${tunnelFormAttempt}`;
+  $: action = buildAction(format, range);
+  $: iframeName = `download-module-xxx`; // ${tunnelFormAttempt}`;
   $: if ( ( format == 'plaintext-zip' || format == 'epub' ) && range != 'volume' ) { range = 'volume'; }
   $: if ( flattenSelection($selected) ) { range = 'selected-pages'; }
   $: console.log("-- download flatten", flattenedSelection);
@@ -358,7 +376,7 @@
           <label class="form-check-label" for="format-image-tiff">
             Image (TIFF)
           </label>
-        </div>        
+        </div>
       </fieldset>
 
       {#if format.startsWith('image-')}
@@ -505,11 +523,13 @@
       </p>
       {/if}
     </form>
-    <form class="d-none" bind:this={tunnelForm} method="GET" action="{action}" target="download-module-{tunnelFormAttempt}">
+    <form class="d-none" bind:this={tunnelForm} method="GET" action="{action}" target="download-module-xxx">
       <input type="hidden" name="id" value={manifest.id} />
       <input type="hidden" name="attachment" value="1" />
-      <input type="hidden" name="tracker" value="D{tunnelFormAttempt}" />
-      <input type="hidden" name="seq" value={$currentSeq} />
+      <input type="hidden" name="tracker" value="" bind:this={tunnelFormTracker} />
+      <!-- {#each selection.seq as seq}
+      <input type="hidden" name="seq" value={seq} />
+      {/each} -->
       {#if format == 'image-tiff' || format == 'image-jpeg'}
         <input type="hidden" name="format" value="image/{(format.split('-'))[1]}" />
         <input 
@@ -526,7 +546,7 @@
       style:opacity={0} 
       aria-hidden="true" 
       title="Tunnel Download Tracker" 
-      name="download-module-{tunnelFormAttempt}"></iframe>
+      name="download-module-xxx"></iframe>
     {:else}
     <p>This item cannot be downloaded.</p>
     {/if}
@@ -542,7 +562,7 @@
   <svelte:fragment slot="body">
     <div style="width: 30rem">
       {#if status.percent < 100}
-      <p>Please wait while we build your {format}.</p>
+      <p>Please wait while we build your {formatTitle[format]}.</p>
       <div class="progress">
         <div 
           class="progress-bar progress-bar-striped progress-bar-animated" 
@@ -554,7 +574,7 @@
           style:width={`${status.percent}%`}></div>
       </div>
       {:else}
-      <p>All done! Your {format} is ready for download.</p>
+      <p>All done! Your {formatTitle[format]} is ready for download.</p>
       {/if}
     </div>
   </svelte:fragment>

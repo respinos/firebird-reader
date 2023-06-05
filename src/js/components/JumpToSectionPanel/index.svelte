@@ -29,7 +29,7 @@
 
     seq = manifest.guess(value);
     if ( seq ) {
-      emitter.emit('goto.page', { delta: delta * value });
+      emitter.emit('goto.page', { seq: seq });
       return true;
     }
 
