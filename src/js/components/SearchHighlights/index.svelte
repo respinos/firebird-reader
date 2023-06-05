@@ -137,7 +137,8 @@
     display: none !important;
   }
 
-  :global(html[data-show-highlights="false"] mark.highlight) {
+  :global(html[data-show-highlights="false"] mark.highlight),
+  :global(html[data-show-highlights="false"] p.kwic mark) {
     background: transparent;
   }
 
