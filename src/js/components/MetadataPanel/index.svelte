@@ -4,6 +4,7 @@
   import Panel from '../Panel';
 
   const manifest = getContext('manifest');
+  const currentSeq = manifest.currentSeq;
 
   let externalLinks = manifest.externalLinks;
 </script>
@@ -17,7 +18,7 @@
       <li>{manifest.totalSeq} page scans</li>
       <li><a href="//catalog.hathitrust.org/Record/{manifest.metadata.catalogRecordNo}">Catalog Record</a></li>
       {#if manifest.hasOcr}
-      <li><a href="/cgi/ssd?id={manifest.id}">Text-Only View</a></li>
+      <li><a href="/cgi/ssd?id={manifest.id}&seq={$currentSeq}">Text-Only View</a></li>
       {/if}
       <li>
         <h3 class="fs-7 mb-1 mt-2">Rights</h3>
