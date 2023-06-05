@@ -64,7 +64,8 @@
   let defaultThumbnailSrc = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=`;
 
   export const scrollIntoView = function(params) {
-    pageDiv.scrollIntoView(params);
+    // pageDiv.scrollIntoView(params);
+    pageDiv.scrollIntoView(false);
   }
 
   export const offsetTop = function() {

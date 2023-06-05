@@ -253,15 +253,15 @@
     if ( ! target ) { return ; }
 
     setTimeout(() => {
-      // target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
+      target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
       // const offsetTop = 
       //   target.offsetTop + 
       //   target.classList.container('.page') ? target.parentElement.offsetTop : 0;
-      let offsetTop = 
-        typeof(target.offsetTop) == 'function' ?
-        target.offsetTop() : 
-        target.offsetTop;
-      container.scrollTop = offsetTop;
+      // let offsetTop = 
+      //   typeof(target.offsetTop) == 'function' ?
+      //   target.offsetTop() : 
+      //   target.offsetTop;
+      // container.scrollTop = offsetTop;
       if ( resizeSeq ) { resizeSeq = null; }
     })
   }
@@ -279,8 +279,10 @@
         container.style.setProperty('--min-reader-width', Math.ceil(innerHeight * 0.8 * 2));
       }
 
+      container.scrollTop = 0; // force this
+
       setTimeout(() => { 
-        console.log("-- scroll.resize", resizeSeq);
+        console.log("-- scroll.resize", isInitialized, resizeSeq);
         gotoPage({ seq: resizeSeq, force: true }) 
       });
 
@@ -368,17 +370,17 @@
         if ( startSeq > 1 ) {
           console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
           setTimeout(() => {
-            // itemMap[startSeq].page.scrollIntoView({ 
-            //   behavior: 'instant',
-            //   block: "start", 
-            //   inline: "nearest"
-            // });
-            let target = findTarget({ seq: startSeq, force: true });
-            let offsetTop = 
-              typeof(target.offsetTop) == 'function' ?
-              target.offsetTop() : 
-              target.offsetTop;
-            container.scrollTop = offsetTop;
+            itemMap[startSeq].page.scrollIntoView({ 
+              behavior: 'instant',
+              block: "start", 
+              inline: "nearest"
+            });
+            // let target = findTarget({ seq: startSeq, force: true });
+            // let offsetTop = 
+            //   typeof(target.offsetTop) == 'function' ?
+            //   target.offsetTop() : 
+            //   target.offsetTop;
+            // container.scrollTop = offsetTop;
 
             isInitialized = true;
 
@@ -418,9 +420,10 @@
 
     const resizeObserver = new ResizeObserver(entries => {
       const entry = entries.at(0);
+      if ( ! isInitialized ) { return ; }
       if ( resizeTimeout ) { clearTimeout(resizeTimeout); }
       if ( resizeSeq == null ) { 
-        console.log("-- scroll.resizeObserver", $currentSeq);
+        console.log("-- scroll.resizeObserver", $currentSeq, isInitialized);
         resizeSeq = $currentSeq; 
       }
       resizeTimeout = setTimeout(() => handleResize(entry), 100);
