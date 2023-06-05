@@ -204,6 +204,7 @@
 		if ( targetView == '2up' && window.innerWidth < 800 ) {
 			targetView = '1up';
 		}
+    if ( targetView == $currentView ) { return ; }
 		if ( $currentView != 'thumb' ) {
 			lastView = $currentView;
 		}
@@ -252,6 +253,8 @@
   $: if ( stage ) { stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight); }
 
   onMount(() => {
+    // force this in case we're doing id=open/id=r, etc.
+    updateHistory({ id: manifest.id });
     setupLoadingView();
 
     container = document.querySelector('#root');
@@ -285,7 +288,7 @@
 		position = constrain(container, size, min, max, position, priority);
 	}
   // $: console.log(":: position", position, w, h, min, max);
-  $: if ( currentSeq ) { updateHistory({ seq: $currentSeq }); }
+  $: if ( isReaderView && currentSeq ) { updateHistory({ seq: $currentSeq }); }
 
 </script>
 

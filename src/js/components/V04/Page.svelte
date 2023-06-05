@@ -41,6 +41,7 @@
 
   let pageNum = manifest.pageNum(seq);
 
+  let lastZoom = zoom;
   let pageZoom = 1;
 
   let scan;
@@ -54,6 +55,7 @@
   let pageTextIsLoaded = false;
   let objectUrl;
   let isLoaded = false;
+  let isLoading = false;
   let hasPageText = false;
 
   let isRTL = manifest.direction() == 'rtl';
@@ -118,7 +120,7 @@
       }
     }
 
-    // console.log("-- visible", seq, percentage, { top, bottom }, viewport );
+    console.log("-- visible", seq, percentage, { top, bottom }, viewport );
 
     return percentage;
   }
@@ -145,6 +147,8 @@
   }
 
   export const loadImage = function(reload=false) {
+    console.log("-- page.loadImage", seq, isVisible, isLoaded);
+    // return;
     const isDebugging = false;
     const delay = isDebugging ? 5 * 1000 : 0;
     setTimeout(() => {
@@ -153,11 +157,12 @@
   }
   export const loadImageActual = function(reload=false) {
     timeout = null;
+    isLoading = true;
     // if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
-    if ( ! image ) { return ; }
+    if ( ! image ) { console.log("-- page.loadImage - no image"); return ; }
     if ( image && image.src != defaultThumbnailSrc ) {
       if ( ! reload ) { 
-        console.log(":: not loading DUPE", seq, image.src)
+        console.log("-- page.loadImage - not loading DUPE", seq, image.src)
         return ; 
       }
     }
@@ -198,14 +203,18 @@
         return response.blob();
       })
       .then(blob => {
+        if ( objectUrl ) {
+          URL.revokeObjectURL(objectUrl);
+        }
         objectUrl = URL.createObjectURL(blob);
         if ( image ) {
-          // console.log("-- page.mount", seq, canvas);
+          console.log("-- page.loadImage - mount blob", seq, canvas);
           image.src = objectUrl;
-          isLoaded = true;
+          isLoaded = true; isLoading = false;
           loadPageText();
           emitter.on('update.highlights', loadPageText);
         } else {
+          console.log("-- page.loadImage - revoke blob", seq, canvas);
           URL.revokeObjectURL(objectUrl);
         }
       })    
@@ -216,7 +225,7 @@
     if ( image ) {
       image.src = defaultThumbnailSrc;
     }
-    // console.log("---- unload", seq, image);
+    console.log("-- !! page.loadImage - unload", seq, image);
   }
 
   const unloadPageText = function() {
@@ -350,8 +359,16 @@
     );
   }
 
-  function openLightbox() {
+  function openLightbox(event) {
+    console.log("-- page.open.lightbox", seq);
+  }
 
+  function shouldLoadImage(image) {
+    let retval = ! isLoaded;
+    if ( ! image ) { retval = false; }
+    if ( image && image.src != defaultThumbnailSrc ) { retval = false; }
+    console.log("-- page.loadImage - shouldLoadimage", seq, retval, isLoaded, isLoading);
+    return retval;
   }
 
   $: isVisible = false;
@@ -372,9 +389,10 @@
   $: pageWidth = ( view == 'thumb' || zoom > 1 ) ? `${innerWidth * zoom}px` : null;
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
-  $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
-  $: if ( zoom ) { loadImage(true); }
-  $: if ( zoom ) { console.log("-- zoom changed", zoom); }
+  $: if ( isVisible && format == 'image' && shouldLoadImage(image) ) { loadImage(); }
+  // $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
+  // $: if ( zoom ) { console.log("-- zoom changed", zoom, lastZoom); }
+  $: if ( zoom != lastZoom ) { loadImage(true); console.log("-- zoom reloading"); lastZoom = zoom; }
   // $: if ( isVisible && format == 'image' && image && image.src == defaultThumbnailSrc ) { loadImage(true); }
   $: if ( isVisible && format == 'plaintext' && ( ! figCaption || figCaption.dataset.loaded == 'false' ) ) { loadPageText(); }
 
@@ -466,7 +484,7 @@
         <img 
           bind:this={image} 
           src={defaultThumbnailSrc} 
-          data-loaded="false"
+          data-loaded={isLoaded}
           alt="" 
           class:zoomed={pageZoom > 1}
           />

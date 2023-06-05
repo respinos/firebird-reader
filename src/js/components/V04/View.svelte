@@ -13,7 +13,8 @@
   const currentView = manifest.currentView;
   const currentSeq = manifest.currentSeq;
   const currentFormat = manifest.currentFormat;
-
+  
+  export let format = $currentFormat;
   export let container;
   export let startSeq = 1;
   export let zoomScales = [ 0.5, 0.75, 1, 1.5, 1.75, 2, 2.5 ];
@@ -70,14 +71,15 @@
   const { observer, io } = createObserver({
     root: container,
     threshold: [ 0, 0.25, 0.5, 0.75, 1.0 ],
-    rootMargin: `200% 0% 200% 0%`
+    rootMargin: '0px'
+    // rootMargin: `200% 0% 200% 0%`
   });
   observer.observedIdx = 0;
   observer.totalIdx = manifest.totalSeq;
 
   const unloadPage = async function(pageDatum) {
     let percentage = itemMap[pageDatum.seq].page.visible(viewport);    
-    // console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
+    console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
     if ( pageDatum.intersectionRatio > 0 ) { return ; }
     itemMap[pageDatum.seq].page.toggle(false);
     currentInView.delete(pageDatum.seq);
@@ -147,9 +149,9 @@
     if ( detail.isIntersecting ) {
       pageDatum.intersectionRatio = detail.intersectionRatio;
       if ( pageDatum.loaded ) {
-        // console.log("# scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
+        console.log("# scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio, isInitialized);
       } else {
-        // console.log("+ scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio);
+        console.log("+ scroll.intersecting", seq, detail.isIntersecting, detail.intersectionRatio, isInitialized, observer.observedIdx);
         if ( pageDatum.timeout ) { clearTimeout(pageDatum.timeout); }
         pageDatum.timeout = setTimeout(() => {
           loadPages(seq);
@@ -171,7 +173,7 @@
     if ( observer.observedIdx < manifest.totalSeq ) { return ; }
     if ( detail.target.dataset.loaded != 'true' ) { return ; }
     let seq = parseInt(detail.target.dataset.seq);
-    // console.log("- un/intersecting", seq);
+    console.log("- un/intersecting", seq);
     itemMap[seq].intersectionRatio = undefined;
     if (itemMap[seq].timeout) {
       clearTimeout(itemMap[seq].timeout);
@@ -355,7 +357,7 @@
       spread[0] = itemMap[seq];
       itemMap[seq].side = 'verso';
       itemMap[seq].spreadIndex = spreadIndex;
-      if ( seq + 1 < manifest.totalSeq ) {
+      if ( seq + 1 <= manifest.totalSeq ) {
         spread[1] = itemMap[seq + 1];
         itemMap[seq + 1].side = 'recto';
         itemMap[seq + 1].spreadIndex = spreadIndex;
@@ -374,21 +376,22 @@
   let isInitialized = false;
   afterUpdate(() => {
     if ( itemMap[manifest.totalSeq].page ) {
+      // console.log("-- view.afterUpdate", $currentView, isInitialized, observer.observedIdx, manifest.totalSeq );
       if ( ! isInitialized && observer.observedIdx == manifest.totalSeq ) {
         if ( startSeq > 1 ) {
           // console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
           setTimeout(() => {
-            itemMap[startSeq].page.scrollIntoView({ 
-              behavior: 'instant',
-              block: "start", 
-              inline: "nearest"
-            });
-            // let target = findTarget({ seq: startSeq, force: true });
-            // let offsetTop = 
-            //   typeof(target.offsetTop) == 'function' ?
-            //   target.offsetTop() : 
-            //   target.offsetTop;
-            // container.scrollTop = offsetTop;
+            // itemMap[startSeq].page.scrollIntoView({ 
+            //   behavior: 'instant',
+            //   block: "start", 
+            //   inline: "nearest"
+            // });
+            let target = findTarget({ seq: startSeq, force: true });
+            let offsetTop = 
+              typeof(target.offsetTop) == 'function' ?
+              target.offsetTop() : 
+              target.offsetTop;
+            container.scroll(0, offsetTop);
 
             isInitialized = true;
 
@@ -487,7 +490,7 @@
           innerHeight={$currentView == 'thumb' ? 250 : innerHeight}
           innerWidth={$currentView == 'thumb' ? 250 : innerWidth}
           view={$currentView}
-          format={$currentFormat}
+          format={format}
           seq={canvas.seq} 
           side={canvas.side}
           bind:zoom={zoom}
@@ -526,7 +529,7 @@
     scroll-behavior: auto;
     padding: 2rem 1rem;
     width: 100%;
-    height: 100%;
+    height: auto;
   }
 
   .inner.view-2up .spread {

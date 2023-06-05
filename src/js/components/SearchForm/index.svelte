@@ -93,6 +93,8 @@
     searchUrl.search = searchParams.toString();
 
     if ( targetNewTab ) {
+      payload = null;
+      updateStatus({ class: null, message: null });
       blankTabForm.submit();
       return;
     }
