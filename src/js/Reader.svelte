@@ -242,6 +242,7 @@
     showLoadingView = false;
     setTimeout(() => {
       isBuildingView = false;
+      document.querySelector('#root').scrollTop = 0; // always
     }, 500);
   }
 
@@ -265,10 +266,6 @@
     })
 
 		resizeObserver.observe(container);
-
-    setTimeout(() => {
-      document.querySelector('hathi-website-header').scrollIntoView();
-    }, 0);
 
     return () => {
       resizeObserver.disconnect();
