@@ -153,7 +153,14 @@
   }
   export const loadImageActual = function(reload=false) {
     timeout = null;
-    if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
+    // if ( image && image.src != defaultThumbnailSrc || reload ) { console.log(":: not loading DUPE", image.src); return ; }
+    if ( ! image ) { return ; }
+    if ( image && image.src != defaultThumbnailSrc ) {
+      if ( ! reload ) { 
+        console.log(":: not loading DUPE", seq, image.src)
+        return ; 
+      }
+    }
     let height = ( view == 'thumb' ) ? 250 : manifest.fit(scanHeight) * window.devicePixelRatio;
     let action = ( view == 'thumb' ) ? 'thumbnail' : 'image';
     imageSrc = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
@@ -366,6 +373,8 @@
 
   $: if ( invoked && pageDiv ) { pageDiv.focus(); }
   $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
+  $: if ( zoom ) { loadImage(true); }
+  $: if ( zoom ) { console.log("-- zoom changed", zoom); }
   // $: if ( isVisible && format == 'image' && image && image.src == defaultThumbnailSrc ) { loadImage(true); }
   $: if ( isVisible && format == 'plaintext' && ( ! figCaption || figCaption.dataset.loaded == 'false' ) ) { loadPageText(); }
   $: if ( isVisible & format == 'plaintext' && figCaption && ! image ) { console.log("-- wtf", seq, isVisible, isLoaded, figCaption, image, figCaption.dataset.loaded); }
