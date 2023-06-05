@@ -488,7 +488,7 @@
 
 <style lang="scss">
   .page {
-    --defaultPageHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
+    --defaultPageHeight: calc(100dvh - ( ( var(--stage-header-height) + var(--paddingBottom, 0) ) * 1px) );
     --actualPageHeight: var(--scanHeight, var(--defaultPageHeight));
     height: clamp(var(--clampHeight), var(--actualPageHeight), var(--actualPageHeight));
     width: 100%;
@@ -595,7 +595,7 @@
 
   .frame {
     // --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
-    --defaultframeHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
+    --defaultframeHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px) );
     --frameHeight: clamp(var(--clampHeight), var(--defaultframeHeight), var(--defaultframeHeight));
     // height: clamp(60vw, var(--frameHeight), var(--frameHeight));
     height: var(--frameHeight);

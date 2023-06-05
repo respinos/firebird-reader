@@ -269,6 +269,7 @@
     if ( minHeight < 600 ) {
       minHeight = 600;
     }
+    if ( $currentView == '2up' ) { minHeight -= ( 5.5 * 16 ); }
     container.style.setProperty('--clampHeight', `${minHeight}px`);
     if ( $currentView == '2up' ) {
       let minWidth = minHeight * manifest.defaultImage.ratio * 2 + ( 2 * 16 );
@@ -472,7 +473,8 @@
     class="spread"
     class:zoomed={zoom > 1}
     class:direction-rtl={manifest.direction() == 'rtl'}
-    style:--columnWidth={columnWidth}>
+    style:--columnWidth={columnWidth}
+    style:--paddingBottom={$currentView == '2up' ? 5.5 * 16 : 0}>
 
     {#each spread as canvas, canvasIdx}
       {#if canvas}
@@ -528,8 +530,10 @@
   }
 
   .inner.view-2up .spread {
+    // // -- debug border
+    // border: 2px solid black;
     --gridColumn: calc(var(--columnWidth) * 1px);
-    --spreadHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
+    --spreadHeight: calc(100dvh - ( ( var(--stage-header-height) + var(--xpaddingBottom, 0) ) * 1px) );
     height: clamp(var(--clampHeight, 0), var(--spreadHeight), var(--spreadHeight));
     width: var(--width, 100%);
 
