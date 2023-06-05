@@ -104,7 +104,10 @@ hathi-website-header  {
   background: darkorange;
 
   max-height: 100dvh;
-  overflow-y: auto;
+
+  @media ( max-width: 1200px ) {
+    overflow-y: auto;
+  }
 }
 
 .reader {
