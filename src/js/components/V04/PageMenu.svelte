@@ -147,6 +147,12 @@
     }
   }
 
+  .page-menu.view-1up {
+    .menu-items {
+      position: static;
+    }
+  }
+
   .page-menu.view-2up.verso {
     justify-self: start;
     .menu-items {

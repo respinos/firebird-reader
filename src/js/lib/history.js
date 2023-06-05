@@ -1,7 +1,7 @@
 let url; let searchParams;
 export function updateHistory(options) {
   if ( ! url ) {
-    url = new URL(location.href);
+    url = new URL(location.href.replace(/;/g, '&'));
     searchParams = new URLSearchParams(url.searchParams);
   }
 
