@@ -266,6 +266,10 @@
 
 		resizeObserver.observe(container);
 
+    setTimeout(() => {
+      document.querySelector('hathi-website-header').scrollIntoView();
+    }, 0);
+
     return () => {
       resizeObserver.disconnect();
 			emitter.off('switch.view', switchView);

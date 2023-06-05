@@ -476,7 +476,8 @@
 <style lang="scss">
   .page {
     --defaultPageHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
-    height: var(--pageHeight, var(--defaultPageHeight));
+    --useScanHeight: var(--scanHeight, var(var(--defaultPageHeight)));
+    height: calc(var(--useScanHeight) * 1px);
     width: 100%;
 
     margin: auto;
