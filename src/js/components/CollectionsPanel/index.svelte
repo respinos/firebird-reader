@@ -68,7 +68,6 @@
       if (action == 'addits') {
         let c2 = params.get('c2');
         let idx = collectionsList.findIndex((o) => o.value == c2);
-        console.log("AHOY FOUND", c2, idx, collectionsList[idx]);
         collectionsList.splice(idx, 1);
         collectionsList = collectionsList;
         c = '__NEW__';
@@ -91,7 +90,7 @@
     action = 'addits';
     let params = new URLSearchParams();
     params.set('c2', c);
-    console.log(`ADDING TO ${c}`);
+    // console.log(`ADDING TO ${c}`);
     submitAction(params);
   }
 

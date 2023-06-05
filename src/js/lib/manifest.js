@@ -234,6 +234,6 @@ export class Manifest {
   }
 
   fit(height) {
-    return this.bestHeights.find((value) => height <= value) || this.bestHeight.at(-1);
+    return Math.ceil(this.bestHeights.find((value) => height <= value) || this.bestHeight.at(-1));
   }
 }

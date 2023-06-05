@@ -17,12 +17,10 @@
   }
 
   const handleClick = function(event) {
-    console.log(event);
     if ( event.target.closest('details') ) { return ; }
     event.stopPropagation();
     let pageDiv = event.target.closest('div.page');
     if ( ! pageDiv ) { return ; }
-    console.log("-- thumb.handlePageClick", pageDiv.dataset.seq);
     emitter.emit('switch.view', { seq: pageDiv.dataset.seq });
   }
 

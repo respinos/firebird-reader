@@ -122,7 +122,6 @@
     }
 
     function jumpToPage(event) {
-      console.log(event);
       onSubmit();
     }
 

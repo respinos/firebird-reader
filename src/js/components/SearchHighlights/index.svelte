@@ -107,7 +107,7 @@
         mark.dataset.class = mark.getAttribute('class');
         mark.classList.add('highlight--plaintext', 'highlight'); // `highlight_${highlight_idx}`);
         mark.dataset.coords = span.dataset.coords;
-        console.log("-- mark", mark, span, span.parentElement);
+        // console.log("-- mark", mark, span, span.parentElement);
         if ( span.parentElement ) {
           span.parentElement.replaceChild(mark, span);
         }
@@ -117,8 +117,8 @@
     highlights = highlights
   }
 
-  $: if (format == 'image' && image && matches && matches.length) { console.log("AHOY building matches", matches); buildHighlights() }
-  $: if (format == 'plaintext' && matches && matches.length) { console.log("AHOY building matches"); buildHighlights(); }
+  $: if (format == 'image' && image && matches && matches.length) { buildHighlights() }
+  $: if (format == 'plaintext' && matches && matches.length) { buildHighlights(); }
 
 </script>
 

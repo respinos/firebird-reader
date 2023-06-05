@@ -46,7 +46,7 @@
 
   let zoom = 1; // on startup
   let zoomIndex = zoomScales.indexOf(zoom);
-  console.log("-- view.startup", zoomScales, zoom, zoomIndex);
+  // console.log("-- view.startup", zoomScales, zoom, zoomIndex);
 
   let seqTimeout;
   let viewport = {};
@@ -77,7 +77,7 @@
 
   const unloadPage = async function(pageDatum) {
     let percentage = itemMap[pageDatum.seq].page.visible(viewport);    
-    console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
+    // console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
     if ( pageDatum.intersectionRatio > 0 ) { return ; }
     itemMap[pageDatum.seq].page.toggle(false);
     currentInView.delete(pageDatum.seq);
@@ -91,7 +91,7 @@
       pageDatum.loaded = true;
       pageDatum.page.toggle(true);
     } else {
-      console.log("$$ ignoring", pageDatum.seq, queue.size, "->", pageDatum);
+      // console.log("$$ ignoring", pageDatum.seq, queue.size, "->", pageDatum);
     }
     pageDatum.enqueued = false;
     return pageDatum;
@@ -216,17 +216,17 @@
   }
 
   const focus = function(seq) {
-    console.log("view.focus", isInitialized, seq);
+    // console.log("view.focus", isInitialized, seq);
     const currentFocusSeq = currentFocusItems.map((item) => item.seq);
     if ( currentFocusSeq.indexOf(seq) > -1 ) { return ; }
     currentFocusItems.forEach((item) => {
-      console.log("view.focus - unfocus", item);
+      // console.log("view.focus - unfocus", item);
       item.page.unfocus();
     })
     currentFocusItems = findFocusItems(seq);
     currentFocusItems.forEach((item) => {
       if ( item === false ) { return ; }
-      console.log('-- view.focus', item.seq);
+      // console.log('-- view.focus', item.seq);
       item.page.focus();
     })
     // itemMap[seq].page.focus();
@@ -271,7 +271,7 @@
         innerHeight = entry.contentRect.height;
       }
 
-      console.log("-- view.resizeObserver", maxHeight, innerWidth, innerHeight);
+      // console.log("-- view.resizeObserver", maxHeight, innerWidth, innerHeight);
 
       if ( $currentView == '2up' ) {
         container.style.setProperty('--min-reader-width', Math.ceil(innerHeight * 0.8 * 2));
@@ -280,7 +280,7 @@
       container.parentElement.scrollTop = 0; // force this
 
       setTimeout(() => { 
-        console.log("-- scroll.resize", isInitialized, resizeSeq);
+        // console.log("-- scroll.resize", isInitialized, resizeSeq);
         gotoPage({ seq: resizeSeq, force: true }) 
       });
 
@@ -295,7 +295,7 @@
     startSeq = $currentSeq;
     isInitialized = false;
 
-    console.log('<< update.zoom', zoomIndex, delta, zoom);
+    // console.log('<< update.zoom', zoomIndex, delta, zoom);
     zoomIndex += delta;
     if ( zoomIndex < 0 ) { zoomIndex = 0; }
     else if ( zoomIndex >= zoomScales.length ) {
@@ -357,7 +357,7 @@
   }
 
   $: columnWidth = ( zoom > 1 ) ? innerWidth / 2 * zoom : null;
-  $: console.log("-- view", columnWidth, innerHeight);
+  // $: console.log("-- view", columnWidth, innerHeight);
   // $: if ( handleClick ) { container.addEventListener('click', handleClick) ; }
   // $: if ( handleKeydown ) { container.addEventListener('keydown', handleKeydown) ; }
 
@@ -366,7 +366,7 @@
     if ( itemMap[manifest.totalSeq].page ) {
       if ( ! isInitialized && observer.observedIdx == manifest.totalSeq ) {
         if ( startSeq > 1 ) {
-          console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
+          // console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
           setTimeout(() => {
             itemMap[startSeq].page.scrollIntoView({ 
               behavior: 'instant',
@@ -406,7 +406,7 @@
   })
 
   onMount(() => {
-    console.log("-- scrollView itemCount", manifest.totalSeq, isInitialized, startSeq, $currentSeq);
+    // console.log("-- scrollView itemCount", manifest.totalSeq, isInitialized, startSeq, $currentSeq);
 
     const handleScroll = debounce((ev) => {
       updateViewport();
@@ -421,7 +421,7 @@
       if ( ! isInitialized ) { return ; }
       if ( resizeTimeout ) { clearTimeout(resizeTimeout); }
       if ( resizeSeq == null ) { 
-        console.log("-- scroll.resizeObserver", $currentSeq, isInitialized);
+        // console.log("-- scroll.resizeObserver", $currentSeq, isInitialized);
         resizeSeq = $currentSeq; 
       }
       resizeTimeout = setTimeout(() => handleResize(entry), 100);
@@ -434,12 +434,12 @@
       emitter.off('goto.page', gotoPage);
       container.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
-      console.log("-- scroll.demount", (new Date).getTime() - t0);
+      // console.log("-- scroll.demount", (new Date).getTime() - t0);
     }
   })
 
   onDestroy(() => {
-    console.log("-- view DESTROY");
+    // console.log("-- view DESTROY");
 
     isInitialized = false;
     if ( io ) {

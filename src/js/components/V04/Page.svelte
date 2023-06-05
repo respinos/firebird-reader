@@ -161,7 +161,7 @@
         return ; 
       }
     }
-    let height = ( view == 'thumb' ) ? 250 : manifest.fit(scanHeight) * window.devicePixelRatio;
+    let height = ( view == 'thumb' ) ? 250 : Math.ceil(manifest.fit(scanHeight) * window.devicePixelRatio);
     let action = ( view == 'thumb' ) ? 'thumbnail' : 'image';
     imageSrc = `/cgi/imgsrv/${action}?id=${canvas.id}&seq=${seq}&height=${height}`;
     fetch(imageSrc)
@@ -377,7 +377,6 @@
   $: if ( zoom ) { console.log("-- zoom changed", zoom); }
   // $: if ( isVisible && format == 'image' && image && image.src == defaultThumbnailSrc ) { loadImage(true); }
   $: if ( isVisible && format == 'plaintext' && ( ! figCaption || figCaption.dataset.loaded == 'false' ) ) { loadPageText(); }
-  $: if ( isVisible & format == 'plaintext' && figCaption && ! image ) { console.log("-- wtf", seq, isVisible, isLoaded, figCaption, image, figCaption.dataset.loaded); }
 
   onMount(() => {
 
@@ -407,8 +406,8 @@
   style:--zoom={zoom != 1 ? zoom : pageZoom}
   style:--ratio={scanUseRatio}
   style:--paddingBottom={view == '2up' ? 5.5 * 16 : 0}
-  style:--scanHeight={scanZoom != 1 ? scanHeight : null}
-  style:--scanWidth={scanZoom != 1 ? scanWidth : null}
+  style:--scanHeight={scanZoom != 1 ? `${scanHeight}px` : null}
+  style:--scanWidth={scanZoom != 1 ? `${scanWidth}px` : null}
   class:view-2up={view == '2up'}
   class:view-1up={view == '1up'}
   class:view-thumb={view == 'thumb'}
@@ -490,8 +489,8 @@
 <style lang="scss">
   .page {
     --defaultPageHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
-    --useScanHeight: var(--scanHeight, var(--defaultPageHeight));
-    height: calc(var(--useScanHeight) * 1px);
+    --actualPageHeight: var(--scanHeight, var(--defaultPageHeight));
+    height: clamp(75vw, var(--actualPageHeight), var(--actualPageHeight));
     width: 100%;
 
     margin: auto;
@@ -596,7 +595,9 @@
 
   .frame {
     // --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
-    --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));    
+    --defaultframeHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
+    --frameHeight: clamp(75vw, var(--defaultframeHeight), var(--defaultframeHeight));
+    // height: clamp(60vw, var(--frameHeight), var(--frameHeight));
     height: var(--frameHeight);
     width: calc(var(--frameHeight) * var(--ratio));
 

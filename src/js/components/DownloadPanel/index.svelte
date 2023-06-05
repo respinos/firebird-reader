@@ -219,7 +219,6 @@
       params.set('_', (new Date).getTime());
       
       requestUrl.search = params.toString();
-      console.log("AHOY DOWNLOADING", requestUrl.toString());
       scriptEl.src = requestUrl.toString();
 
       downloadInProgress = true;
@@ -291,8 +290,6 @@
   $: if ( flattenSelection($selected) ) { range = 'selected-pages'; }
   $: console.log("-- download flatten", flattenedSelection);
   $: meta = manifest.meta($currentSeq);
-  $: console.log($currentSeq, meta);
-  // $: if ( flattenedSelection.length ) { range = 'selected-pages'; }
 
   onMount(() => {
     if ( ! allowDownload ) {

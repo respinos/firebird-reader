@@ -11,7 +11,6 @@
 
   const currentSeq = manifest.currentSeq;
   $: seq = $currentSeq;
-  $: console.log("ViewerToolbar", seq);
 
   const interfaceMode = manifest.interfaceMode;
   const isFullscreen =  manifest.isFullscreen;
@@ -20,13 +19,11 @@
   let enableZoomOut = true;
 
   const enableZoomOptions = function(args) {
-    console.log("-- enable.zoom", args);
     enableZoomIn = args.in;
     enableZoomOut = args.out;
   }
 
   const goto = function(args) {
-    console.log("-- goto.page", args);
     emitter.emit('goto.page', args);
   }
 
@@ -40,7 +37,7 @@
     if ( mode ) {
       $interfaceMode = mode;
     } else {
-      console.log("-- toggleInterface", $interfaceMode);
+      // console.log("-- toggleInterface", $interfaceMode);
       $interfaceMode = ( $interfaceMode == 'default' ) ? 'minimal' : 'default';
     }
     document.body.dataset.interface = $interfaceMode;
@@ -50,7 +47,7 @@
   const toggleFullscreen = function(event) {
     toggleInterface(event, screenfull.isFullscreen ? 'default' : 'minimal');
     screenfull.toggle(document.querySelector('#root')).then(() => {
-      console.log("-- toggleFullScreen", screenfull.isFullscreen);
+      // console.log("-- toggleFullScreen", screenfull.isFullscreen);
       $isFullscreen = screenfull.isFullscreen;
     })
   }
@@ -87,7 +84,7 @@
   let isFullscreenEnabled = false;
   let isRTL = manifest.direction() == 'rtl';
 
-  $: console.log("-- view.toolbar interfaceMode", $interfaceMode);
+  // $: console.log("-- view.toolbar interfaceMode", $interfaceMode);
 
   onMount(() => {
     isFullscreenEnabled = screenfull.isEnabled;

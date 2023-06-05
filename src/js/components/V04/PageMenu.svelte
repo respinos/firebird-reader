@@ -25,6 +25,7 @@
   export let openLightbox = function() {}
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <details 
   class="page-menu {side} view-{view}" 
   class:sticky-top={sticky}

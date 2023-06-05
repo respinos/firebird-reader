@@ -29,7 +29,7 @@
     width: 100%; */
 
     backdrop-filter: blur(10px);
-    background-color: rgb(238, 238, 238, 0.25);
+    background-color: rgb(255, 255, 255, 0.25);
 
     z-index: 1000;
 

@@ -50,9 +50,7 @@
     let pages = [];
     let item = view.item($currentSeq);
     const spread = view.spread(item.spreadIndex);
-    console.log("-- 2up.findFocusPages", item, spread);
     pages = Array.from(spread.items);
-    console.log(pages);
     return pages;
   }
   
@@ -70,7 +68,6 @@
   }
 
   const handleKeydown = function(event) {
-    console.log("-- 2up.keydown", event);
     if ( event.target.closest('details') ) { return ; }
     let pageDiv = event.target.closest('div.page');
     if ( ! pageDiv ) { return ; }

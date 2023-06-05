@@ -46,7 +46,7 @@
 
   document.documentElement.dataset.originalTitle = document.title;
 
-  let isBuildingView = true;
+  let isBuildingView = false;
   let showLoadingView = false;
 
   // build environment
@@ -69,7 +69,6 @@
 	const currentView = writable(view);
 	const currentFormat = writable(format);
 	const currentSeq = writable(manifest.currentSeq);
-  console.log("-- startup", $currentSeq);
 	
 	let instance;
 	manifest.instance = instance;
@@ -160,7 +159,6 @@
 		const size = type === 'horizontal' ? w : h;
 
 		position = pos.endsWith('%') ? `${(100 * pos_px) / size}%` : `${pos_px}px`;
-    console.log("-- position", position);
     document.body.style.setProperty('--aside-width', position);
 		// dispatch('change');
 	}
@@ -200,7 +198,7 @@
 
 	let targetView;
 	function switchView(options) {
-		console.log("-- switchView", options);
+		// console.log("-- switchView", options);
 		targetView = options.view || lastView;
 		if ( targetView == '2up' && window.innerWidth < 800 ) {
 			targetView = '1up';
@@ -221,7 +219,7 @@
 	}
 
 	function switchFormat(options) {
-		console.log("-- switchFormat", options);
+		// console.log("-- switchFormat", options);
 		if ( $currentFormat != options.format ) {
 			$currentFormat = options.format;
       updateHistory({ format: options.format });
@@ -263,6 +261,11 @@
 			const contentBoxSize = entry.contentBoxSize[0];
       w = contentBoxSize.inlineSize;
       stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight);
+
+      if ( window.innerHeight < 600 ) {
+        manifest.interfaceMode.set('minimal');
+        document.body.dataset.interface = 'minimal';
+      }
     })
 
 		resizeObserver.observe(container);
@@ -280,7 +283,7 @@
 		const size = type === 'horizontal' ? w : h;
 		position = constrain(container, size, min, max, position, priority);
 	}
-  $: console.log(":: position", position, w, h, min, max);
+  // $: console.log(":: position", position, w, h, min, max);
   $: if ( currentSeq ) { updateHistory({ seq: $currentSeq }); }
 
 </script>
@@ -302,7 +305,9 @@
       aria-hidden="true"></i>
   </button>
 </div>
+{#if isReaderView}
 <ViewerToolbar></ViewerToolbar>
+{/if}
 <aside>
   <div 
     class="inner"
