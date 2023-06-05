@@ -4,7 +4,10 @@ export function tooltip(node) {
 
   node.bs = new Tooltip(
     node,
-    { title: function() { return this.getAttribute('aria-label'); } }
+    { 
+      title: function() { return this.getAttribute('aria-label'); }, 
+      container: node.dataset.bsContainer || 'body'
+    }
   );
 
   const hide = function() { node.bs.hide(); }

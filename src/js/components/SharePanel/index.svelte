@@ -128,7 +128,7 @@
 <Modal bind:this={modal}>
   <svelte:fragment slot="title">Embed this item</svelte:fragment>
   <svelte:fragment slot="body">
-    <div class="mb-3" bind:this={modalBody}>
+    <div class="mb-3 share-modal-body" bind:this={modalBody}>
       <p id="embed-help-info">
         Copy the code below and paste it into the HTML of any website or blog.
       </p>
@@ -145,6 +145,7 @@
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy iframe code"
+          data-bs-container=".share-modal-body"
           use:tooltip
           bind:this={btnCodeBlock}
           on:click={() => copySelection(codeBlock)}>
