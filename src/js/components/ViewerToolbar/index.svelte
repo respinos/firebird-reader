@@ -65,9 +65,11 @@
       value = `#${value}`;
     }
 
-    seq = manifest.guess(value);
-    if ( seq ) {
+    let targetSeq = manifest.guess(value);
+    if ( targetSeq ) {
       emitter.emit('goto.page', { seq: seq });
+    } else {
+      seq = $currentSeq;
     }
   }
 
@@ -77,6 +79,9 @@
       delta = -1;
     } else if ( event.code == 'ArrowUp' ) {
       delta = 1;
+    } else if ( event.code == 'Enter' ) {
+      event.preventDefault();
+      handleValue(event);
     }
     emitter.emit('goto.page', { delta : delta });
   }
@@ -130,8 +135,8 @@
         bind:value={seq} 
         type="text" 
         class="form-control text-center" 
-        on:change={handleValue} 
-        on:blur={handleValue}
+        on:change|preventDefault={handleValue} 
+        on:blur|preventDefault={handleValue}
         on:keydown={handleKeydown} />
       <span>/</span>
       <span>{manifest.totalSeq}</span>
