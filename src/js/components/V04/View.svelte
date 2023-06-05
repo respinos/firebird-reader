@@ -279,7 +279,7 @@
         container.style.setProperty('--min-reader-width', Math.ceil(innerHeight * 0.8 * 2));
       }
 
-      container.scrollTop = 0; // force this
+      container.parentElement.scrollTop = 0; // force this
 
       setTimeout(() => { 
         console.log("-- scroll.resize", isInitialized, resizeSeq);
