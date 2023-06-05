@@ -67,6 +67,10 @@
     pageDiv.scrollIntoView(params);
   }
 
+  export const offsetTop = function() {
+    return pageDiv.parentElement.offsetTop + pageDiv.offsetTop;
+  }
+
   export const focus = function(invoke=false) {
     focused = true;
     invoked = invoke;
@@ -476,7 +480,7 @@
 <style lang="scss">
   .page {
     --defaultPageHeight: calc(100dvh - ( var(--stage-header-height) * 1px));
-    --useScanHeight: var(--scanHeight, var(var(--defaultPageHeight)));
+    --useScanHeight: var(--scanHeight, var(--defaultPageHeight));
     height: calc(var(--useScanHeight) * 1px);
     width: 100%;
 

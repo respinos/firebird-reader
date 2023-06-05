@@ -253,8 +253,15 @@
     if ( ! target ) { return ; }
 
     setTimeout(() => {
-      // itemMap[target].page.scrollIntoView();
-      target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
+      // target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
+      // const offsetTop = 
+      //   target.offsetTop + 
+      //   target.classList.container('.page') ? target.parentElement.offsetTop : 0;
+      let offsetTop = 
+        typeof(target.offsetTop) == 'function' ?
+        target.offsetTop() : 
+        target.offsetTop;
+      container.scrollTop = offsetTop;
       if ( resizeSeq ) { resizeSeq = null; }
     })
   }
@@ -361,11 +368,18 @@
         if ( startSeq > 1 ) {
           console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
           setTimeout(() => {
-            itemMap[startSeq].page.scrollIntoView({ 
-              behavior: 'instant',
-              block: "start", 
-              inline: "nearest"
-            });
+            // itemMap[startSeq].page.scrollIntoView({ 
+            //   behavior: 'instant',
+            //   block: "start", 
+            //   inline: "nearest"
+            // });
+            let target = findTarget({ seq: startSeq, force: true });
+            let offsetTop = 
+              typeof(target.offsetTop) == 'function' ?
+              target.offsetTop() : 
+              target.offsetTop;
+            container.scrollTop = offsetTop;
+
             isInitialized = true;
 
             $currentSeq = startSeq;
