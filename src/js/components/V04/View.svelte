@@ -253,14 +253,12 @@
     if ( ! target ) { return ; }
 
     setTimeout(() => {
-      target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
-      // const offsetTop = 
-      //   target.offsetTop + 
-      //   target.classList.container('.page') ? target.parentElement.offsetTop : 0;
-      // let offsetTop = 
-      //   typeof(target.offsetTop) == 'function' ?
-      //   target.offsetTop() : 
-      //   target.offsetTop;
+      // target.scrollIntoView({ behavior: 'instant', block: 'nearest'});
+      let offsetTop = 
+        typeof(target.offsetTop) == 'function' ?
+        target.offsetTop() : 
+        target.offsetTop;
+      container.scroll(0, offsetTop);
       // container.scrollTop = offsetTop;
       if ( resizeSeq ) { resizeSeq = null; }
     })
