@@ -12,6 +12,7 @@
 
   // components
   import WebsiteHeader from '~firebird-common/src/js/components/Header';
+  import AcceptableUseBanner from '~firebird-common/src/js/components/AcceptableUseBanner';
 
   import ViewerToolbar from './components/ViewerToolbar';
 	import Panel from './components/Panel';
@@ -361,6 +362,8 @@
 {#if isBuildingView}
 <Loading show={showLoadingView} />
 {/if}
+
+<AcceptableUseBanner></AcceptableUseBanner>
 
 {#if dragging}
 	<div class="mousecatcher" />
