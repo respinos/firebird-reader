@@ -43,6 +43,8 @@
   let sizeValue = ''
   let sizeAttr;
 
+  let errorMessage;
+
   let HT = globalThis.HT;
 
   let allowDownload = manifest.allowSinglePageDownload || manifest.allowFullDownload;
@@ -145,6 +147,7 @@
 
   function submitDownload() {
     // blah blah is this a short form or not
+    errorMessage = '';
     numAttempts = 0;
     numProcessed = 0;
 
@@ -154,6 +157,8 @@
       selection.isSelection = true;
       console.log("-- selection", selection);
       if (selection.pages.length == 0) {
+        errorMessage = `You haven't selected any pages to download.
+        To select pages, use the selection checkbox in the page toolbar.`;
         return;
       }
     } else if ( range.startsWith('current-page') ) {
@@ -163,10 +168,10 @@
           page = $currentSeq;
           break;
         case 'current-page-verso':
-          page = $currentSeq;
+          page = $currentLocation.verso.seq;
           break;
         case 'current-page-recto':
-          page = $currentSeq;
+          page = $currentLocation.recto.seq;
           break;
       }
       if ( ! page ) {
@@ -255,11 +260,12 @@
       sizeValue = targetPPI;
       action += 'download/' + (format.split('-'))[0];
     }
+    console.log('-- build.action', action, format, range);
     return action;
   }
 
   function isPartialDownload() {
-    return ( range == 'selected-pages' || range == 'current-page' );
+    return ( range == 'selected-pages' || range.startsWith('current-page') );
   }
 
   function flattenSelection(selected) {
@@ -509,6 +515,9 @@
         {/if}
         </button>
       </p>
+      {#if errorMessage}
+      <div class="alert alert-warning fs-7">{errorMessage}</div>
+      {/if}
 
       <p class="fs-7 mb-1">
         <a class="fs-7" target="_blank" href="https://www.hathitrust.org/help_digital_library#downloadhelp">Download Help</a>
