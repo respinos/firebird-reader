@@ -9,6 +9,7 @@
   export let startSeq = 1;
 
   const currentSeq = manifest.currentSeq;
+  const currentFormat = manifest.currentFormat;
 
   let view;
 
@@ -21,6 +22,7 @@
     {container}
     {startSeq}
     {currentLocation}
+    format={$currentFormat}
     bind:this={view}
    />
 

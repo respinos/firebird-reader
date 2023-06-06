@@ -233,6 +233,8 @@
   }
 
   export const loadPageText = function() {
+    // return;
+
     if ( ! figCaption ) { return ; }
 
     if ( ! includePageText ) { return ; }
@@ -359,7 +361,7 @@
   }
 
   function openLightbox(event) {
-    console.log("-- page.open.lightbox", seq);
+    emitter.emit('open.lightbox', { src: imageSrc, alt: `Page scan #${seq}` });
   }
 
   function shouldLoadImage(image) {
@@ -392,8 +394,9 @@
   // $: if ( isVisible && format == 'image' && ! image ) { loadImage(); }
   // $: if ( zoom ) { console.log("-- zoom changed", zoom, lastZoom); }
   $: if ( zoom != lastZoom ) { loadImage(true); console.log("-- zoom reloading"); lastZoom = zoom; }
-  // $: if ( isVisible && format == 'image' && image && image.src == defaultThumbnailSrc ) { loadImage(true); }
+  $: if ( isVisible && format == 'image' && image && image.src == defaultThumbnailSrc ) { loadImage(true); }
   $: if ( isVisible && format == 'plaintext' && ( ! figCaption || figCaption.dataset.loaded == 'false' ) ) { loadPageText(); }
+  $: if ( format ) { console.log("-- page.format", format); }
 
   onMount(() => {
 
@@ -452,6 +455,7 @@
     {isUnusual}
     {side}
     {view}
+    {format}
     {pageZoom}
     {rotateScan}
     {updateZoom}
@@ -725,6 +729,7 @@
   figure.zoomed {
     overflow: auto !important;
     align-items: start;
+    min-width: 80%;
 
     .image {
       height: auto;

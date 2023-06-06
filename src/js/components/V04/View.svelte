@@ -219,9 +219,11 @@
 
   const focus = function(seq) {
     // console.log("view.focus", isInitialized, seq);
-    const currentFocusSeq = currentFocusItems.map((item) => item.seq);
+    const currentFocusSeq = currentFocusItems.map((item) => item && item.seq);
+    console.log("-- focus", seq, currentFocusSeq, currentFocusItems);
     if ( currentFocusSeq.indexOf(seq) > -1 ) { return ; }
     currentFocusItems.forEach((item) => {
+      if ( item === false ) { return ; }
       // console.log("view.focus - unfocus", item);
       item.page.unfocus();
     })
@@ -247,6 +249,7 @@
     }
     if ( targetSeq == $currentSeq && ! options.force ) { return ; }
     targetSeq = Math.max(1, Math.min(targetSeq, manifest.totalSeq));
+if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq); }
     return itemMap[targetSeq].page;
   }
 
@@ -272,7 +275,7 @@
       minHeight = 600;
     }
     if ( $currentView == '2up' ) { minHeight -= ( 5.5 * 16 ); }
-    container.style.setProperty('--clampHeight', `${minHeight}px`);
+    // container.style.setProperty('--clampHeight', `${minHeight}px`);
     if ( $currentView == '2up' ) {
       let minWidth = minHeight * manifest.defaultImage.ratio * 2 + ( 2 * 16 );
       container.style.setProperty('--min-reader-width', Math.ceil(minWidth));
@@ -303,10 +306,11 @@
   emitter.on('goto.page', gotoPage);
 
   emitter.on('update.zoom', delta => {
+    console.log('<< update.zoom', zoomIndex, delta, zoom, isInitialized);
+
     startSeq = $currentSeq;
     isInitialized = false;
 
-    // console.log('<< update.zoom', zoomIndex, delta, zoom);
     zoomIndex += delta;
     if ( zoomIndex < 0 ) { zoomIndex = 0; }
     else if ( zoomIndex >= zoomScales.length ) {
@@ -378,7 +382,6 @@
       // console.log("-- view.afterUpdate", $currentView, isInitialized, observer.observedIdx, manifest.totalSeq );
       if ( ! isInitialized && observer.observedIdx == manifest.totalSeq ) {
         if ( startSeq > 1 ) {
-          // console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx);
           setTimeout(() => {
             // itemMap[startSeq].page.scrollIntoView({ 
             //   behavior: 'instant',
@@ -391,6 +394,8 @@
               target.offsetTop() : 
               target.offsetTop;
             container.scroll(0, offsetTop);
+            console.log("-- scroll.afterUpdate initializing", startSeq, observer.observedIdx, target.seq, offsetTop);
+            window.xz = target;
 
             isInitialized = true;
 

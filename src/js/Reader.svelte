@@ -250,6 +250,8 @@
 	emitter.on('switch.format', switchFormat);
   emitter.on('view.ready', hideLoadingView);
 
+  console.log("-- startup.seq", $currentSeq);
+
   $: if ( stage ) { stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight); }
 
   onMount(() => {
@@ -259,17 +261,21 @@
 
     container = document.querySelector('#root');
     w = container.clientWidth;
+    h = container.clientHeight;
 
 		const resizeObserver = new ResizeObserver((entries) => {
 			const entry = entries[0];
 			const contentBoxSize = entry.contentBoxSize[0];
       w = contentBoxSize.inlineSize;
+      h = contentBoxSize.blockSize;
       stage.style.setProperty('--stage-header-height', document.querySelector('hathi-website-header').clientHeight);
 
       if ( window.innerHeight < 600 ) {
         manifest.interfaceMode.set('minimal');
         document.body.dataset.interface = 'minimal';
       }
+
+      clampHeight = ( h <= 600 ) ? '600px' : '0px';
     })
 
 		resizeObserver.observe(container);
@@ -282,6 +288,8 @@
     }
   })
 
+  let clampHeight = '0px';
+
 	$: position = pos;
 	$: if (container) {
 		const size = type === 'horizontal' ? w : h;
@@ -289,6 +297,19 @@
 	}
   // $: console.log(":: position", position, w, h, min, max);
   $: if ( isReaderView && currentSeq ) { updateHistory({ seq: $currentSeq }); }
+
+  onMount(() => {
+    let resizeObserver = new ResizeObserver(entries => {
+      const entry = entries.at(0);
+      const height = entry.contentRect.height;
+      if ( height < 600 ) {
+        clampHeight = `600px`;
+      } else {
+        clampHeight = `0px`;
+      }
+    })
+    resizeObserver.observe(container)
+  })
 
 </script>
 
@@ -350,7 +371,7 @@
       aria-hidden="true"></i>
   </button>
 </div>
-<main bind:this={stage}>
+<main bind:this={stage} style:--clampHeight={clampHeight}>
   {#if stage}
     {#if view == 'search'}
     <SearchView></SearchView>

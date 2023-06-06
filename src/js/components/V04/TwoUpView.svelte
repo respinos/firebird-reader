@@ -90,6 +90,7 @@
     {findFocusItems}
     {handleClick}
     {handleKeydown}
+    format={$currentFormat}
     bind:this={view}
    />
 

@@ -13,6 +13,7 @@
   export let isUnusual = false;
   export let side = null;
   export let view = '1up';
+  export let format = 'image';
   export let pageZoom = 1;
   export let allowPageZoom = false;
   export let allowRotate = false;
@@ -82,7 +83,9 @@
         class="fa-solid fa-up-right-from-square fa-flip-horizontal"></i>
       </button>
     {/if}
-    {#if allowRotate}
+    <!-- if we disable the button then we have to disable pageZoom if rotated and bleh-->
+    <!-- disabled={pageZoom > 1 ? true : null} -->
+    {#if allowRotate && format == 'image'}
     <button
       type="button" 
       class="btn btn-light border border-dark" 
