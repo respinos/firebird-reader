@@ -1,6 +1,11 @@
 <script>
+  import { getContext } from 'svelte';
+  const manifest = getContext('manifest');
+
   export let parent;
   export let expanded = false;
+
+  let bsParent = manifest.ui == 'crms' ? null : parent;
 
   let id = `${(new Date).getTime()}-${Math.ceil(Math.random() * 1000)}`;
 </script>
@@ -14,7 +19,7 @@
       </div>
     </button>
   </h2>
-  <div id="c{id}" class="accordion-collapse collapse" class:show={expanded} aria-labelledby="h{id}" data-bs-parent="{parent}">
+  <div id="c{id}" class="accordion-collapse collapse" class:show={expanded} aria-labelledby="h{id}" data-bs-parent="{bsParent}">
     <div class="accordion-body">
       <slot name="body"></slot>
     </div>

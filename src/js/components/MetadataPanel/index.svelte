@@ -2,6 +2,7 @@
   import { getContext } from 'svelte';
 
   import Panel from '../Panel';
+  import BibData from './BibData';
 
   const manifest = getContext('manifest');
   const currentSeq = manifest.currentSeq;
@@ -14,6 +15,7 @@
   <i class="fa-solid fa-book" slot="icon"></i>
   <slot:fragment slot="title">About This Item</slot:fragment>
   <slot:fragment slot="body">
+    <BibData></BibData>
     <ul class="list-unstyled mb-0">
       <li>{manifest.totalSeq} page scans</li>
       <li><a href="//catalog.hathitrust.org/Record/{manifest.metadata.catalogRecordNo}">Catalog Record</a></li>
@@ -25,7 +27,7 @@
         <p class="fs-7">
           <a href="{manifest.rights.useLink}">{manifest.rights.head}.</a>
           {#if manifest.metadata.format == 'BK' && manifest.rights.useAuxLink}
-            <a class="visually-hidden" href={manifest.rights.useAuxLink} rel="license"></a>
+            <a class="visually-hidden" href={manifest.rights.useAuxLink} rel="license">License URL</a>
           {/if}
           {#if manifest.rights.useIcon || manifest.rights.useAuxLink || manifest.rights.useAuxIcon}
             <br /><br />

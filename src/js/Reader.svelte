@@ -234,7 +234,7 @@
     isBuildingView = true;
     loadingTimeout = setTimeout(() => {
       showLoadingView = true;
-    }, 500);
+    }, 100);
   }
 
   function hideLoadingView() {
@@ -321,14 +321,18 @@
       class="accordion" 
       id="controls">
       <MetadataPanel></MetadataPanel>
+      {#if manifest.ui != 'crms'}
       <DownloadPanel></DownloadPanel>
+      {/if}
       {#if isReaderView }
       <SearchInItemPanel></SearchInItemPanel>
       <JumpToSectionPanel></JumpToSectionPanel>
       {/if}
+      {#if manifest.ui != 'crms'}
       <GetThisItemPanel></GetThisItemPanel>
       <CollectionsPanel></CollectionsPanel>
       <SharePanel></SharePanel>
+      {/if}
     </div>
     <VersionPanel></VersionPanel>
   </div>
