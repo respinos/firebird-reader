@@ -23,7 +23,7 @@
   let btnSubmit;
   let alert;
   let inFetch = false;
-  let targetNewTab = false;
+  let targetNewTab = HT.prefs.get()?.pt?.submitTarget || false;
   let blankTabForm;
 
   let payload = manifest.payload;
@@ -178,7 +178,12 @@
   {#if inPanel}
   <div class="mt-2">
     <div class="form-check fs-7">
-      <input class="form-check-input" type="checkbox" bind:checked={targetNewTab} id="search-form-target">
+      <input 
+        class="form-check-input" 
+        type="checkbox" 
+        bind:checked={targetNewTab} 
+        on:change={() => HT.prefs.set({ pt: { submitTarget: targetNewTab }})}
+        id="search-form-target">
       <label class="form-check-label" for="search-form-target">
         Open results in a new tab
       </label>
