@@ -27,11 +27,27 @@
   let codeBlock;
   let view = '1up';
   let codeBlockText = {};
-  codeBlockText['1up'] = `<iframe width="450" heigh="700" src="https://hdl.handle.net/2027/${manifest.id}?urlappend=%3Bui=embed"></iframe>`;
-  codeBlockText['2up'] = `<iframe width="700" heigh="450" src="https://hdl.handle.net/2027/${manifest.id}?urlappend=%3Bui=embed"></iframe>`;
+  codeBlockText['1up'] = `<iframe width="450" height="700" src="https://hdl.handle.net/2027/${manifest.id}?urlappend=%3Bui=embed"></iframe>`;
+  codeBlockText['2up'] = `<iframe width="700" height="450" src="https://hdl.handle.net/2027/${manifest.id}?urlappend=%3Bui=embed"></iframe>`;
 
   function getLabel(el) {
     return this.getAttribute('aria-label');
+  }
+
+  function selectInnerText(event) {
+    const target = event.target;
+    if ( event.type == 'blur' ) {
+      target.dataset.clicked = 'false';
+      return;
+    }
+
+    if ( target.dataset.clicked == 'true' ) {
+      // do nothing
+    } else {
+      // on:click={() => codeBlock.select()}
+      target.select();
+      target.dataset.clicked = 'true';
+    }
   }
 
   function copySelection(trigger, el) {
@@ -86,7 +102,8 @@
           readonly 
           value="https://hdl.handle.net/2027/{manifest.id}"
           bind:this={shareHandle}
-          on:click={() => shareHandle.select()} />
+          on:blur={selectInnerText}
+          on:click={selectInnerText} />
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy permanent link"
@@ -108,7 +125,8 @@
           readonly 
           value="https://hdl.handle.net/2027/{manifest.id}?urlappend=%3Bseq={$currentSeq}"
           bind:this={shareHandleLink}
-          on:click={() => shareHandleLink.select()} />
+          on:blur={selectInnerText}
+          on:click={selectInnerText} />
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy link to this page scan"
@@ -141,7 +159,8 @@
           rows="3"
           bind:this={codeBlock}
           bind:value={codeBlockText[view]}
-          on:click={() => codeBlock.select()}></textarea>
+          on:blur={selectInnerText}
+          on:click={selectInnerText}></textarea>
         <button 
           class="btn btn-outline-dark" 
           aria-label="Copy iframe code"

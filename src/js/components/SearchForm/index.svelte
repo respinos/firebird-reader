@@ -1,5 +1,6 @@
 <script>
   import { onMount, beforeUpdate, tick, getContext } from 'svelte';
+  import { get } from 'svelte/store';
   import { tooltip } from '../../lib/tooltip';
 
   const manifest = getContext('manifest');
@@ -18,7 +19,7 @@
   let searchUrl = new URL(location.href);
   let searchParams = searchUrl.searchParams;
 
-  let q1;
+  let q1 = get(manifest.q1);
   let btnSubmit;
   let alert;
   let inFetch = false;
@@ -63,7 +64,12 @@
   }
 
   function summarizePayload() {
-    let message = `Showing ${payload.startRecord}-${payload.endRecord} of ${payload.totalResults} results for ${q1}`;
+    let message;
+    if ( payload.totalResults > 0) {
+      message = `Showing ${payload.startRecord}-${payload.endRecord} of ${payload.totalResults} results for ${q1}`;
+    } else {
+      message = `No results found for ${q1}`;
+    }
     updateStatus({ class: 'alert-primary', message: message});
   }
 
@@ -185,7 +191,7 @@
   {status.message}
 </div>
 {/if}
-{#if payload}
+{#if payload && payload.totalResults > 0}
   <div class="d-flex align-items-center justify-content-between border rounded p-1 mb-3">
     <div class="btn-group" role="group" aria-label="Sort Results">
       <button 
@@ -244,7 +250,7 @@
           {/if}
           <span>
               - {item.termHitCount} matching 
-            {#if item.termHitCount = 1}term{:else}terms{/if}
+            {#if item.termHitCount == 1}term{:else}terms{/if}
           </span>
         </svelte:element>
         {#each item.kwics as kwic}
@@ -253,7 +259,7 @@
       </article>
     {/each}
   </div>
-  {#if payload.range}
+  {#if payload.range && payload.totalResults > 0 && payload.range.max > 1}
   <nav aria-label="Result navigation" class="d-flex flex-column align-items-start justify-content-between flex-sm-row align-items-sm-center gap-3">
     <div>
       <ul class="list-unstyled d-flex gap-1 m-0">

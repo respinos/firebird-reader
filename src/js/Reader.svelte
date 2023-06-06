@@ -77,7 +77,7 @@
 	manifest.currentView = currentView;
 	manifest.currentFormat = currentFormat;
 	manifest.currentSeq = currentSeq;
-	manifest.q1 = writable('');
+	manifest.q1 = writable(manifest.q1 || '');
 	manifest.currentLocation = writable({});
 	manifest.interfaceMode = writable(document.body.dataset.interface);
   const interfaceMode = manifest.interfaceMode;
