@@ -288,6 +288,7 @@
         if ( ! words || ! words.length ) { return ; }
 
         matches = extractHighlights(words, ocr_div);
+        console.log("-- page.extract.highlights", seq, matches);
       })
 
       if ( format == 'plaintext' && figCaption.dataset.configured != 'true' ) {
