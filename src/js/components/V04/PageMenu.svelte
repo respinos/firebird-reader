@@ -136,7 +136,7 @@
     z-index: 50;
     align-self: flex-start;
 
-    grid-row: 1/2;
+    grid-row: 2/3;
     grid-column: 1/2;
     align-self: start;
     justify-self: end;

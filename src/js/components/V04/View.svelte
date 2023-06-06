@@ -79,7 +79,7 @@
 
   const unloadPage = async function(pageDatum) {
     let percentage = itemMap[pageDatum.seq].page.visible(viewport);    
-    console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
+    // console.log("!! unloading", pageDatum.seq, percentage, isInitialized, "->", pageDatum);
     if ( pageDatum.intersectionRatio > 0 ) { return ; }
     itemMap[pageDatum.seq].page.toggle(false);
     currentInView.delete(pageDatum.seq);
@@ -275,7 +275,6 @@
     container.style.setProperty('--clampHeight', `${minHeight}px`);
     if ( $currentView == '2up' ) {
       let minWidth = minHeight * manifest.defaultImage.ratio * 2 + ( 2 * 16 );
-      console.log("WHY", innerHeight, manifest.defaultImage.ratio);
       container.style.setProperty('--min-reader-width', Math.ceil(minWidth));
     }
 

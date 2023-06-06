@@ -15,6 +15,7 @@
 
   import SearchHighlights from '../SearchHighlights/index.svelte';
   import PageMenu from './PageMenu';
+  import PageMessage from './PageMessage';
 
   import { extractHighlights } from '../../lib/highlights';
 
@@ -120,7 +121,7 @@
       }
     }
 
-    console.log("-- visible", seq, percentage, { top, bottom }, viewport );
+    // console.log("-- visible", seq, percentage, { top, bottom }, viewport );
 
     return percentage;
   }
@@ -147,7 +148,7 @@
   }
 
   export const loadImage = function(reload=false) {
-    console.log("-- page.loadImage", seq, isVisible, isLoaded);
+    // console.log("-- page.loadImage", seq, isVisible, isLoaded);
     // return;
     const isDebugging = false;
     const delay = isDebugging ? 5 * 1000 : 0;
@@ -208,13 +209,11 @@
         }
         objectUrl = URL.createObjectURL(blob);
         if ( image ) {
-          console.log("-- page.loadImage - mount blob", seq, canvas);
           image.src = objectUrl;
           isLoaded = true; isLoading = false;
           loadPageText();
           emitter.on('update.highlights', loadPageText);
         } else {
-          console.log("-- page.loadImage - revoke blob", seq, canvas);
           URL.revokeObjectURL(objectUrl);
         }
       })    
@@ -225,7 +224,7 @@
     if ( image ) {
       image.src = defaultThumbnailSrc;
     }
-    console.log("-- !! page.loadImage - unload", seq, image);
+    // console.log("-- !! page.loadImage - unload", seq, image);
   }
 
   const unloadPageText = function() {
@@ -367,7 +366,7 @@
     let retval = ! isLoaded;
     if ( ! image ) { retval = false; }
     if ( image && image.src != defaultThumbnailSrc ) { retval = false; }
-    console.log("-- page.loadImage - shouldLoadimage", seq, retval, isLoaded, isLoading);
+    // console.log("-- page.loadImage - shouldLoadimage", seq, retval, isLoaded, isLoading);
     return retval;
   }
 
@@ -442,6 +441,10 @@
   on:unintersecting={handleUnintersecting}
   bind:this={pageDiv}>
 
+  {#if manifest.messageList[seq]}
+  <PageMessage seq={seq} code={manifest.messageList[seq]}></PageMessage>
+  {/if}
+
   <PageMenu
     {seq}
     {pageNum}
@@ -514,7 +517,7 @@
     margin: auto;
 
     display: grid;
-    grid-template-rows: 1fr;
+    grid-template-rows: min-content 1fr;
     grid-template-columns: 1fr;
 
     position: relative;
@@ -575,17 +578,18 @@
 
       height: auto;
       width: auto;
+      max-width: 250px;
 
       gap: 0.5rem;
       grid-template-rows: min-content 1fr;
 
       .page-menu {
-        grid-row: 1/2;
+        grid-row: 2/3;
       }
 
       figure {
         --frameHeight: 250px;
-        grid-row: 2/3;
+        grid-row: 3/4;
         // height: var(--frameHeight, '250px');
         // height: 250px;
       }
@@ -629,7 +633,7 @@
     // --- debug background
     background: darkkhaki;
 
-    grid-row: 1/2;
+    grid-row: 2/3;
     grid-column: 1/2;
 
     // // squares
@@ -773,6 +777,11 @@
 
   img.zoomed {
     align-self: flex-start;
+  }
+
+  .message {
+    align-self: start;
+    margin: 0 auto;
   }
 
 </style>

@@ -57,7 +57,7 @@
   const handleClick = function(event) {
     if ( $currentFormat == 'plaintext' ) { return ; }
     if ( event.target.closest('details') ) { return ; }
-    // if ( event.target.closest('button') ) { return ; }
+    if ( event.target.closest('button') ) { return ; }
     let pageDiv = event.target.closest('div.page');
     if ( ! pageDiv ) { return ; }
     let options = { delta: 1 };

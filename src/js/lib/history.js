@@ -13,12 +13,14 @@ export function updateHistory(options) {
     searchParams.delete('format');
   }
 
-  url.search = searchParams.toString();
-
   let title = document.title;
   if ( options.seq ) {
+    // remove any ownerid parameters
+    searchParams.delete('ownerid');
     title = `#${options.seq} - ${document.documentElement.dataset.originalTitle}`;
   }
+
+  url.search = searchParams.toString();
 
   window.history.replaceState(title, document.title, url.toString());
   document.title = title;
