@@ -138,6 +138,7 @@
         unloadImage();
       }
       unloadPageText();
+      clearTimeout(timeout);
       isLoaded = false;
     }
   }
@@ -212,7 +213,7 @@
           image.src = objectUrl;
           isLoaded = true; isLoading = false;
           loadPageText();
-          emitter.on('update.highlights', loadPageText);
+          emitter.on('update.highlights', updatePageText);
         } else {
           URL.revokeObjectURL(objectUrl);
         }
@@ -229,16 +230,25 @@
 
   const unloadPageText = function() {
     if ( figCaption ) { figCaption.innerHTML = ''; }
-    emitter.off('update.highlights', loadPageText);
+    emitter.off('update.highlights', updatePageText);
   }
 
-  export const loadPageText = function() {
+  const updatePageText = function() {
+    loadPageText(true);
+  }
+
+  let numPageTextLoaded = 0;
+  export const loadPageText = function(reload=false) {
     // return;
 
     if ( ! isVisible ) { return ; }
     if ( ! figCaption ) { return ; }
 
     if ( ! includePageText ) { return ; }
+
+    if ( figCaption && figCaption.dataset.loaded == 'true' && ! reload ) {
+      return;
+    }
 
     function parseCoords(value) {
       var values = value.split(' ')
@@ -253,6 +263,9 @@
         return response.text();
       })
       .then(text => {
+
+        numPageTextLoaded =+ 1;
+        console.log("-- page.load.page.text #", seq, numPageTextLoaded);
 
         if ( ! figCaption ) { return ; }
 
@@ -293,7 +306,7 @@
       })
 
       if ( format == 'plaintext' && figCaption.dataset.configured != 'true' ) {
-        emitter.on('update.highlights', loadPageText);
+        emitter.on('update.highlights', updatePageText);
         figCaption.dataset.configured = true;
         isLoaded = true;
       }
@@ -505,7 +518,7 @@
         {/if}
         </div>
         {#if side != 'thumb'}
-        <figcaption class="visually-hidden" bind:this={figCaption}>
+        <figcaption class="visually-hidden" data-loaded="false" bind:this={figCaption}>
         </figcaption>
         {/if}
       {:else}
@@ -766,16 +779,18 @@
   }
 
   .page:is([data-orient="90"]) {
-    width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    // width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    width: 100%;
     max-width: 100%;
-    height: auto;
+    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1) * var(--ratio));
     // is this necessary?
-    aspect-ratio: calc(1 / var(--ratio));
+    // aspect-ratio: calc(1 / var(--ratio));
   }
 
   .frame:is([data-orient="90"]) {
     transform-origin: center;
     transform: rotate(90deg) scale(1) !important;
+    margin-top: calc(var(--orient-margin, 0) / 2 * 1px);
   }
 
   .frame:is([data-orient="180"]) {
@@ -783,16 +798,15 @@
   }
 
   .page:is([data-orient="270"]) {
-    width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    width: 100%;
     max-width: 100%;
-    height: auto;
-    // is this necessary?
-    aspect-ratio: calc(1 / var(--ratio));
+    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1) * var(--ratio));
   }
 
   .frame:is([data-orient="270"]) {
     transform-origin: center;
     transform: rotate(270deg) scale(1) !important;
+    margin-top: calc(var(--orient-margin, 0) / 2 * 1px);
   }
 
   figcaption.plaintext {
