@@ -423,6 +423,7 @@
   class="page {format}" 
   {style} 
   data-seq={seq} 
+  data-orient={orient}
   style:--zoom={zoom != 1 ? zoom : pageZoom}
   style:--ratio={scanUseRatio}
   style:--paddingBottom={view == '2up' ? 5.5 * 16 : 0}
@@ -515,7 +516,8 @@
   .page {
     --defaultPageHeight: calc(100dvh - ( ( var(--stage-header-height) + var(--paddingBottom, 0) ) * 1px) );
     --actualPageHeight: var(--scanHeight, var(--defaultPageHeight));
-    height: clamp(var(--clampHeight), var(--actualPageHeight), var(--actualPageHeight));
+    // height: clamp(var(--clampHeight), var(--actualPageHeight), var(--actualPageHeight));
+    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
     width: 100%;
 
     margin: auto;
@@ -622,10 +624,11 @@
   .frame {
     // --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
     --defaultframeHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px) );
-    --frameHeight: clamp(var(--clampHeight), var(--defaultframeHeight), var(--defaultframeHeight));
+    --frameHeight: calc(clamp(var(--clampHeight), var(--defaultframeHeight), var(--defaultframeHeight)) * var(--zoom, 1));
     // height: clamp(60vw, var(--frameHeight), var(--frameHeight));
     height: var(--frameHeight);
-    width: calc(var(--frameHeight) * var(--ratio));
+    aspect-ratio: var(--ratio);
+    // width: calc(var(--frameHeight) * var(--ratio));
 
     display: flex;
 
@@ -728,17 +731,17 @@
 
   figure.zoomed {
     overflow: auto !important;
-    align-items: start;
-    min-width: 80%;
+    // align-items: start;
+    // min-width: 80%;
 
     .image {
       height: auto;
     }
 
-    img {
-      max-height: none;
-      max-width: none;
-    }
+    // img {
+    //   max-height: none;
+    //   max-width: none;
+    // }
   }
 
   figure.adjusted img {
@@ -747,30 +750,34 @@
     max-height: 100%;
   }
 
+  .page:is([data-orient="90"]) {
+    width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    max-width: 100%;
+    height: auto;
+    // is this necessary?
+    aspect-ratio: calc(1 / var(--ratio));
+  }
+
   .frame:is([data-orient="90"]) {
-    /* max-width: 100%;
-    height: auto; */
     transform-origin: center;
-    transform: rotate(90deg) scale(0.8) !important;
-    // margin-top: calc(var(--orient-margin) * 1px) !important;
-    // margin-bottom: calc(var(--orient-margin) * 1px) !important;
+    transform: rotate(90deg) scale(1) !important;
   }
 
   .frame:is([data-orient="180"]) {
-    /* max-width: 100%;
-    max-height: 100%;
-    width: 100%; */
     transform: rotate(180deg) !important;
   }
 
-  .frame:is([data-orient="270"]) {
-    /* max-width: 100%;
-    height: auto; */
+  .page:is([data-orient="270"]) {
+    width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    max-width: 100%;
+    height: auto;
+    // is this necessary?
+    aspect-ratio: calc(1 / var(--ratio));
+  }
 
+  .frame:is([data-orient="270"]) {
     transform-origin: center;
-    transform: rotate(270deg) scale(0.8) !important;
-    // margin-top: calc(var(--orient-margin) * 1px) !important;
-    // margin-bottom: calc(var(--orient-margin) * 1px) !important;
+    transform: rotate(270deg) scale(1) !important;
   }
 
   figcaption.plaintext {
