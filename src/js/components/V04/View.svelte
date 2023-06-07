@@ -481,7 +481,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     class:zoomed={zoom > 1}
     class:direction-rtl={manifest.direction() == 'rtl'}
     style:--columnWidth={columnWidth}
-    style:--paddingBottom={$currentView == '2up' ? 5.5 * 16 : 0}>
+    style:--paddingBottom={$currentView == '2up' ? 4.5 * 16 : 0}>
 
     {#each spread as canvas, canvasIdx}
       {#if canvas}

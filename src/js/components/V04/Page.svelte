@@ -429,7 +429,7 @@
   style:--zoom={zoom}
   style:--scanZoom={scanZoom}
   style:--ratio={scanUseRatio}
-  style:--paddingBottom={view == '2up' ? 5.5 * 16 : 0}
+  style:--xxpaddingBottom={view == '2up' ? 5.5 * 16 : 0}
   style:--scanHeight={scanZoom != 1 ? `${scanHeight}px` : null}
   style:--scanWidth={scanZoom != 1 ? `${scanWidth}px` : null}
   class:view-2up={view == '2up'}
@@ -534,7 +534,7 @@
     position: relative;
 
     &.view-2up {
-      margin-bottom: 5.5rem;
+      margin-bottom: calc(var(--paddingBottom) * 1px);
       height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
 
       &.zoomed {
