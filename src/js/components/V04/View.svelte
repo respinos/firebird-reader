@@ -540,7 +540,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     // // -- debug border
     // border: 2px solid black;
     --gridColumn: calc(var(--columnWidth) * 1px);
-    --spreadHeight: calc(100dvh - ( ( var(--stage-header-height) + var(--xpaddingBottom, 0) ) * 1px) );
+    --spreadHeight: calc(100dvh - ( ( var(--stage-header-height) + var(--paddingBottom, 0) ) * 1px) );
     height: clamp(var(--clampHeight, 0), var(--spreadHeight), var(--spreadHeight));
     width: var(--width, 100%);
 
@@ -554,7 +554,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     // bottom padding keeps the spread from overlapping with
     // the view toolbar
     padding: 1rem;
-    padding-bottom: 5.5rem;
+    margin-bottom: 5.5rem;
 
     // // --- debug border
     // border: 8px solid yellow;

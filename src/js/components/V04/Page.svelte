@@ -235,6 +235,7 @@
   export const loadPageText = function() {
     // return;
 
+    if ( ! isVisible ) { return ; }
     if ( ! figCaption ) { return ; }
 
     if ( ! includePageText ) { return ; }
@@ -318,6 +319,7 @@
   }
 
   const updateZoom = function(delta) {
+    if ( zoom != 1 && pageZoom == 1 ) { pageZoom = zoom; }
     pageZoom += delta;
     loadImage(true);
   };
@@ -338,7 +340,7 @@
   }
 
   function calculateZoom(zoom, pageZoom) {
-    if ( pageZoom > 1 ) { return pageZoom; }
+    if ( pageZoom > zoom ) { return pageZoom; }
     return zoom;
   }
 
@@ -373,7 +375,7 @@
   }
 
   $: isVisible = false;
-  $: scanZoom = calculateZoom(zoom, 1);
+  $: scanZoom = calculateZoom(zoom, pageZoom);
   $: scanRatio = calculateRatio(innerHeight, canvas);
   $: scanHeight = calculate(innerHeight, canvas.height, scanZoom);
   $: scanWidth = calculate(innerHeight, canvas.width, scanZoom);
@@ -424,7 +426,8 @@
   {style} 
   data-seq={seq} 
   data-orient={orient}
-  style:--zoom={zoom != 1 ? zoom : pageZoom}
+  style:--zoom={zoom}
+  style:--scanZoom={scanZoom}
   style:--ratio={scanUseRatio}
   style:--paddingBottom={view == '2up' ? 5.5 * 16 : 0}
   style:--scanHeight={scanZoom != 1 ? `${scanHeight}px` : null}
@@ -435,6 +438,7 @@
   class:verso={side == 'verso'}
   class:recto={side == 'recto'}
   class:direction-rtl={isRTL}
+  class:zoomed={pageZoom > 1 && pageZoom != zoom}
   id="p{seq}" 
   aria-hidden={!focused}
   aria-label="Page scan {seq}"
@@ -461,7 +465,7 @@
     {rotateScan}
     {updateZoom}
     {openLightbox}
-    sticky={view == '1up'}
+    sticky={view == '1up' || view == '2up'}
     allowRotate={view == '1up'}
     allowPageZoom={view != 'thumb'}
     allowFullDownload={manifest.allowFullDownload}
@@ -472,9 +476,9 @@
   <figure class="frame {format}" 
     class:pending={!isLoaded}
     class:adjusted={canvas.width > canvas.height}
-    class:zoomed={pageZoom > 1}
+    class:zoomed={pageZoom > 1 && pageZoom != zoom}
     data-orient={orient}
-    style:--frameHeight={zoom != 1 ? `${( scanHeight )}px` : defaultPageHeight}
+    style:--xxframeHeight={zoom != 1 ? `${( scanHeight )}px` : defaultPageHeight}
     style:--orient-margin={orientMargin}>
     {#if !isLoaded}
       <div 
@@ -516,8 +520,9 @@
   .page {
     --defaultPageHeight: calc(100dvh - ( ( var(--stage-header-height) + var(--paddingBottom, 0) ) * 1px) );
     --actualPageHeight: var(--scanHeight, var(--defaultPageHeight));
+    --actualZoom: var(--zoom, 1);
     // height: clamp(var(--clampHeight), var(--actualPageHeight), var(--actualPageHeight));
-    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--actualZoom, 1));
     width: 100%;
 
     margin: auto;
@@ -530,10 +535,16 @@
 
     &.view-2up {
       margin-bottom: 5.5rem;
-      // aspect-ratio: var(--ratio);
+      height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+
+      &.zoomed {
+        overflow: auto;
+      }
 
       &.image {
-        height: auto;
+        height: 100%;
+        // height: calc(var(--spreadHeight) - 5.5rem);
+        // overflow: auto;
       }
 
       &.plaintext .frame {
@@ -543,8 +554,11 @@
       }
 
       &.image .frame {
-        height: auto;
-        aspect-ratio: var(--ratio);
+        // height: auto;
+        // aspect-ratio: var(--ratio);
+        &.zoomed {
+          max-width: none;
+        }
       }
     }
 
@@ -579,12 +593,12 @@
     }
 
     &.view-thumb {
-      // height: calc(var(--pageHeight) + 2.7rem);
       --defaultPageHeight: 250px;
 
       height: auto;
       width: auto;
-      max-width: 250px;
+      min-height: calc(var(--defaultPageHeight) * var(--actualZoom));
+      max-width: var(--defaultPageHeight);
 
       gap: 0.5rem;
       grid-template-rows: min-content 1fr;
@@ -594,7 +608,7 @@
       }
 
       figure {
-        --frameHeight: 250px;
+        --frameHeight: calc(250px * var(--actualZoom)); 
         grid-row: 3/4;
         // height: var(--frameHeight, '250px');
         // height: 250px;
@@ -602,6 +616,7 @@
     }
 
     &.view-1up {
+      --actualZoom: var(--scanZoom, 1);
       margin-bottom: 2rem;
 
       &.plaintext {
@@ -624,7 +639,7 @@
   .frame {
     // --frameHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px));
     --defaultframeHeight: calc(100dvh * 0.99 - ( ( var(--stage-header-height) + var(--paddingBottom) ) * 1px) );
-    --frameHeight: calc(clamp(var(--clampHeight), var(--defaultframeHeight), var(--defaultframeHeight)) * var(--zoom, 1));
+    --frameHeight: calc(clamp(var(--clampHeight), var(--defaultframeHeight), var(--defaultframeHeight)) * var(--scanZoom, 1));
     // height: clamp(60vw, var(--frameHeight), var(--frameHeight));
     height: var(--frameHeight);
     aspect-ratio: var(--ratio);

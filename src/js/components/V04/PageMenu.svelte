@@ -151,6 +151,8 @@
   }
 
   .page-menu.view-1up {
+    margin-right: 1.5rem;
+
     .menu-items {
       position: static;
     }
@@ -158,6 +160,8 @@
 
   .page-menu.view-2up.verso {
     justify-self: start;
+    left: 0;
+    margin-left: 1.5rem;
     .menu-items {
       left: 0.5rem;
       right: auto;
@@ -165,6 +169,9 @@
   }
 
   .page-menu.view-2up.recto {
+    margin-right: 1.5rem;
+    right: 0;
+    left: auto;
     justify-self: end;
   }
 
