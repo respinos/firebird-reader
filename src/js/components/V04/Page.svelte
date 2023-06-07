@@ -148,12 +148,15 @@
     page_coords = [ ...coords ];
   }
 
+  let loadImageTimeout;
+  let loadPageTextTimeout;
   export const loadImage = function(reload=false) {
     // console.log("-- page.loadImage", seq, isVisible, isLoaded);
     // return;
+    clearTimeout(loadImageTimeout);
     const isDebugging = false;
-    const delay = isDebugging ? 5 * 1000 : 0;
-    setTimeout(() => {
+    const delay = isDebugging ? 5 * 1000 : 500;
+    loadImageTimeout = setTimeout(() => {
       loadImageActual(reload);
     }, delay);
   }
@@ -239,6 +242,17 @@
 
   let numPageTextLoaded = 0;
   export const loadPageText = function(reload=false) {
+    // console.log("-- page.loadImage", seq, isVisible, isLoaded);
+    // return;
+    clearTimeout(loadPageTextTimeout);
+    const isDebugging = false;
+    const delay = isDebugging ? 5 * 1000 : 500;
+    loadPageTextTimeout = setTimeout(() => {
+      loadPageTextActual(reload);
+    }, delay);
+  }
+
+  export const loadPageTextActual = function(reload=false) {
     // return;
 
     if ( ! isVisible ) { return ; }
