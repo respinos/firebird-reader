@@ -750,9 +750,10 @@
   .frame:is([data-orient="90"]) {
     /* max-width: 100%;
     height: auto; */
+    transform-origin: center;
     transform: rotate(90deg) scale(0.8) !important;
-    margin-top: calc(var(--orient-margin) * 1px) !important;
-    margin-bottom: calc(var(--orient-margin) * 1px) !important;
+    // margin-top: calc(var(--orient-margin) * 1px) !important;
+    // margin-bottom: calc(var(--orient-margin) * 1px) !important;
   }
 
   .frame:is([data-orient="180"]) {
@@ -766,9 +767,10 @@
     /* max-width: 100%;
     height: auto; */
 
+    transform-origin: center;
     transform: rotate(270deg) scale(0.8) !important;
-    margin-top: calc(var(--orient-margin) * 1px) !important;
-    margin-bottom: calc(var(--orient-margin) * 1px) !important;
+    // margin-top: calc(var(--orient-margin) * 1px) !important;
+    // margin-bottom: calc(var(--orient-margin) * 1px) !important;
   }
 
   figcaption.plaintext {
