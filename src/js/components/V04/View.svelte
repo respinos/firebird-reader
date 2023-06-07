@@ -49,6 +49,8 @@
   let zoomIndex = zoomScales.indexOf(zoom);
   // console.log("-- view.startup", zoomScales, zoom, zoomIndex);
 
+  let lastFormat = format;
+
   let seqTimeout;
   let viewport = {};
   let currentFocusItems = [];
@@ -372,6 +374,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
   }
 
   $: columnWidth = ( zoom > 1 ) ? innerWidth / 2 * zoom : null;
+  $: if ( format != lastFormat ) { zoom = 1; lastFormat = format; }
   // $: console.log("-- view", columnWidth, innerHeight);
   // $: if ( handleClick ) { container.addEventListener('click', handleClick) ; }
   // $: if ( handleKeydown ) { container.addEventListener('keydown', handleKeydown) ; }
