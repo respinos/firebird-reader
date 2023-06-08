@@ -526,12 +526,17 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     display: contents;
   }
 
+  .inner.view-1up {
+    display: flex;
+    flex-direction: column;
+  }
+
   .inner.view-thumb {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 1.5rem;
+    gap: 1rem;
 
     scroll-behavior: auto;
     padding: 2rem 1rem;

@@ -560,6 +560,9 @@
 
     position: relative;
 
+    // // -- debug border
+    // border: 4px solid darkkhaki;
+
     &.view-2up {
       margin-bottom: calc(var(--paddingBottom) * 1px);
       height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
@@ -623,12 +626,14 @@
       --defaultPageHeight: 250px;
 
       height: auto;
-      width: auto;
+      // width: auto;
       min-height: calc(var(--defaultPageHeight) * var(--actualZoom));
       max-width: var(--defaultPageHeight);
 
       gap: 0.5rem;
       grid-template-rows: min-content 1fr;
+
+      margin: 0;
 
       .page-menu {
         grid-row: 2/3;
@@ -679,8 +684,8 @@
 
     position: relative;
 
-    // --- debug background
-    background: darkkhaki;
+    // // --- debug background
+    // background: darkkhaki;
 
     grid-row: 2/3;
     grid-column: 1/2;
@@ -720,7 +725,7 @@
       overflow: hidden;
 
       .image {
-        height: 100%;
+        // height: 100%;
         width: auto;
 
         position: relative;
@@ -773,7 +778,7 @@
 
   figure.zoomed {
     overflow: auto !important;
-    // align-items: start;
+    align-items: start;
     // min-width: 80%;
 
     .image {
@@ -794,17 +799,26 @@
 
   .page:is([data-orient="90"]) {
     // width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
-    width: 100%;
-    max-width: 100%;
-    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1) * var(--ratio));
-    // is this necessary?
+    // height: auto;
     // aspect-ratio: calc(1 / var(--ratio));
+    // width: 100%;
+    max-width: 100%;
+    overflow: auto;
+    // height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1) * var(--ratio));
+    // is this necessary?
   }
 
   .frame:is([data-orient="90"]) {
+    --orient-margin-x: calc(var(--orient-margin, 0) * var(--scanZoom, 1) * 0.5 * 1px);
+    --orient-margin-y: calc(var(--orient-margin, 0) * var(--scanZoom, 1) * 2 * 1px);
     transform-origin: center;
-    transform: rotate(90deg) scale(1) !important;
-    margin-top: calc(var(--orient-margin, 0) / 2 * 1px);
+    transform: rotate(90deg) scale(1.0) translateX(var(--orient-margin-x)) translateY(var(--orient-margin-y)) !important;
+    align-items: start;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    // margin-top: calc(var(--orient-margin, 0) / 2 * 1px);
+    // margin-top: calc(var(--orient-margin, 0) * 1px);
   }
 
   .frame:is([data-orient="180"]) {
@@ -812,15 +826,25 @@
   }
 
   .page:is([data-orient="270"]) {
-    width: 100%;
+    // width: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1));
+    // height: auto;
+    // aspect-ratio: calc(1 / var(--ratio));
+    // width: 100%;
     max-width: 100%;
-    height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1) * var(--ratio));
+    overflow: auto;
+    max-width: 100%;
+    // height: calc(clamp(var(--clampHeight), var(--defaultPageHeight), var(--defaultPageHeight)) * var(--zoom, 1) * var(--ratio));
   }
 
   .frame:is([data-orient="270"]) {
+    --orient-margin-x: calc(var(--orient-margin, 0) * var(--scanZoom, 1) * -0.5 * 1px);
+    --orient-margin-y: calc(var(--orient-margin, 0) * var(--scanZoom, 1) * -2 * 1px);
     transform-origin: center;
-    transform: rotate(270deg) scale(1) !important;
-    margin-top: calc(var(--orient-margin, 0) / 2 * 1px);
+    transform: rotate(270deg) scale(1.0) translateX(var(--orient-margin-x)) translateY(var(--orient-margin-y)) !important;
+    align-items: start;
+    margin: 0;
+    max-width: none;
+    max-height: none;
   }
 
   figcaption.plaintext {
