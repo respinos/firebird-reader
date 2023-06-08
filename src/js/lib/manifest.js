@@ -11,8 +11,7 @@ export class Manifest {
     this._ = get;
 
     this.selectedKey = `selection-${this.id}`;
-    this.items = this.featureList;
-    this.totalSeq = this.featureList.length;
+    // this.items = this.featureList;
     this.defaultSeq = parseInt(this.defaultSeq, 10);
     this.firstSeq = parseInt(this.firstSeq, 10);
     this.defaultImage = {

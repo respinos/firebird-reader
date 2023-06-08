@@ -62,8 +62,10 @@
 	// && ! isEmbed
 	if ( window.innerWidth < 800 && manifest.ui != 'embed' ) {
 		view = '1up';
-	}
-
+  } else if ( manifest.totalSeq == 1 && manifest.view == '2up' ) {
+    view = '1up';
+  }
+	
   let isReaderView = views[view] != null;
 
 	let lastView = '1up';

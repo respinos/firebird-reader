@@ -265,6 +265,7 @@
     }
 
     function parseCoords(value) {
+      if ( ! value ) { return null; }
       var values = value.split(' ')
       return values.map((v) => parseInt(v, 10));
     }
@@ -299,7 +300,6 @@
             </div>`;
         }
 
-        page_coords = parseCoords(ocr_div.dataset.coords);
         // -- do we need this?
         // ocr_div.classList.add('visually-hidden');
         // console.log("loadPageText", seq, page_coords, ocr_div.dataset.words);
@@ -309,12 +309,11 @@
         figCaption.dataset.loaded = true;
         figCaption.append(ocr_div);
 
-        // if we have no page coordinates, there's no highlighting
-        if ( ! ocr_div.dataset.coords ) { return; }
-
         // if no words match, there's no highlighting
         let words = JSON.parse(ocr_div.dataset.words || '[]');
         if ( ! words || ! words.length ) { return ; }
+
+        page_coords = parseCoords(ocr_div.dataset.coords);
 
         matches = extractHighlights(words, ocr_div);
       })
@@ -527,7 +526,7 @@
           alt="" 
           class:zoomed={pageZoom > 1}
           />
-        {#if side != 'thumb'}
+        {#if side != 'thumb' && page_coords}
         <SearchHighlights image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
         {/if}
         </div>

@@ -48,6 +48,7 @@
         class:active={$format == 'plaintext'}
         data-role="format" 
         data-value="plaintext"
+        disabled={!manifest.hasOcr}
         on:click={switchFormat}>
         <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
         <span>Plain Text</span>
@@ -90,6 +91,7 @@
         class:active={$view == '2up'}
         data-role="view" 
         data-value="2up"
+        disabled={manifest.totalSeq == 1}
         on:click={switchView}>
         <i class="fa-solid fa-book-open" aria-hidden="true"></i>
         <span>Flip</span>
