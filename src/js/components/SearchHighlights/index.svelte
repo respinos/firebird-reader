@@ -6,6 +6,9 @@
   export let matches = [];
   export let image = null;
   export let format;
+  export let orient = 0;
+  export let seq;
+  export let canvas;
 
   let highlights = [];
 
@@ -26,19 +29,31 @@
     var scaling = {};
 
     if ( image ) {
-      if ( image.hasAttribute('width') ) {
-        scaling.width = parseInt(image.getAttribute('width'), 10); 
-        scaling.height = parseInt(image.getAttribute('height'), 10);
-      } else {
-        scaling.width = image.width;
-        scaling.height = image.height;
-      }
+      // if ( image.hasAttribute('width') ) {
+      //   scaling.width = parseInt(image.getAttribute('width'), 10); 
+      //   scaling.height = parseInt(image.getAttribute('height'), 10);
+      // } else {
+      //   scaling.width = image.width;
+      //   scaling.height = image.height;
+      // }
 
-      scaling.width = image.offsetWidth;
-      scaling.height = image.offsetHeight;
+      scaling.width = canvas.width; // image.offsetWidth;
+      scaling.height = canvas.height; // image.offsetHeight;
+
+      console.log("-- search.highlights", scaling.width, scaling.height);
+
+      if ( orient == 90 || orient == 270 ) {
+        scaling.width = canvas.height; // image.offsetHeight;
+        scaling.height = canvas.width; // image.offsetWidth;
+      }
 
       scaling.ratio = scaling.width / page_coords[2];
       scaling.ratioY = scaling.height / page_coords[3];
+
+      if ( orient == 90 || orient == 270 ) {
+        scaling.ratio = scaling.width / page_coords[3];
+      }
+
       scaling.padding = 0; // parseInt(window.getComputedStyle(page).marginTop) / 2;
       scaling.ratioZ = 1.0;
       scaling.ratio *= scaling.ratioZ;
@@ -62,8 +77,19 @@
         coords[1] *= scaling.ratio;
         coords[3] *= scaling.ratio;
 
-        var highlight_w0 = ( coords[2] - coords[0] );
-        var highlight_h0 = ( coords[3] - coords[1] );
+        if ( orient == 90 || orient == 270 ) {
+          let newCoords = [];
+          newCoords[0] = coords[1];
+          newCoords[2] = coords[3];
+          newCoords[1] = coords[0];
+          newCoords[3] = coords[2];
+
+          console.log("-- search.highlights", orient, span.dataset.coords, coords, newCoords, image.offsetWidth, image.offsetHeight, scaling.width, scaling.height);
+          coords = [...newCoords];
+        }
+
+        var highlight_w0 = Math.abs( coords[2] - coords[0] );
+        var highlight_h0 = Math.abs( coords[3] - coords[1] );
         var highlight_w = highlight_w0 * 1.25;
         var highlight_h = highlight_h0 * 1.25;
 
@@ -76,6 +102,22 @@
         highlight.height = `${highlight_h / scaling.height * 100.0}%`;
         highlight.top = `${( coords[1] - ( ( highlight_h - highlight_h0 ) / 2 ) ) / scaling.height * 100.0}%`;
         highlight.left = `${( coords[0] - ( ( highlight_w - highlight_w0 ) / 2 ) ) / scaling.width * 100.0}%`;
+
+        if ( orient == 90 ) {
+          highlight.top = `${( coords[1] - ( ( highlight_h - highlight_h0 ) / 2 ) ) / scaling.height * 100.0}%`;
+          highlight.left = `${( ( scaling.width - coords[0] ) - ( ( highlight_w - highlight_w0 ) / 0.25 ) ) / scaling.width * 100.0}%`;
+        } else if ( orient == 180 ) {
+          highlight.top = `${( ( scaling.height - coords[1] ) - ( ( highlight_h - highlight_h0 ) / 0.25 ) ) / scaling.height * 100.0}%`;
+          highlight.left = `${( ( scaling.width - coords[0] ) - ( ( highlight_w - highlight_w0 ) / 0.25 ) ) / scaling.width * 100.0}%`;
+        } else if ( orient == 270 ) {
+          highlight.top = `${( ( scaling.height ) - coords[1] - ( ( highlight_h - highlight_h0 ) / 0.25 ) ) / scaling.height * 100.0}%`;
+          highlight.left = `${( ( coords[0] ) - ( ( highlight_w - highlight_w0 ) / 2 ) ) / scaling.width * 100.0}%`;          
+        }
+
+        if ( orient == 90 || seq == 7 ) {
+          console.log("-- search.highlights top", coords[1], ( ( highlight_h - highlight_h0 ) / 2 ), scaling.height, scaling.ratio);
+          console.log("-- search.highlights left", coords[0], ( ( highlight_w - highlight_w0 ) / 2 ), scaling.width, scaling.ratio );
+        }
 
         // var highlight = document.createElement('mark');
         // highlight.classList.add('highlight');
@@ -131,6 +173,7 @@
 
   :global(mark.highlight) {
     background: #ffff00;
+    background: darkorange;
   }
 
   :global(html[data-show-highlights="false"] mark.image.highlight) {

@@ -564,7 +564,7 @@
           class:zoomed={pageZoom > 1}
           />
         {#if side != 'thumb' && page_coords}
-        <SearchHighlights image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
+        <SearchHighlights {canvas} {seq} {orient} image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
         {/if}
         </div>
         {#if side != 'thumb'}
