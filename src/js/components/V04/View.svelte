@@ -6,7 +6,7 @@
   import PQueue from "p-queue";
   import { debounce } from '../../lib/debounce';
 
-  import Page from './Page';
+  import Page from './PageRotateCanvas';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');

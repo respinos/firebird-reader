@@ -90,6 +90,7 @@
 	manifest.selected = writable(new Set(storedSelected));
 
 	window.manifest = manifest;
+  window.emitter = emitter;
 
   // aside
 	let priority = 'min';
