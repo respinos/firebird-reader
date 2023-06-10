@@ -473,6 +473,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
   class:view-2up={$currentView =='2up'}
   class:view-1up={$currentView == '1up'}
   class:view-thumb={$currentView == 'thumb'}
+  style:--paddingBottom={$currentView == '2up' ? 2.5 * 16 : 0}
   bind:this={inner}
   on:click={handleClick}
   on:keydown={handleKeydown}
@@ -483,8 +484,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     class="spread"
     class:zoomed={zoom > 1}
     class:direction-rtl={manifest.direction() == 'rtl'}
-    style:--columnWidth={columnWidth}
-    style:--paddingBottom={$currentView == '2up' ? 4.5 * 16 : 0}>
+    style:--columnWidth={columnWidth}>
 
     {#each spread as canvas, canvasIdx}
       {#if canvas}
