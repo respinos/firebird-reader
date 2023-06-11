@@ -1,7 +1,7 @@
 <svelte:options accessors={true} />
 <script>
 
-  import { onMount, getContext, onDestroy } from 'svelte';
+  import { onMount, getContext, onDestroy, tick } from 'svelte';
   import { afterUpdate } from 'svelte';
   import { get } from 'svelte/store';
 
@@ -47,6 +47,7 @@
 
   let scan;
   let image;
+  let rotatedImage;
   let imageSrc;
   let text;
   let matches;
@@ -325,7 +326,40 @@
       }
   }
 
-  const rotateScan = function() {
+  const rotateScan = async function() {
+    orient = ( orient + 90 ) % 360;
+    if ( ! rotatedImage ) {
+      await tick();
+    }
+    console.log("-- page.rotateScan", seq, rotatedImage);
+    drawRotatedImage();
+  }
+
+  const drawRotatedImage = function() {
+    const context = rotatedImage.getContext('2d');
+    canvas.height = rotatedImage.width = 0;
+    let imgWidth, imgHeight;
+    if ( orient == 90 || orient == 270 ) {
+      imgWidth = image.naturalWidth;
+      imgHeight = image.naturalHeight;
+    } else {
+      imgWidth = image.naturalHeight;
+      imgHeight = image.naturalWidth;
+    }
+    rotatedImage.width = imgHeight;
+    rotatedImage.height = imgWidth;
+    context.save();
+    context.translate(imgHeight / 2, imgWidth / 2);
+    context.rotate((orient * Math.PI) / 180);
+    if (orient == 90 || orient == 270) {
+      context.drawImage(image, -(imgWidth / 2), -(imgHeight / 2));
+    } else {
+      context.drawImage(image, -(imgHeight / 2), -(imgWidth / 2));
+    }
+    context.restore();
+  }
+
+  const rotateScanXX = function() {
     let lastOrient = orient;
     let newOrient = ( orient + 90 ) % 360;
     let imageOrient = 90;
@@ -403,13 +437,15 @@
 
   function checkForFoldout() {
     if ( view == 'thumb' || format != 'image' ) { return false; }
-    if ( canvas.width < canvas.height ) { return false; }
+    let meta = manifest.meta(seq);
+    if ( orient != 0 ) { console.log("-- page.checkForFoldout", seq, meta.width, meta.height); }
+    if ( meta.width < meta.height ) { return false; }
     console.log("-- checkForFoldout", manifest.checkFeatures(seq, "FOLDOUT"));
     return (
       manifest.checkFeatures(seq, "FOLDOUT") && 
       ! manifest.checkFeatures(seq, "BLANK")
     ) || (
-      ( canvas.width / canvas.height ) > ( 4 / 3 )
+      ( meta.width / meta.height ) > ( 4 / 3 )
     );
   }
 
@@ -558,11 +594,15 @@
         <div class="image">
         <img 
           bind:this={image} 
+          class:d-none={orient != 0}
           src={defaultThumbnailSrc} 
           data-loaded={isLoaded}
           alt="" 
           class:zoomed={pageZoom > 1}
           />
+        {#if orient != 0}
+          <canvas bind:this={rotatedImage} />
+        {/if}
         {#if side != 'thumb' && page_coords}
         <SearchHighlights {canvas} {seq} {orient} image={image} page_coords={page_coords} matches={matches} format="image"></SearchHighlights>
         {/if}
@@ -844,7 +884,7 @@
 
   }
 
-  figure img {
+  figure img, figure canvas {
     // height: 99%;
     display: block;
     margin: auto;
