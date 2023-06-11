@@ -40,7 +40,7 @@
       scaling.width = canvas.width; // image.offsetWidth;
       scaling.height = canvas.height; // image.offsetHeight;
 
-      console.log("-- search.highlights", scaling.width, scaling.height);
+      console.log("-- search.highlights scaling", scaling.width, scaling.height, canvas);
 
       if ( orient == 90 || orient == 270 ) {
         scaling.width = canvas.height; // image.offsetHeight;
@@ -159,7 +159,7 @@
     highlights = highlights
   }
 
-  $: if (format == 'image' && image && matches && matches.length) { buildHighlights() }
+  $: if (format == 'image' && image && matches && matches.length && orient >= 0) { buildHighlights() }
   $: if (format == 'plaintext' && matches && matches.length) { buildHighlights(); }
 
 </script>

@@ -373,6 +373,13 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     spreadData.push(spread);
   }
 
+  const toggleView = function(visible) {
+    itemData.forEach((item) => {
+      item.page.toggle(visible);
+    })
+  }
+  emitter.on('toggle.view', toggleView);
+
   $: columnWidth = ( zoom > 1 ) ? innerWidth / 2 * zoom : null;
   $: if ( format != lastFormat ) { zoom = 1; lastFormat = format; }
   // $: console.log("-- view", columnWidth, innerHeight);
@@ -451,6 +458,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     return () => {
       let t0 = (new Date).getTime();
       emitter.off('goto.page', gotoPage);
+      emitter.off('toggle.view', toggleView);
       container.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
       // console.log("-- scroll.demount", (new Date).getTime() - t0);
