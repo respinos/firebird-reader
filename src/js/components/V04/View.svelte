@@ -6,7 +6,7 @@
   import PQueue from "p-queue";
   import { debounce } from '../../lib/debounce';
 
-  import Page from './Page';
+  import Page from './PageRotateCanvas';
 
   const emitter = getContext('emitter');
   const manifest = getContext('manifest');
@@ -373,6 +373,13 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     spreadData.push(spread);
   }
 
+  const toggleView = function(visible) {
+    itemData.forEach((item) => {
+      item.page.toggle(visible);
+    })
+  }
+  emitter.on('toggle.view', toggleView);
+
   $: columnWidth = ( zoom > 1 ) ? innerWidth / 2 * zoom : null;
   $: if ( format != lastFormat ) { zoom = 1; lastFormat = format; }
   // $: console.log("-- view", columnWidth, innerHeight);
@@ -451,6 +458,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     return () => {
       let t0 = (new Date).getTime();
       emitter.off('goto.page', gotoPage);
+      emitter.off('toggle.view', toggleView);
       container.removeEventListener('scroll', handleScroll);
       resizeObserver.disconnect();
       // console.log("-- scroll.demount", (new Date).getTime() - t0);
@@ -473,6 +481,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
   class:view-2up={$currentView =='2up'}
   class:view-1up={$currentView == '1up'}
   class:view-thumb={$currentView == 'thumb'}
+  style:--paddingBottom={$currentView == '2up' ? 2.5 * 16 : 0}
   bind:this={inner}
   on:click={handleClick}
   on:keydown={handleKeydown}
@@ -483,8 +492,7 @@ if ( options.force ) { console.log("-- view.find.target", options.seq, targetSeq
     class="spread"
     class:zoomed={zoom > 1}
     class:direction-rtl={manifest.direction() == 'rtl'}
-    style:--columnWidth={columnWidth}
-    style:--paddingBottom={$currentView == '2up' ? 4.5 * 16 : 0}>
+    style:--columnWidth={columnWidth}>
 
     {#each spread as canvas, canvasIdx}
       {#if canvas}

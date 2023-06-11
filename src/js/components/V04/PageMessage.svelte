@@ -8,6 +8,7 @@
 
   export let code;
   export let seq;
+  export let view;
 
   let show = manifest.messageList[seq] !== undefined;
   let modal;
@@ -27,14 +28,27 @@
 </script>
 
 {#if show}
-<div class="message w-100">
-  <div class="alert alert-warning d-flex align-items-center flex-wrap justify-content-between gap-3 p-2 mx-4 fs-7">
+<div class="message view-{view}">
+  <div class="alert alert-warning d-flex align-items-center flex-nowrap justify-content-between gap-3 p-1 px-2 mx-2 fs-7 shadow">
+    {#if view == 'thumb'}
+    <button 
+      class="btn btn-outline-dark btn-sm text-nowrap" 
+      type="button"
+      aria-label={message.alert}
+      on:click|stopPropagation={showDetail}
+      ><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i></button>
+    {:else}
     <span>{@html message.alert}</span>
     <button 
       class="btn btn-outline-dark btn-sm text-nowrap" 
       type="button"
-      on:click|stopPropagation={showDetail}
-      >More Information</button>
+      on:click|stopPropagation={showDetail}>
+      {#if view == '2up'}
+      <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+      {/if}
+      <span class:visually-hidden={view == '2up'}>More Information</span>
+    </button>
+    {/if}
   </div>
   {#if message.detail}
   <Modal bind:this={modal} {onClose}>
@@ -51,6 +65,13 @@
   .message {
     grid-row: 1/2;
     grid-column: 1/2;
-    justify-self: center;
+    justify-self: start;
+    margin-right: 1rem;
+    margin-top: 0.5rem;
+    z-index: 10;
+  }
+
+  .message.view-thumb {
+    margin-top: -1rem;
   }
 </style>
