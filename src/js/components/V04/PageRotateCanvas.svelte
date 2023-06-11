@@ -989,7 +989,7 @@ console.log("-- page.drawRotatedImage", seq, image.naturalWidth, image.naturalHe
     max-width: 100%;
     max-height: 100%;
 
-    padding: 2rem 0;
+    padding: 2rem 6rem 2rem 1rem;
 
     & .image, & .loader {
       height: min-content;

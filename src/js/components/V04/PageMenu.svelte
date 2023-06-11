@@ -221,7 +221,9 @@
 
   .page-menu > div {
     margin-top: 0.5rem;
-    margin: 0.5rem auto;
+    margin-left: auto;
+    margin-right: 1rem;
+    // margin: 0.5rem auto;
     font-size: 1.5rem;
     --bs-btn-font-size: 1.5rem !important;
   }
