@@ -674,20 +674,24 @@ console.log("-- page.drawRotatedImage", seq, image.naturalWidth, image.naturalHe
         overflow: auto;
       }
 
-      &.format-image {
+      .format-image {
         height: 100%;
         // height: calc(var(--spreadHeight) - 5.5rem);
         // overflow: auto;
       }
 
-      &.format-plaintext .frame {
+      // .format-plaintext {
+      //   height: 100%;
+      // }
+
+      .format-plaintext.frame {
         padding-top: 3rem;
         padding-bottom: 5rem;
         width: 100%;
         height: 100%;
       }
 
-      &.format-image .frame {
+      .format-image .frame {
         // height: auto;
         // aspect-ratio: var(--ratio);
         &.zoomed {
